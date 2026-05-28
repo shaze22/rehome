@@ -101,9 +101,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [photoIdx, setPhotoIdx] = useState(0)
   const [buyerState, setBuyerState] = useState('')
   const { timeLeft, isUrgent, isEnded } = useCountdown(listing.endsAt)
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
     const channel = supabase
       .channel(`listing:${listing.id}`)
       .on('broadcast', { event: 'new_bid' }, ({ payload }) => {
@@ -119,7 +119,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [listing.id, supabase])
+  }, [listing.id])
 
   const deliveryQuote = buyerState
     ? calculateDeliveryQuote(listing.state, buyerState)

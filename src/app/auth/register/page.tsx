@@ -13,14 +13,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const supabase = createClient()
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     if (password.length < 6) { setError('Kata laluan mesti sekurang-kurangnya 6 aksara.'); return }
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email,
       password,
       options: { data: { name } },
@@ -31,7 +30,7 @@ export default function RegisterPage() {
   }
 
   async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
+    await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })

@@ -44,7 +44,6 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
   const [localStatus, setLocalStatus] = useState(currentStatus)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const supabase = createClient()
 
   const info = STATUS_INFO[localStatus as keyof typeof STATUS_INFO] ?? STATUS_INFO.UNVERIFIED
 
@@ -54,6 +53,7 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
 
     setUploading(true)
     setError('')
+    const supabase = createClient()
     const ext = file.name.split('.').pop()
     const path = `ic/${userId}/${Date.now()}.${ext}`
     const { data, error: uploadError } = await supabase.storage.from('rehome-photos').upload(path, file)

@@ -12,20 +12,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await createClient().auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) { setError(error.message); return }
     router.push('/dashboard')
   }
 
   async function handleGoogle() {
-    await supabase.auth.signInWithOAuth({
+    await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })

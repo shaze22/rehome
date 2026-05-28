@@ -41,7 +41,6 @@ interface Props {
 
 export function SellForm({ userId }: Props) {
   const router = useRouter()
-  const supabase = createClient()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -98,6 +97,7 @@ export function SellForm({ userId }: Props) {
       return
     }
     setPhotoUploading(true)
+    const supabase = createClient()
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `listings/${userId}/${Date.now()}.${ext}`
