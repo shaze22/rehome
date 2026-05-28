@@ -21,22 +21,24 @@ export async function GET() {
   const pass = 'J4cbPX2UysGRgZAd'
   const ref  = 'hydvxvaugylaizzgjojp'
 
-  // DNS lookup to find project region
   let dbIp = 'unknown'
   try {
     const addrs = await dns.resolve4(`db.${ref}.supabase.co`)
     dbIp = addrs[0] ?? 'none'
   } catch (e) { dbIp = `dns-err: ${e}` }
 
-  // Try all Supabase pooler regions
-  const regions = ['us-east-1','us-east-2','us-west-1','us-west-2','eu-west-1','eu-west-2','eu-central-1','ap-northeast-1','ap-southeast-2','sa-east-1','ca-central-1']
-  const tests = regions.map(r =>
-    tryConnect(`postgresql://postgres.${ref}:${pass}@aws-0-${r}.pooler.supabase.com:6543/postgres`, r)
-  )
+  const results = await Promise.allSettled([
+    // Direct connection (IPv4 now enabled)
+    tryConnect(`postgresql://postgres:${pass}@db.${ref}.supabase.co:5432/postgres`, 'direct-5432'),
+    // Seoul pooler (ap-northeast-2) - where 3.38.64.137 lives
+    tryConnect(`postgresql://postgres.${ref}:${pass}@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres`, 'seoul-pooler-6543'),
+    tryConnect(`postgresql://postgres.${ref}:${pass}@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres`, 'seoul-pooler-5432'),
+    // ap-northeast-1 (Tokyo) too
+    tryConnect(`postgresql://postgres.${ref}:${pass}@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres`, 'tokyo-pooler-6543'),
+  ])
 
-  const results = await Promise.allSettled(tests)
   return NextResponse.json({
     dbIp,
-    regions: results.map(r => r.status === 'fulfilled' ? r.value : { error: String(r.reason) })
+    results: results.map(r => r.status === 'fulfilled' ? r.value : { error: String(r.reason) })
   })
 }
