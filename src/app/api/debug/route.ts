@@ -10,7 +10,8 @@ async function tryConnect(connectionString: string, label: string) {
     await p.$disconnect()
     return { label, status: 'OK', count }
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message.split('\n')[2]?.trim() ?? e.message : String(e)
+    const raw = e instanceof Error ? e.message : String(e)
+    const msg = raw.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 3).join(' | ')
     return { label, status: 'FAIL', error: msg }
   }
 }
@@ -18,32 +19,20 @@ async function tryConnect(connectionString: string, label: string) {
 export async function GET() {
   const pass = 'J4cbPX2UysGRgZAd'
   const ref  = 'hydvxvaugylaizzgjojp'
+  const host = `aws-0-us-east-1.pooler.supabase.com`
 
   const results = await Promise.allSettled([
-    tryConnect(
-      `postgresql://postgres:${pass}@db.${ref}.supabase.co:5432/postgres`,
-      'direct-5432'
-    ),
-    tryConnect(
-      `postgresql://postgres:${pass}@db.${ref}.supabase.co:6543/postgres`,
-      'direct-6543'
-    ),
-    tryConnect(
-      `postgresql://postgres.${ref}:${pass}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres`,
-      'pooler-ap-southeast-1-5432'
-    ),
-    tryConnect(
-      `postgresql://postgres.${ref}:${pass}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`,
-      'pooler-ap-southeast-1-6543'
-    ),
-    tryConnect(
-      `postgresql://postgres.${ref}:${pass}@aws-0-us-east-1.pooler.supabase.com:5432/postgres`,
-      'pooler-us-east-1-5432'
-    ),
-    tryConnect(
-      `postgresql://postgres.${ref}:${pass}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`,
-      'pooler-us-east-1-6543'
-    ),
+    // Different username formats
+    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres`, 'user=postgres.ref port=6543'),
+    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:5432/postgres`, 'user=postgres.ref port=5432'),
+    tryConnect(`postgresql://postgres:${pass}@${host}:6543/postgres`,        'user=postgres port=6543'),
+    tryConnect(`postgresql://postgres:${pass}@${host}:5432/postgres`,        'user=postgres port=5432'),
+    // Different database names
+    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/${ref}`,   'user=postgres.ref db=ref'),
+    tryConnect(`postgresql://postgres:${pass}@${host}:6543/${ref}`,          'user=postgres db=ref'),
+    // SSL variants
+    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres?sslmode=require`, 'ssl-require'),
+    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres?sslmode=disable`, 'ssl-disable'),
   ])
 
   return NextResponse.json(
