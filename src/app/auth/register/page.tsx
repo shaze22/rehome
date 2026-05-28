@@ -62,7 +62,7 @@ export default function RegisterPage() {
           <div className="w-12 h-12 rounded-2xl gradient-teal flex items-center justify-center mx-auto mb-4">
             <Recycle className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Sertai REHOME</h1>
+          <h1 className="text-2xl font-bold mb-2">Sertai BALLOUT</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Mulakan perjalanan pekeliling anda hari ini</p>
         </div>
 

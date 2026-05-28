@@ -39,7 +39,7 @@ export default async function ImpactPage() {
       <div className="text-center mb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
           <Leaf className="w-3.5 h-3.5" />
-          Impak Nyata REHOME
+          Impak Nyata BALLOUT
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold mb-4">
           Bersama Kita{' '}
@@ -48,7 +48,7 @@ export default async function ImpactPage() {
           </span>
         </h1>
         <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          Setiap transaksi di REHOME adalah langkah ke arah Malaysia yang lebih hijau, lebih mampan, dan lebih bertanggungjawab.
+          Setiap transaksi di BALLOUT adalah langkah ke arah Malaysia yang lebih hijau, lebih mampan, dan lebih bertanggungjawab.
         </p>
       </div>
 

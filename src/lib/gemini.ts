@@ -25,7 +25,7 @@ export async function getAIPriceSuggestion(params: {
 }): Promise<AIPriceSuggestion> {
   const prompt = `You are an expert in Malaysian second-hand goods pricing and circular economy market analysis.
 
-Analyze this item and suggest a fair starting bid range for a Malaysian online auction platform (REHOME):
+Analyze this item and suggest a fair starting bid range for a Malaysian online auction platform (BALLOUT):
 
 Item Details:
 - Category: ${params.category}

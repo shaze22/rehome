@@ -16,11 +16,11 @@ export function DashboardStats({ rehomeScore, totalListings, activeListings, tot
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {/* Rehome Score */}
+      {/* Ballout Score */}
       <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 mb-2">
           <Star className="w-4 h-4" style={{ color: 'var(--yellow)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Rehome Score</span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Ballout Score</span>
         </div>
         <p className="text-3xl font-bold font-mono" style={{ color: scoreColor }}>{rehomeScore}</p>
         <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-surface)' }}>

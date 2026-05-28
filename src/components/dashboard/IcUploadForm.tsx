@@ -25,7 +25,7 @@ const STATUS_INFO = {
     bg: 'rgba(251,191,36,0.08)',
     border: 'rgba(251,191,36,0.3)',
     title: 'Sedang Disemak',
-    desc: 'IC anda sedang disemak oleh pasukan REHOME. Proses ini mengambil masa 1-2 hari bekerja.',
+    desc: 'IC anda sedang disemak oleh pasukan BALLOUT. Proses ini mengambil masa 1-2 hari bekerja.',
   },
   VERIFIED: {
     icon: CheckCircle,

@@ -86,7 +86,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <div className="text-center">
               <p className="text-3xl font-bold font-mono" style={{ color: scoreColor }}>{profile.rehomeScore}</p>
               <p className="text-xs flex items-center gap-1 justify-center mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                <Star className="w-3 h-3" style={{ color: 'var(--yellow)' }} /> Rehome Score
+                <Star className="w-3 h-3" style={{ color: 'var(--yellow)' }} /> Ballout Score
               </p>
             </div>
             <div className="text-center">
@@ -99,7 +99,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         {/* Score bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
-            <span>Rehome Score</span>
+            <span>Ballout Score</span>
             <span className="font-mono">{profile.rehomeScore}/100</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-surface)' }}>

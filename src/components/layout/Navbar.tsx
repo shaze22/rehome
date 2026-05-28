@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { Recycle, Bell, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
+import { Recycle, Heart, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -34,7 +34,7 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
               <Recycle className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>REHOME</span>
+            <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>BALLOUT</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -53,6 +53,10 @@ export function Navbar() {
                 <Link href="/dashboard" className="flex items-center gap-1.5 text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
+                </Link>
+                <Link href="/dashboard/watchlist" className="flex items-center gap-1.5 text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
+                  <Heart className="w-4 h-4" />
+                  Simpanan
                 </Link>
                 <Link
                   href="/sell"

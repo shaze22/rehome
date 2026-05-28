@@ -31,7 +31,7 @@ export const BADGES: Badge[] = [
     id: 'trusted_seller',
     name: 'Trusted Seller',
     nameMs: 'Penjual Dipercayai',
-    description: 'Rehome Score ≥ 80 dengan IC disahkan',
+    description: 'Ballout Score ≥ 80 dengan IC disahkan',
     emoji: '🛡️',
     color: 'var(--blue)',
     requirement: 'rehomeScore >= 80 AND icVerified',

@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { ListingDetailClient } from '@/components/listings/ListingDetailClient'
+import { ListingChat } from '@/components/listings/ListingChat'
+import { WatchlistButton } from '@/components/listings/WatchlistButton'
 
 async function getListing(id: string) {
   try {
@@ -14,6 +16,7 @@ async function getListing(id: string) {
           orderBy: { createdAt: 'desc' },
           take: 20,
         },
+        review: { select: { rating: true, comment: true, createdAt: true } },
         _count: { select: { bids: true } },
       },
     })
@@ -31,10 +34,22 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <ListingDetailClient
-      listing={listing as any}
-      currentUserId={user?.id ?? null}
-      currentUserEmail={user?.email ?? null}
-    />
+    <div>
+      <ListingDetailClient
+        listing={listing as any}
+        currentUserId={user?.id ?? null}
+        currentUserEmail={user?.email ?? null}
+        watchlistButton={
+          <WatchlistButton listingId={listing.id} currentUserId={user?.id ?? null} />
+        }
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <ListingChat
+          listingId={listing.id}
+          currentUserId={user?.id ?? null}
+          sellerId={listing.sellerId}
+        />
+      </div>
+    </div>
   )
 }

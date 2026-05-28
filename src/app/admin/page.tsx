@@ -11,7 +11,12 @@ export default async function AdminPage() {
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
   if (dbUser?.role !== 'ADMIN') redirect('/dashboard')
 
-  const [pendingICs, recentListings, totalUsers, activeListings, soldListings, volumeResult] = await Promise.all([
+  const [
+    pendingICs, recentListings,
+    totalUsers, activeListings, soldListings, endedListings,
+    volumeResult, totalBids, totalMessages, avgRatingResult,
+    recentUsers, topSellers,
+  ] = await Promise.all([
     prisma.user.findMany({
       where: { icStatus: 'PENDING' },
       select: { id: true, name: true, email: true, icPhoto: true, icStatus: true, createdAt: true },
@@ -28,16 +33,38 @@ export default async function AdminPage() {
     prisma.user.count(),
     prisma.listing.count({ where: { status: 'ACTIVE' } }),
     prisma.listing.count({ where: { status: 'SOLD' } }),
-    prisma.transaction.aggregate({ _sum: { amount: true } }),
+    prisma.listing.count({ where: { status: 'ENDED' } }),
+    prisma.transaction.aggregate({ _sum: { amount: true, platformFee: true } }),
+    prisma.bid.count(),
+    prisma.message.count(),
+    prisma.review.aggregate({ _avg: { rating: true } }),
+    prisma.user.findMany({
+      orderBy: { createdAt: 'desc' }, take: 5,
+      select: { id: true, name: true, email: true, role: true, rehomeScore: true, createdAt: true },
+    }),
+    prisma.listing.groupBy({
+      by: ['sellerId'],
+      where: { status: 'SOLD' },
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: 5,
+    }),
   ])
 
   const totalVolume = volumeResult._sum.amount ?? 0
+  const totalRevenue = volumeResult._sum.platformFee ?? 0
+  const avgRating = avgRatingResult._avg.rating ?? 0
 
   return (
     <AdminPanel
       pendingICs={pendingICs as any}
       recentListings={recentListings as any}
-      stats={{ totalUsers, activeListings, soldListings, totalVolume }}
+      recentUsers={recentUsers as any}
+      stats={{
+        totalUsers, activeListings, soldListings, endedListings,
+        totalVolume, totalRevenue, totalBids, totalMessages,
+        avgRating: Math.round(avgRating * 10) / 10,
+      }}
     />
   )
 }

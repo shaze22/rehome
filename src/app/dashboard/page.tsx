@@ -5,12 +5,11 @@ import Link from 'next/link'
 import { DashboardStats } from '@/components/dashboard/DashboardStats'
 import { SellerListingCard } from '@/components/dashboard/SellerListingCard'
 import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
-import {
-  Gavel, Package, Plus, CheckCircle, Clock
-} from 'lucide-react'
+import { OrderCard } from '@/components/dashboard/OrderCard'
+import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag } from 'lucide-react'
 
 async function getDashboardData(userId: string) {
-  const [user, myListings, myBids, transactions] = await Promise.all([
+  const [user, myListings, myBids, transactions, sellerOrders, buyerOrders] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.listing.findMany({
       where: { sellerId: userId },
@@ -43,8 +42,29 @@ async function getDashboardData(userId: string) {
     prisma.transaction.findMany({
       where: { sellerId: userId, status: 'RELEASED' },
     }),
+    // Orders as seller
+    prisma.transaction.findMany({
+      where: { sellerId: userId, status: 'ESCROWED' },
+      orderBy: { createdAt: 'desc' },
+    }),
+    // Orders as buyer
+    prisma.transaction.findMany({
+      where: { buyerId: userId },
+      orderBy: { createdAt: 'desc' },
+    }),
   ])
-  return { user, myListings, myBids, transactions }
+
+  // Attach listing titles
+  const allListingIds = [...new Set([...sellerOrders, ...buyerOrders].map(o => o.listingId))]
+  const listingTitles = allListingIds.length > 0
+    ? await prisma.listing.findMany({ where: { id: { in: allListingIds } }, select: { id: true, title: true } })
+    : []
+  const titleMap = Object.fromEntries(listingTitles.map(l => [l.id, l.title]))
+
+  const sellerOrdersWithTitle = sellerOrders.map(o => ({ ...o, listingTitle: titleMap[o.listingId] ?? o.listingId }))
+  const buyerOrdersWithTitle  = buyerOrders.map(o => ({ ...o, listingTitle: titleMap[o.listingId] ?? o.listingId }))
+
+  return { user, myListings, myBids, transactions, sellerOrders: sellerOrdersWithTitle, buyerOrders: buyerOrdersWithTitle }
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ payment?: string }> }) {
@@ -53,7 +73,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!user) redirect('/auth/login')
 
   const params = await searchParams
-  let { user: dbUser, myListings, myBids, transactions } = await getDashboardData(user.id)
+  let { user: dbUser, myListings, myBids, transactions, sellerOrders, buyerOrders } = await getDashboardData(user.id)
 
   if (!dbUser) {
     dbUser = await prisma.user.create({
@@ -196,6 +216,36 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           )}
         </div>
       </div>
+
+      {/* Orders */}
+      {(sellerOrders.length > 0 || buyerOrders.length > 0) && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5" style={{ color: 'var(--purple)' }} />
+            Pesanan
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {(sellerOrders as any[]).map(o => (
+              <OrderCard key={o.id} order={{
+                listingId: o.listingId, title: o.listingTitle,
+                amount: o.amount, sellerPayout: o.sellerPayout,
+                status: o.status, shippingStatus: o.shippingStatus,
+                trackingNumber: o.trackingNumber, deliveryConfirmed: o.deliveryConfirmed,
+                isSeller: true,
+              }} />
+            ))}
+            {(buyerOrders as any[]).map(o => (
+              <OrderCard key={o.id} order={{
+                listingId: o.listingId, title: o.listingTitle,
+                amount: o.amount, sellerPayout: o.sellerPayout,
+                status: o.status, shippingStatus: o.shippingStatus,
+                trackingNumber: o.trackingNumber, deliveryConfirmed: o.deliveryConfirmed,
+                isSeller: false,
+              }} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

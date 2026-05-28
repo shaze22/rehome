@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
-  AlertCircle, Package, ChevronLeft, ChevronRight, Truck, Bot
+  AlertCircle, Package, ChevronLeft, ChevronRight, Truck, Bot, Share2
 } from 'lucide-react'
 import { calculateDeliveryQuote } from '@/lib/delivery'
 
@@ -59,6 +59,7 @@ interface Props {
   listing: Listing
   currentUserId: string | null
   currentUserEmail: string | null
+  watchlistButton?: React.ReactNode
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -91,7 +92,7 @@ function useCountdown(endsAt: string) {
   return { timeLeft, isUrgent, isEnded }
 }
 
-export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail }: Props) {
+export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
   const [bidAmount, setBidAmount] = useState(Math.max(initialListing.currentBid + 1, initialListing.startingBid + 1, 1))
@@ -101,6 +102,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [photoIdx, setPhotoIdx] = useState(0)
   const [buyerState, setBuyerState] = useState('')
   const { timeLeft, isUrgent, isEnded } = useCountdown(listing.endsAt)
+
+  // Trigger expiry when timer hits zero (client-side fallback for cron)
+  useEffect(() => {
+    if (isEnded && listing.status === 'ACTIVE') {
+      fetch(`/api/listings/${listing.id}/expire`, { method: 'POST' }).catch(() => {})
+    }
+  }, [isEnded, listing.id, listing.status])
 
   useEffect(() => {
     const supabase = createClient()
@@ -206,7 +214,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           <div className="mt-6 rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-              Laporan Keadaan (Rehome Shield)
+              Laporan Keadaan (Ballout Shield)
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -255,7 +263,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-bold mb-2">{listing.title}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-bold mb-2">{listing.title}</h1>
+              <button
+                onClick={() => {
+                  const url = window.location.href
+                  const text = `🔥 *${listing.title}* — Tawaran semasa: *RM ${listing.currentBid || listing.startingBid}*\n\nLelongan di BALLOUT:\n${url}`
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ backgroundColor: '#25D366', color: 'white' }}
+                title="Share ke WhatsApp"
+              >
+                <Share2 className="w-3.5 h-3.5" /> WhatsApp
+              </button>
+            </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{listing.description}</p>
           </div>
 
@@ -397,6 +419,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               15% fi platform · Pembayaran escrow selamat
             </p>
           </div>
+
+          {/* Watchlist */}
+          {watchlistButton && (
+            <div className="flex justify-end">{watchlistButton}</div>
+          )}
 
           {/* Delivery Quote */}
           <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>

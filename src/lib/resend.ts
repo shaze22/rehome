@@ -6,12 +6,12 @@ function getResend() {
 
 export async function sendOutbidEmail(to: string, name: string, listingTitle: string, newBid: number) {
   await getResend().emails.send({
-    from: 'REHOME <noreply@rehome.my>',
+    from: 'BALLOUT <noreply@ballout.my>',
     to,
     subject: `Anda telah ditawar di "${listingTitle}"`,
     html: `
       <div style="font-family: Inter, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 32px; border-radius: 12px;">
-        <h2 style="color: #14b8a6;">REHOME — Tawaran Baharu!</h2>
+        <h2 style="color: #14b8a6;">BALLOUT — Tawaran Baharu!</h2>
         <p>Hai ${name},</p>
         <p>Seseorang telah membuat tawaran baharu sebanyak <strong style="color: #00d9a5;">RM ${newBid}</strong> pada item "<strong>${listingTitle}</strong>".</p>
         <p>Buat tawaran balas sekarang sebelum masa tamat!</p>
@@ -25,12 +25,12 @@ export async function sendOutbidEmail(to: string, name: string, listingTitle: st
 
 export async function sendAuctionWonEmail(to: string, name: string, listingTitle: string, amount: number, listingId: string) {
   await getResend().emails.send({
-    from: 'REHOME <noreply@rehome.my>',
+    from: 'BALLOUT <noreply@ballout.my>',
     to,
     subject: `Tahniah! Anda menang lelongan "${listingTitle}"`,
     html: `
       <div style="font-family: Inter, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 32px; border-radius: 12px;">
-        <h2 style="color: #14b8a6;">REHOME — Anda Menang!</h2>
+        <h2 style="color: #14b8a6;">BALLOUT — Anda Menang!</h2>
         <p>Tahniah ${name}!</p>
         <p>Anda telah memenangi lelongan untuk "<strong>${listingTitle}</strong>" dengan tawaran <strong style="color: #00d9a5;">RM ${amount}</strong>.</p>
         <p>Sila buat pembayaran dalam masa 24 jam.</p>
@@ -44,12 +44,12 @@ export async function sendAuctionWonEmail(to: string, name: string, listingTitle
 
 export async function sendPaymentReceivedEmail(to: string, name: string, listingTitle: string, payout: number) {
   await getResend().emails.send({
-    from: 'REHOME <noreply@rehome.my>',
+    from: 'BALLOUT <noreply@ballout.my>',
     to,
     subject: `Pembayaran diterima untuk "${listingTitle}"`,
     html: `
       <div style="font-family: Inter, sans-serif; background: #0a0a0f; color: #e2e8f0; padding: 32px; border-radius: 12px;">
-        <h2 style="color: #14b8a6;">REHOME — Pembayaran Diterima</h2>
+        <h2 style="color: #14b8a6;">BALLOUT — Pembayaran Diterima</h2>
         <p>Hai ${name},</p>
         <p>Pembayaran sebanyak <strong style="color: #00d9a5;">RM ${payout}</strong> untuk "<strong>${listingTitle}</strong>" telah dihantar ke akaun anda.</p>
         <p>Terima kasih kerana menyumbang kepada ekonomi pekeliling!</p>

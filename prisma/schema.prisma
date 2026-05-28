@@ -8,20 +8,24 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String?
-  avatar       String?
-  icVerified   Boolean   @default(false)
-  icStatus     ICStatus  @default(UNVERIFIED)
-  icPhoto      String?
-  rehomeScore  Int       @default(50)
-  state        String?
-  role         Role      @default(BUYER)
-  listings     Listing[]
-  bids         Bid[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id             String      @id @default(cuid())
+  email          String      @unique
+  name           String?
+  avatar         String?
+  icVerified     Boolean     @default(false)
+  icStatus       ICStatus    @default(UNVERIFIED)
+  icPhoto        String?
+  rehomeScore    Int         @default(50)
+  state          String?
+  role           Role        @default(BUYER)
+  listings       Listing[]
+  bids           Bid[]
+  sentMessages   Message[]   @relation("MessageSender")
+  reviews        Review[]    @relation("ReviewAuthor")
+  receivedReviews Review[]   @relation("ReviewSeller")
+  watchlist      Watchlist[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model Listing {
@@ -41,6 +45,9 @@ model Listing {
   status           ListingStatus @default(ACTIVE)
   endsAt           DateTime
   bids             Bid[]
+  messages         Message[]
+  review           Review?
+  watchlist        Watchlist[]
   aiSuggestedMin   Float?
   aiSuggestedMax   Float?
   aiReasoning      String?
@@ -81,9 +88,50 @@ model Transaction {
   sellerPayout      Float
   stripePaymentId   String?
   status            TransactionStatus @default(PENDING)
+  shippingStatus    ShippingStatus    @default(PENDING)
+  trackingNumber    String?
   deliveryConfirmed Boolean           @default(false)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  listingId  String   @unique
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  reviewerId String
+  reviewer   User     @relation("ReviewAuthor", fields: [reviewerId], references: [id])
+  sellerId   String
+  seller     User     @relation("ReviewSeller", fields: [sellerId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([sellerId])
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
 }
 
 enum Role {
@@ -120,4 +168,10 @@ enum TransactionStatus {
   ESCROWED
   RELEASED
   REFUNDED
+}
+
+enum ShippingStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
 }

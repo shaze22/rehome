@@ -12,7 +12,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
                 <Recycle className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>REHOME</span>
+              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>BALLOUT</span>
             </div>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
               Platform ekonomi pekeliling Malaysia. Beri barangan anda kehidupan baharu melalui lelongan progresif yang selamat dan telus.
@@ -70,7 +70,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid var(--border)' }}>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            © 2026 REHOME. Hak cipta terpelihara. Dibina untuk Malaysia yang lebih hijau.
+            © 2026 BALLOUT. Hak cipta terpelihara. Dibina untuk Malaysia yang lebih hijau.
           </p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
             15% fi platform · Escrow selamat · IC disahkan

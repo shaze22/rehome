@@ -55,7 +55,7 @@ export default async function HomePage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
               <Leaf className="w-3.5 h-3.5" />
-              Platform Ekonomi Pekeliling #1 Malaysia
+              Platform Lelongan Barangan Terpakai #1 Malaysia
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Jual, Beli &{' '}

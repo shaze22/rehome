@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'REHOME — Platform Ekonomi Pekeliling Malaysia',
+  title: 'BALLOUT — Platform Ekonomi Pekeliling Malaysia',
   description: 'Jual beli barangan terpakai melalui lelongan progresif. Jimat wang, selamatkan alam.',
 }
 

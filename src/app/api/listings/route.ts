@@ -45,17 +45,17 @@ export async function POST(request: NextRequest) {
   const data = parsed.data
 
   // Get or create user record
-  let dbUser = await prisma.user.findUnique({ where: { id: user.id } })
-  if (!dbUser) {
-    dbUser = await prisma.user.create({
-      data: {
-        id: user.id,
-        email: user.email!,
-        name: user.user_metadata?.name ?? user.email?.split('@')[0],
-        role: 'SELLER',
-      },
-    })
-  }
+  // Upsert user and auto-elevate to SELLER
+  const dbUser = await prisma.user.upsert({
+    where: { id: user.id },
+    create: {
+      id: user.id,
+      email: user.email!,
+      name: user.user_metadata?.name ?? user.email?.split('@')[0],
+      role: 'SELLER',
+    },
+    update: { role: 'SELLER' },
+  })
 
   // AI pricing
   let aiSuggestedMin: number | null = null

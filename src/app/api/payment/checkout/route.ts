@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           currency: 'myr',
           product_data: {
             name: listing.title,
-            description: `Lelongan REHOME — ${listing.category}`,
+            description: `Lelongan BALLOUT — ${listing.category}`,
           },
           unit_amount: Math.round(listing.currentBid * 100),
         },
