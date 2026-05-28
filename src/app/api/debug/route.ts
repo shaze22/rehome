@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@/generated/prisma/client'
 
-async function tryConnect(connectionString: string, label: string) {
+async function tryConnect(opts: { connectionString: string; ssl?: object }, label: string) {
   try {
-    const adapter = new PrismaPg({ connectionString, max: 1 })
+    const adapter = new PrismaPg({ ...opts, max: 1 })
     const p = new PrismaClient({ adapter })
     const count = await p.user.count()
     await p.$disconnect()
@@ -20,19 +20,12 @@ export async function GET() {
   const pass = 'J4cbPX2UysGRgZAd'
   const ref  = 'hydvxvaugylaizzgjojp'
   const host = `aws-0-us-east-1.pooler.supabase.com`
+  const ssl  = { rejectUnauthorized: false }
 
   const results = await Promise.allSettled([
-    // Different username formats
-    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres`, 'user=postgres.ref port=6543'),
-    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:5432/postgres`, 'user=postgres.ref port=5432'),
-    tryConnect(`postgresql://postgres:${pass}@${host}:6543/postgres`,        'user=postgres port=6543'),
-    tryConnect(`postgresql://postgres:${pass}@${host}:5432/postgres`,        'user=postgres port=5432'),
-    // Different database names
-    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/${ref}`,   'user=postgres.ref db=ref'),
-    tryConnect(`postgresql://postgres:${pass}@${host}:6543/${ref}`,          'user=postgres db=ref'),
-    // SSL variants
-    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres?sslmode=require`, 'ssl-require'),
-    tryConnect(`postgresql://postgres.${ref}:${pass}@${host}:6543/postgres?sslmode=disable`, 'ssl-disable'),
+    tryConnect({ connectionString: `postgresql://postgres.${ref}:${pass}@${host}:6543/postgres`, ssl }, 'pooler-6543-ssl-noverify'),
+    tryConnect({ connectionString: `postgresql://postgres.${ref}:${pass}@${host}:5432/postgres`, ssl }, 'pooler-5432-ssl-noverify'),
+    tryConnect({ connectionString: `postgresql://postgres:${pass}@${host}:6543/postgres`, ssl },          'postgres-6543-ssl-noverify'),
   ])
 
   return NextResponse.json(
