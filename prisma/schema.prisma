@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  avatar       String?
+  icVerified   Boolean   @default(false)
+  icStatus     ICStatus  @default(UNVERIFIED)
+  icPhoto      String?
+  rehomeScore  Int       @default(50)
+  state        String?
+  role         Role      @default(BUYER)
+  listings     Listing[]
+  bids         Bid[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Listing {
+  id               String        @id @default(cuid())
+  title            String
+  description      String
+  category         Category
+  condition        Int
+  originalPrice    Float
+  startingBid      Float         @default(0)
+  currentBid       Float         @default(0)
+  currentBidder    String?
+  photos           String[]
+  sellerId         String
+  seller           User          @relation(fields: [sellerId], references: [id])
+  state            String
+  status           ListingStatus @default(ACTIVE)
+  endsAt           DateTime
+  bids             Bid[]
+  aiSuggestedMin   Float?
+  aiSuggestedMax   Float?
+  aiReasoning      String?
+  co2Saved         Float         @default(0)
+  hasScratch       Boolean       @default(false)
+  isFunctional     Boolean       @default(true)
+  hasCompleteParts Boolean       @default(true)
+  hasOriginalBox   Boolean       @default(false)
+  hasWarranty      Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status, endsAt])
+  @@index([sellerId])
+  @@index([category])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([bidderId])
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  listingId         String            @unique
+  sellerId          String
+  buyerId           String
+  amount            Float
+  platformFee       Float
+  sellerPayout      Float
+  stripePaymentId   String?
+  status            TransactionStatus @default(PENDING)
+  deliveryConfirmed Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum Category {
+  FURNITURE
+  ELECTRONICS
+  FASHION
+  BOOKS
+  SPORTS
+  KITCHEN
+  OTHERS
+}
+
+enum ListingStatus {
+  ACTIVE
+  ENDED
+  SOLD
+  CANCELLED
+}
+
+enum ICStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+}
+
+enum TransactionStatus {
+  PENDING
+  ESCROWED
+  RELEASED
+  REFUNDED
+}
