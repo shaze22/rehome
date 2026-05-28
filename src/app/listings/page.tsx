@@ -13,9 +13,14 @@ interface SearchParams {
 }
 
 async function getListings(params: SearchParams) {
+  const now = new Date()
+  // Include listings with no timer (waiting for first bid) AND listings whose timer hasn't expired yet
   const where: Record<string, unknown> = {
     status: 'ACTIVE',
-    endsAt: { gt: new Date() },
+    OR: [
+      { endsAt: null },
+      { endsAt: { gt: now } },
+    ],
   }
 
   if (params.category) where.category = params.category
@@ -28,10 +33,10 @@ async function getListings(params: SearchParams) {
   }
 
   const orderBy =
-    params.sort === 'ending' ? { endsAt: 'asc' as const } :
-    params.sort === 'price_asc' ? { currentBid: 'asc' as const } :
-    params.sort === 'price_desc' ? { currentBid: 'desc' as const } :
-    { createdAt: 'desc' as const }
+    params.sort === 'ending' ? [{ endsAt: { sort: 'asc' as const, nulls: 'last' as const } }] :
+    params.sort === 'price_asc' ? [{ currentBid: 'asc' as const }] :
+    params.sort === 'price_desc' ? [{ currentBid: 'desc' as const }] :
+    [{ createdAt: 'desc' as const }]
 
   try {
     return await prisma.listing.findMany({

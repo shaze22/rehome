@@ -14,7 +14,6 @@ const ListingSchema = z.object({
   startingBid: z.number().int().min(0),
   photos: z.array(z.string().url()).max(5),
   state: z.string().min(1),
-  durationHours: z.number().int().refine(v => [1,3,6,12,24,48,72].includes(v)),
   hasScratch: z.boolean(),
   isFunctional: z.boolean(),
   hasCompleteParts: z.boolean(),
@@ -77,7 +76,6 @@ export async function POST(request: NextRequest) {
   }
 
   const co2Saved = calculateCO2Saved(data.category)
-  const endsAt = new Date(Date.now() + data.durationHours * 3600 * 1000)
 
   const listing = await prisma.listing.create({
     data: {
@@ -90,7 +88,8 @@ export async function POST(request: NextRequest) {
       photos: data.photos,
       sellerId: user.id,
       state: data.state,
-      endsAt,
+      endsAt: null,
+      firstBidAt: null,
       aiSuggestedMin,
       aiSuggestedMax,
       aiReasoning,

@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
-  AlertCircle, Package, ChevronLeft, ChevronRight, Truck, Bot, Share2
+  AlertCircle, ChevronLeft, ChevronRight, Bot, Share2
 } from 'lucide-react'
-import { calculateDeliveryQuote } from '@/lib/delivery'
+import { calculateDeliveryQuote, calculateDeliveryMarkup, calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 
 interface Bid {
   id: string
@@ -40,7 +40,7 @@ interface Listing {
   photos: string[]
   state: string
   status: string
-  endsAt: string
+  endsAt: string | null
   co2Saved: number
   hasScratch: boolean
   isFunctional: boolean
@@ -67,14 +67,21 @@ const CATEGORY_LABELS: Record<string, string> = {
   BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
 }
 
-function useCountdown(endsAt: string) {
+function useCountdown(endsAt: string | null) {
   const [timeLeft, setTimeLeft] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
   const [isEnded, setIsEnded] = useState(false)
+  const [isWaiting, setIsWaiting] = useState(!endsAt)
 
   useEffect(() => {
+    if (!endsAt) {
+      setIsWaiting(true)
+      setTimeLeft('Menunggu bidder pertama...')
+      return
+    }
+    setIsWaiting(false)
     function update() {
-      const diff = new Date(endsAt).getTime() - Date.now()
+      const diff = new Date(endsAt as string).getTime() - Date.now()
       if (diff <= 0) { setIsEnded(true); setTimeLeft('Lelongan Tamat'); return }
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
@@ -89,19 +96,23 @@ function useCountdown(endsAt: string) {
     return () => clearInterval(id)
   }, [endsAt])
 
-  return { timeLeft, isUrgent, isEnded }
+  return { timeLeft, isUrgent, isEnded, isWaiting }
 }
 
 export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
-  const [bidAmount, setBidAmount] = useState(Math.max(initialListing.currentBid + 1, initialListing.startingBid + 1, 1))
+  const initialBidAmount = initialListing._count.bids === 0
+    ? initialListing.startingBid
+    : initialListing.currentBid + 1
+  const [bidAmount, setBidAmount] = useState(initialBidAmount)
   const [bidError, setBidError] = useState('')
   const [bidLoading, setBidLoading] = useState(false)
   const [bidSuccess, setBidSuccess] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
+  const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
-  const { timeLeft, isUrgent, isEnded } = useCountdown(listing.endsAt)
+  const { timeLeft, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt)
 
   // Trigger expiry when timer hits zero (client-side fallback for cron)
   useEffect(() => {
@@ -121,6 +132,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           currentBid: payload.currentBid,
           currentBidder: payload.currentBidder,
           endsAt: payload.endsAt,
+          _count: { bids: payload.bidCount },
         }))
         setBidAmount(payload.currentBid + 1)
       })
@@ -129,16 +141,29 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
     return () => { supabase.removeChannel(channel) }
   }, [listing.id])
 
-  const deliveryQuote = buyerState
+  const isFirstBid = listing._count.bids === 0
+  const deliveryQuote = deliveryMethod === 'delivery' && buyerState
     ? calculateDeliveryQuote(listing.state, buyerState)
-    : null
+    : deliveryMethod === 'pickup' ? 0 : null
+  const deliveryMarkup = deliveryMethod === 'delivery' && buyerState
+    ? calculateDeliveryMarkup(listing.state, buyerState)
+    : 0
+  const platformFee = calculatePlatformFee(bidAmount)
+  const totalIfWin = deliveryQuote !== null ? bidAmount + deliveryQuote + platformFee : null
+  const deliveryReady = deliveryMethod === 'pickup' || (deliveryMethod === 'delivery' && buyerState !== '')
 
   async function handleBid(e: React.FormEvent) {
     e.preventDefault()
     setBidError('')
     if (!currentUserId) { setBidError('Sila log masuk untuk membida.'); return }
-    if (bidAmount < 1 || !Number.isInteger(bidAmount)) { setBidError('Tawaran mesti nombor bulat (Ringgit sahaja).'); return }
-    if (bidAmount <= listing.currentBid) { setBidError(`Tawaran mesti lebih tinggi daripada RM ${listing.currentBid}.`); return }
+    if (!deliveryReady) { setBidError('Sila pilih kaedah penghantaran dahulu.'); return }
+    if (!Number.isInteger(bidAmount) || bidAmount < 0) { setBidError('Tawaran mesti nombor bulat (Ringgit sahaja).'); return }
+    if (isFirstBid && bidAmount < listing.startingBid) {
+      setBidError(`Tawaran minimum ialah RM ${listing.startingBid}.`); return
+    }
+    if (!isFirstBid && bidAmount <= listing.currentBid) {
+      setBidError(`Tawaran mesti lebih tinggi daripada RM ${listing.currentBid}.`); return
+    }
 
     setBidLoading(true)
     try {
@@ -302,8 +327,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Timer */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Clock className={`w-4 h-4 ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--teal)' }} />
-                <span className={`text-sm font-mono font-bold ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>
+                <Clock className={`w-4 h-4 ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : 'var(--teal)' }} />
+                <span className={`text-sm font-mono font-bold ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                   {timeLeft}
                 </span>
               </div>
@@ -311,6 +336,12 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {listing._count.bids} tawaran
               </span>
             </div>
+
+            {isWaiting && (
+              <div className="mb-4 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: 'var(--text-secondary)' }}>
+                Jadilah bidder pertama! Timer 30 minit akan bermula sebaik sahaja ada tawaran masuk.
+              </div>
+            )}
 
             {/* Current bid */}
             <div className="mb-4">
@@ -320,7 +351,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               <p className="text-4xl font-bold font-mono" style={{ color: 'var(--teal)' }}>
                 RM {currentBidDisplay.toFixed(0)}
               </p>
-              {listing.originalPrice > 0 && (
+              {listing.originalPrice > 0 && currentBidDisplay > 0 && (
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   Harga asal: RM {listing.originalPrice.toFixed(0)} · Jimat {Math.round((1 - currentBidDisplay / listing.originalPrice) * 100)}%
                 </p>
@@ -341,30 +372,116 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Bid form */}
             {!isEnded && !isOwnListing && (
               <form onSubmit={handleBid}>
-                <div className="mb-3">
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                    Tawaran Anda (RM, nombor bulat sahaja)
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>RM</span>
-                      <input
-                        type="number"
-                        min={listing.currentBid + 1}
-                        step={1}
-                        value={bidAmount}
-                        onChange={e => setBidAmount(Number(e.target.value))}
-                        className="w-full pl-10 pr-3 py-3 rounded-lg text-lg font-mono font-bold outline-none focus:ring-2"
-                        style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button type="button" onClick={() => setBidAmount(a => a + 1)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+1</button>
-                      <button type="button" onClick={() => setBidAmount(a => a + 5)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+5</button>
-                      <button type="button" onClick={() => setBidAmount(a => a + 10)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+10</button>
-                    </div>
+                {/* Step 1: Delivery method */}
+                <div className="mb-4">
+                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Langkah 1: Pilih kaedah penghantaran
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => { setDeliveryMethod('pickup'); setBuyerState('') }}
+                      className="px-3 py-2.5 rounded-lg text-xs font-medium text-left transition-all"
+                      style={{
+                        backgroundColor: deliveryMethod === 'pickup' ? 'rgba(20,184,166,0.15)' : 'var(--bg-elevated)',
+                        border: deliveryMethod === 'pickup' ? '1px solid rgba(20,184,166,0.5)' : '1px solid var(--border)',
+                        color: deliveryMethod === 'pickup' ? 'var(--teal)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      Ambil Sendiri (Percuma)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod('delivery')}
+                      className="px-3 py-2.5 rounded-lg text-xs font-medium text-left transition-all"
+                      style={{
+                        backgroundColor: deliveryMethod === 'delivery' ? 'rgba(79,140,255,0.15)' : 'var(--bg-elevated)',
+                        border: deliveryMethod === 'delivery' ? '1px solid rgba(79,140,255,0.5)' : '1px solid var(--border)',
+                        color: deliveryMethod === 'delivery' ? 'var(--blue)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      Penghantaran Courier
+                    </button>
                   </div>
+                  {deliveryMethod === 'delivery' && (
+                    <select
+                      value={buyerState}
+                      onChange={e => setBuyerState(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="">Pilih negeri anda</option>
+                      {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
                 </div>
+
+                {/* Step 2: Bid amount */}
+                {deliveryReady && (
+                  <>
+                    <div className="mb-3">
+                      <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                        Langkah 2: Masukkan tawaran (RM, nombor bulat)
+                      </p>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>RM</span>
+                          <input
+                            type="number"
+                            min={isFirstBid ? listing.startingBid : listing.currentBid + 1}
+                            step={1}
+                            value={bidAmount}
+                            onChange={e => setBidAmount(Number(e.target.value))}
+                            className="w-full pl-10 pr-3 py-3 rounded-lg text-lg font-mono font-bold outline-none focus:ring-2"
+                            style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <button type="button" onClick={() => setBidAmount(a => a + 1)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+1</button>
+                          <button type="button" onClick={() => setBidAmount(a => a + 5)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+5</button>
+                          <button type="button" onClick={() => setBidAmount(a => a + 10)} className="px-3 py-1 rounded-md text-xs" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>+10</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cost breakdown */}
+                    {totalIfWin !== null && (
+                      <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Anggaran kos jika menang:</p>
+                        <div className="flex justify-between">
+                          <span style={{ color: 'var(--text-muted)' }}>Tawaran anda</span>
+                          <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
+                        </div>
+                        {deliveryMethod === 'delivery' && buyerState && (
+                          <>
+                            <div className="flex justify-between">
+                              <span style={{ color: 'var(--text-muted)' }}>Kos penghantaran</span>
+                              <span className="font-mono">RM {deliveryQuote!.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <span className="pl-2">· Kadar asas + markup 30%</span>
+                              <span className="font-mono">+RM {deliveryMarkup.toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
+                        {deliveryMethod === 'pickup' && (
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-muted)' }}>Penghantaran</span>
+                            <span className="font-mono text-green-400">Percuma (ambil sendiri)</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span style={{ color: 'var(--text-muted)' }}>Fi platform (15%)</span>
+                          <span className="font-mono">RM {platformFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
+                          <span>Jumlah bayaran</span>
+                          <span className="font-mono">RM {totalIfWin.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
                 {bidError && (
                   <div className="flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>
@@ -385,10 +502,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 ) : (
                   <button
                     type="submit"
-                    disabled={bidLoading || isLastBidder}
+                    disabled={bidLoading || isLastBidder || !deliveryReady}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : `Bida RM ${bidAmount}`}
+                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : !deliveryReady ? 'Pilih penghantaran dahulu' : `Bida RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -416,7 +533,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
             {/* Fee info */}
             <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-              15% fi platform · Pembayaran escrow selamat
+              Escrow selamat · Pembayaran hanya selepas menang
             </p>
           </div>
 
@@ -425,34 +542,6 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             <div className="flex justify-end">{watchlistButton}</div>
           )}
 
-          {/* Delivery Quote */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Truck className="w-4 h-4" style={{ color: 'var(--blue)' }} />
-              <span className="text-sm font-semibold">Anggaran Penghantaran</span>
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={buyerState}
-                onChange={e => setBuyerState(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              >
-                <option value="">Pilih negeri anda</option>
-                {['Johor','Kedah','Kelantan','Kuala Lumpur','Labuan','Melaka','Negeri Sembilan','Pahang','Perak','Perlis','Pulau Pinang','Putrajaya','Sabah','Sarawak','Selangor','Terengganu'].map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              {deliveryQuote !== null && (
-                <div className="flex items-center px-4 rounded-lg font-bold font-mono" style={{ backgroundColor: 'rgba(79,140,255,0.1)', color: 'var(--blue)', border: '1px solid rgba(79,140,255,0.3)', whiteSpace: 'nowrap' }}>
-                  RM {deliveryQuote}
-                </div>
-              )}
-            </div>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-              Dari: {listing.state} · Anggaran sahaja
-            </p>
-          </div>
 
           {/* Seller info */}
           <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>

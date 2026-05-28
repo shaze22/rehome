@@ -6,11 +6,14 @@ import { z } from 'zod'
 
 const BidSchema = z.object({
   listingId: z.string().min(1),
-  amount: z.number().int('Tawaran mesti nombor bulat').positive(),
+  amount: z.number().int('Tawaran mesti nombor bulat').min(0, 'Tawaran tidak boleh negatif'),
 })
 
-const BID_TIMER_RESET_MINUTES = 3
-const MAX_TIMER_CAP_MINUTES = 10
+// Progressive timer constants (milliseconds)
+const PHASE1_MS = 15 * 60 * 1000   // first bid: 15 min
+const PHASE2_MS = 5 * 60 * 1000    // counter bid #1: +5 min
+const PHASE3_MS = 2.5 * 60 * 1000  // counter bid #2+: +2.5 min
+const HARD_CAP_MS = 30 * 60 * 1000 // maximum 30 min from first bid
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -39,6 +42,7 @@ export async function POST(request: NextRequest) {
     include: {
       bids: { orderBy: { createdAt: 'desc' }, take: 1 },
       seller: { select: { id: true, email: true } },
+      _count: { select: { bids: true } },
     },
   })
 
@@ -50,7 +54,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Lelongan tidak aktif.' }, { status: 400 })
   }
 
-  if (new Date() > listing.endsAt) {
+  const now = new Date()
+
+  // If endsAt is set and already past, auction is over
+  if (listing.endsAt && now > listing.endsAt) {
     return NextResponse.json({ error: 'Lelongan telah tamat.' }, { status: 400 })
   }
 
@@ -62,21 +69,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Anda tidak boleh membida dua kali berturut-turut.' }, { status: 400 })
   }
 
-  const minBid = listing.currentBid > 0 ? listing.currentBid + 1 : Math.max(listing.startingBid, 1)
-  if (amount < minBid) {
-    return NextResponse.json({ error: `Tawaran minimum ialah RM ${minBid}.` }, { status: 400 })
+  const bidCount = listing._count.bids
+
+  // First bid: can be 0 or any amount >= startingBid
+  // Counter bid: must be > currentBid
+  if (bidCount === 0) {
+    if (amount < listing.startingBid) {
+      return NextResponse.json({ error: `Tawaran minimum ialah RM ${listing.startingBid}.` }, { status: 400 })
+    }
+  } else {
+    if (amount <= listing.currentBid) {
+      return NextResponse.json({ error: `Tawaran mesti lebih tinggi daripada RM ${listing.currentBid}.` }, { status: 400 })
+    }
   }
 
-  // Progressive timer reset
-  const now = new Date()
-  const timeLeft = listing.endsAt.getTime() - now.getTime()
-  const capMs = MAX_TIMER_CAP_MINUTES * 60 * 1000
-  let newEndsAt = listing.endsAt
-  if (timeLeft < capMs) {
-    newEndsAt = new Date(now.getTime() + BID_TIMER_RESET_MINUTES * 60 * 1000)
-    if (newEndsAt > new Date(listing.endsAt.getTime() + capMs)) {
-      newEndsAt = listing.endsAt
-    }
+  // Calculate new endsAt based on auction phase
+  let newEndsAt: Date
+  let firstBidAt = listing.firstBidAt
+
+  if (bidCount === 0) {
+    // Phase 1: first bid — start 15-minute countdown
+    firstBidAt = now
+    newEndsAt = new Date(now.getTime() + PHASE1_MS)
+  } else {
+    // firstBidAt must exist at this point
+    const hardCap = new Date(firstBidAt!.getTime() + HARD_CAP_MS)
+    const extensionMs = bidCount === 1 ? PHASE2_MS : PHASE3_MS
+    const extended = new Date(listing.endsAt!.getTime() + extensionMs)
+    newEndsAt = extended > hardCap ? hardCap : extended
   }
 
   const [bid] = await prisma.$transaction([
@@ -86,7 +106,12 @@ export async function POST(request: NextRequest) {
     }),
     prisma.listing.update({
       where: { id: listingId },
-      data: { currentBid: amount, currentBidder: user.id, endsAt: newEndsAt },
+      data: {
+        currentBid: amount,
+        currentBidder: user.id,
+        endsAt: newEndsAt,
+        firstBidAt: firstBidAt,
+      },
     }),
   ])
 
@@ -99,10 +124,11 @@ export async function POST(request: NextRequest) {
       currentBid: amount,
       currentBidder: user.id,
       endsAt: newEndsAt.toISOString(),
+      bidCount: bidCount + 1,
     },
   })
 
-  // Send outbid email to previous highest bidder
+  // Notify previous highest bidder they've been outbid
   if (listing.currentBidder && listing.currentBidder !== user.id) {
     try {
       const prevBidder = await prisma.user.findUnique({
@@ -121,5 +147,6 @@ export async function POST(request: NextRequest) {
     success: true,
     bid: { ...bid, createdAt: bid.createdAt.toISOString() },
     newEndsAt: newEndsAt.toISOString(),
+    phase: bidCount === 0 ? 1 : bidCount === 1 ? 2 : 3,
   })
 }

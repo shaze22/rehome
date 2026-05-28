@@ -10,7 +10,7 @@ interface ListingWithSeller {
   title: string
   currentBid: number
   startingBid: number
-  endsAt: Date | string
+  endsAt: Date | string | null
   photos: string[]
   category: string
   condition: number
@@ -29,13 +29,18 @@ interface Props {
   listing: ListingWithSeller
 }
 
-function useCountdown(endsAt: Date | string) {
+function useCountdown(endsAt: Date | string | null) {
   const [timeLeft, setTimeLeft] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
 
   useEffect(() => {
+    if (!endsAt) {
+      setTimeLeft('Menunggu bidder pertama')
+      setIsUrgent(false)
+      return
+    }
     function update() {
-      const diff = new Date(endsAt).getTime() - Date.now()
+      const diff = new Date(endsAt as Date | string).getTime() - Date.now()
       if (diff <= 0) { setTimeLeft('Tamat'); return }
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
@@ -59,7 +64,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export function ListingCard({ listing }: Props) {
-  const { timeLeft, isUrgent } = useCountdown(listing.endsAt)
+  const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
 
   return (

@@ -43,7 +43,8 @@ model Listing {
   seller           User          @relation(fields: [sellerId], references: [id])
   state            String
   status           ListingStatus @default(ACTIVE)
-  endsAt           DateTime
+  endsAt           DateTime?
+  firstBidAt       DateTime?
   bids             Bid[]
   messages         Message[]
   review           Review?

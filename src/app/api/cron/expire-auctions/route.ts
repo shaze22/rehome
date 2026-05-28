@@ -13,11 +13,12 @@ export async function GET(request: NextRequest) {
 
   const now = new Date()
 
-  // Find all active listings that have passed their end time
+  // Find all active listings that have a timer set and have passed their end time
+  // Listings with endsAt = null are waiting for a first bid and should never expire
   const expiredListings = await prisma.listing.findMany({
     where: {
       status: 'ACTIVE',
-      endsAt: { lt: now },
+      endsAt: { not: null, lt: now },
     },
     include: {
       seller: { select: { email: true, name: true } },
@@ -33,8 +34,8 @@ export async function GET(request: NextRequest) {
 
   for (const listing of expiredListings) {
     try {
-      if (listing.currentBidder && listing.currentBid > 0) {
-        // Has a winner
+      if (listing.currentBidder) {
+        // Has a winner (even RM0 bids are valid wins)
         await prisma.listing.update({
           where: { id: listing.id },
           data: { status: 'ENDED' },

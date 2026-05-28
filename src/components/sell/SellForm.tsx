@@ -16,15 +16,6 @@ const CATEGORIES = [
   { value: 'OTHERS', label: 'Lain-lain' },
 ]
 
-const DURATIONS = [
-  { value: 1, label: '1 Jam' },
-  { value: 3, label: '3 Jam' },
-  { value: 6, label: '6 Jam' },
-  { value: 12, label: '12 Jam' },
-  { value: 24, label: '1 Hari' },
-  { value: 48, label: '2 Hari' },
-  { value: 72, label: '3 Hari' },
-]
 
 interface AISuggestion {
   low: number
@@ -49,7 +40,6 @@ export function SellForm({ userId }: Props) {
   const [originalPrice, setOriginalPrice] = useState('')
   const [startingBid, setStartingBid] = useState('0')
   const [state, setState] = useState('')
-  const [durationHours, setDurationHours] = useState(24)
   const [photos, setPhotos] = useState<string[]>([])
   const [photoUploading, setPhotoUploading] = useState(false)
   const [hasScratch, setHasScratch] = useState(false)
@@ -124,7 +114,7 @@ export function SellForm({ userId }: Props) {
           title, description, category, condition,
           originalPrice: Number(originalPrice),
           startingBid: Number(startingBid),
-          photos, state, durationHours,
+          photos, state,
           hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty,
         }),
       })
@@ -196,26 +186,17 @@ export function SellForm({ userId }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Harga Asal (RM) *</label>
-              <input
-                type="number" required min={0} step={1} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
-                placeholder="0"
-                className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tempoh Lelongan *</label>
-              <select
-                value={durationHours} onChange={e => setDurationHours(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                style={inputStyle}
-              >
-                {DURATIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Harga Asal (RM) *</label>
+            <input
+              type="number" required min={0} step={1} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
+              placeholder="0"
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
+              style={inputStyle}
+            />
+          </div>
+          <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: 'var(--text-secondary)' }}>
+            Listing akan kekal aktif sehingga ada bidder pertama. Selepas bidder pertama, lelongan hanya berlangsung selama 30 minit sahaja.
           </div>
         </div>
       </section>

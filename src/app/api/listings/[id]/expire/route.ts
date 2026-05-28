@@ -12,11 +12,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!listing) return NextResponse.json({ error: 'Tidak dijumpai.' }, { status: 404 })
   if (listing.status !== 'ACTIVE') return NextResponse.json({ already: true, status: listing.status })
-  if (listing.endsAt > new Date()) return NextResponse.json({ active: true })
+  if (!listing.endsAt || listing.endsAt > new Date()) return NextResponse.json({ active: true })
 
   await prisma.listing.update({ where: { id }, data: { status: 'ENDED' } })
 
-  if (listing.currentBidder && listing.currentBid > 0) {
+  if (listing.currentBidder) {
     try {
       const winner = await prisma.user.findUnique({
         where: { id: listing.currentBidder },
