@@ -23,7 +23,8 @@ async function getProfile(id: string) {
         },
       }),
       prisma.listing.count({ where: { sellerId: id, status: 'SOLD' } }),
-      prisma.bid.groupBy({ by: ['listingId'], where: { bidderId: id } }).then(r => r.length),
+      prisma.bid.findMany({ where: { bidderId: id }, select: { listingId: true } })
+        .then(bids => new Set(bids.map(b => b.listingId)).size),
       prisma.listing.aggregate({ where: { sellerId: id, status: 'SOLD' }, _sum: { co2Saved: true } }),
     ])
     return profile ? { ...profile, soldCount, boughtCount, totalCO2: co2Result._sum.co2Saved ?? 0 } : null

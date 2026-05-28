@@ -31,7 +31,14 @@ async function getDashboardData(userId: string) {
         },
       },
       orderBy: { createdAt: 'desc' },
-      distinct: ['listingId'],
+    }).then(bids => {
+      // Deduplicate: keep only the latest bid per listing
+      const seen = new Set<string>()
+      return bids.filter(b => {
+        if (seen.has(b.listingId)) return false
+        seen.add(b.listingId)
+        return true
+      })
     }),
     prisma.transaction.findMany({
       where: { sellerId: userId, status: 'RELEASED' },

@@ -11,7 +11,7 @@ export default async function AdminPage() {
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
   if (dbUser?.role !== 'ADMIN') redirect('/dashboard')
 
-  const [pendingICs, recentListings, stats] = await Promise.all([
+  const [pendingICs, recentListings, totalUsers, activeListings, soldListings, volumeResult] = await Promise.all([
     prisma.user.findMany({
       where: { icStatus: 'PENDING' },
       select: { id: true, name: true, email: true, icPhoto: true, icStatus: true, createdAt: true },
@@ -25,15 +25,12 @@ export default async function AdminPage() {
       orderBy: { createdAt: 'desc' },
       take: 20,
     }),
-    prisma.$transaction([
-      prisma.user.count(),
-      prisma.listing.count({ where: { status: 'ACTIVE' } }),
-      prisma.listing.count({ where: { status: 'SOLD' } }),
-      prisma.transaction.aggregate({ _sum: { amount: true } }),
-    ]),
+    prisma.user.count(),
+    prisma.listing.count({ where: { status: 'ACTIVE' } }),
+    prisma.listing.count({ where: { status: 'SOLD' } }),
+    prisma.transaction.aggregate({ _sum: { amount: true } }),
   ])
 
-  const [totalUsers, activeListings, soldListings, volumeResult] = stats
   const totalVolume = volumeResult._sum.amount ?? 0
 
   return (
