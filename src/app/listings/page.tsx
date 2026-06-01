@@ -47,7 +47,12 @@ async function getListings(params: SearchParams) {
 
   if (params.category) where.category = params.category
   if (params.state) where.state = params.state
-  if (params.q) where.title = { contains: params.q, mode: 'insensitive' }
+  if (params.q) {
+    where.OR = [
+      { title: { contains: params.q, mode: 'insensitive' } },
+      { description: { contains: params.q, mode: 'insensitive' } },
+    ]
+  }
 
   if (mode === 'FLASH' && (params.minPrice || params.maxPrice)) {
     where.currentBid = {}
