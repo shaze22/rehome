@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, Part } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -6,6 +6,54 @@ export async function geminiGenerate(prompt: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
   const result = await model.generateContent(prompt)
   return result.response.text()
+}
+
+async function urlToBase64(url: string): Promise<{ data: string; mimeType: string }> {
+  const res = await fetch(url)
+  const buffer = await res.arrayBuffer()
+  const mimeType = res.headers.get('content-type') ?? 'image/jpeg'
+  const data = Buffer.from(buffer).toString('base64')
+  return { data, mimeType }
+}
+
+export interface PhotoAnalysis {
+  conditionScore: number
+  issues: string[]
+  title: string
+  description: string
+  isPhotoValid: boolean
+  invalidReason?: string
+}
+
+export async function analyzeItemPhotos(photoUrls: string[], category: string): Promise<PhotoAnalysis> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+  const imageParts: Part[] = await Promise.all(
+    photoUrls.slice(0, 3).map(async (url) => {
+      const { data, mimeType } = await urlToBase64(url)
+      return { inlineData: { data, mimeType } } as Part
+    })
+  )
+
+  const prompt = `Kau adalah pakar penilaian barangan terpakai Malaysia. Analisa gambar-gambar ini dan balas JSON sahaja:
+
+{
+  "conditionScore": <integer 1-10, 10=seperti baru>,
+  "issues": ["senarai kerosakan/masalah yang nampak, max 4, dalam BM"],
+  "title": "<tajuk listing ringkas & menarik dalam BM, max 60 chars>",
+  "description": "<penerangan 2-3 ayat tentang keadaan barang dalam BM>",
+  "isPhotoValid": <true jika gambar jelas tunjuk barang, false jika blur/gelap/salah item>,
+  "invalidReason": "<sebab tidak sah, atau null>"
+}
+
+Kategori barang: ${category}
+Panduan skor: 9-10=hampir baru, 7-8=baik, 5-6=sederhana, 3-4=lusuh, 1-2=rosak teruk`
+
+  const result = await model.generateContent([...imageParts, prompt])
+  const text = result.response.text()
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('Invalid AI response')
+  return JSON.parse(match[0]) as PhotoAnalysis
 }
 
 export interface AIPriceSuggestion {
