@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
   AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
-  Package, Home, Truck
+  Package, Home, Truck, Trash2
 } from 'lucide-react'
 import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { OfferModal } from './OfferModal'
@@ -155,6 +155,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [shipConfirming, setShipConfirming] = useState(false)
   const [receiveConfirming, setReceiveConfirming] = useState(false)
   const [trackingInput, setTrackingInput] = useState('')
+  const [cancelling, setCancelling] = useState(false)
 
   interface QuoteResult { cheapest: number; couriers: { courierName: string; serviceName: string; price: number }[]; source: string }
   const [deliveryQuote, setDeliveryQuote] = useState<QuoteResult | null>(null)
@@ -292,6 +293,17 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       }
     } finally {
       setReceiveConfirming(false)
+    }
+  }
+
+  async function handleCancelListing() {
+    if (!confirm('Tarik balik listing ini? Tindakan ini tidak boleh dibatalkan.')) return
+    setCancelling(true)
+    try {
+      const res = await fetch(`/api/listings/${listing.id}`, { method: 'DELETE' })
+      if (res.ok) setListing(prev => ({ ...prev, status: 'CANCELLED' }))
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -589,8 +601,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
             {/* Swap: Owner sees offers panel here (when active) */}
             {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
-              <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-                Ini listing anda. Tawaran dipaparkan di bawah.
+              <div className="space-y-2">
+                <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  Ini listing anda. Tawaran dipaparkan di bawah.
+                </div>
+                {listing._count.bids === 0 && (
+                  <button
+                    onClick={handleCancelListing}
+                    disabled={cancelling}
+                    className="w-full py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    style={{ border: '1px solid rgba(239,68,68,0.4)', color: 'var(--red)' }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {cancelling ? 'Menarik balik...' : 'Tarik Balik Listing'}
+                  </button>
+                )}
               </div>
             )}
 
@@ -783,8 +808,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             )}
 
             {!isSwap && isOwnListing && (
-              <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-                Ini adalah listing anda sendiri.
+              <div className="space-y-2">
+                <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  Ini adalah listing anda sendiri.
+                </div>
+                {listing.status === 'ACTIVE' && listing._count.bids === 0 && (
+                  <button
+                    onClick={handleCancelListing}
+                    disabled={cancelling}
+                    className="w-full py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    style={{ border: '1px solid rgba(239,68,68,0.4)', color: 'var(--red)' }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {cancelling ? 'Menarik balik...' : 'Tarik Balik Listing'}
+                  </button>
+                )}
               </div>
             )}
 
