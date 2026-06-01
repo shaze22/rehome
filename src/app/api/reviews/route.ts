@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Hanya pembeli boleh beri ulasan.' }, { status: 403 })
   if (!tx.deliveryConfirmed) return NextResponse.json({ error: 'Sahkan terima item dahulu.' }, { status: 400 })
 
-  const existing = await prisma.review.findUnique({ where: { listingId } })
+  const existing = await prisma.review.findFirst({ where: { listingId, reviewerId: user.id } })
   if (existing) return NextResponse.json({ error: 'Ulasan sudah diberikan.' }, { status: 400 })
 
   const review = await prisma.review.create({
