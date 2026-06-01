@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       platformFee: platformFee.toString(),
       sellerPayout: sellerPayout.toString(),
     },
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=success`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}`,
   })
 

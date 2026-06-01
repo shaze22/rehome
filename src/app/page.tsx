@@ -1,50 +1,58 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
+import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { WasteCounter } from '@/components/home/WasteCounter'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
-import { ArrowRight, Leaf, Shield, Zap, TrendingUp } from 'lucide-react'
+import { ArrowRight, Leaf, Shield, Zap, TrendingUp, ArrowLeftRight } from 'lucide-react'
 
 async function getFeaturedListings() {
   try {
     return await prisma.listing.findMany({
-      where: { status: 'ACTIVE', endsAt: { gt: new Date() } },
-      include: { seller: { select: { name: true, rehomeScore: true, icVerified: true } } },
+      where: { status: 'ACTIVE', mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+      include: { seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 8,
+      take: 4,
     })
   } catch {
     return []
   }
 }
 
-async function getTotalCO2() {
+async function getFeaturedSwapListings() {
   try {
-    const result = await prisma.listing.aggregate({
-      where: { status: 'SOLD' },
-      _sum: { co2Saved: true },
+    return await prisma.listing.findMany({
+      where: { status: 'ACTIVE', mode: 'SWAP', endsAt: { gt: new Date() } },
+      include: { seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 4,
     })
-    return result._sum.co2Saved ?? 0
   } catch {
-    return 0
+    return []
   }
 }
 
-async function getTotalTransactions() {
+async function getStats() {
   try {
-    return await prisma.listing.count({ where: { status: 'SOLD' } })
+    const [sold, swapDone, co2Result] = await Promise.all([
+      prisma.listing.count({ where: { status: 'SOLD' } }),
+      prisma.swapTransaction.count({ where: { escrowStatus: 'COMPLETED' } }),
+      prisma.listing.aggregate({ where: { status: 'SOLD' }, _sum: { co2Saved: true } }),
+    ])
+    return { sold, swapDone, co2: co2Result._sum.co2Saved ?? 0 }
   } catch {
-    return 0
+    return { sold: 0, swapDone: 0, co2: 0 }
   }
 }
 
 export default async function HomePage() {
-  const [listings, totalCO2, totalTransactions] = await Promise.all([
+  const [flashListings, swapListings, stats] = await Promise.all([
     getFeaturedListings(),
-    getTotalCO2(),
-    getTotalTransactions(),
+    getFeaturedSwapListings(),
+    getStats(),
   ])
+  const { sold: totalTransactions, swapDone, co2: totalCO2 } = stats
 
   return (
     <div>
@@ -87,10 +95,10 @@ export default async function HomePage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
             {[
-              { label: 'Item Dijual', value: `${totalTransactions.toLocaleString()}+`, icon: TrendingUp, color: 'var(--teal)' },
+              { label: 'Item Dijual', value: totalTransactions > 0 ? `${totalTransactions.toLocaleString()}+` : 'Jadi Yang Pertama!', icon: TrendingUp, color: 'var(--teal)' },
               { label: 'CO₂ Diselamatkan', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
-              { label: 'Pembeli Aktif', value: '2,400+', icon: Shield, color: 'var(--blue)' },
-              { label: 'Masa Purata Jual', value: '4.2 jam', icon: Zap, color: 'var(--purple)' },
+              { label: 'Pertukaran Selesai', value: swapDone > 0 ? `${swapDone}+` : 'Mula Tukar!', icon: ArrowLeftRight, color: 'var(--purple)' },
+              { label: 'Masa Purata Jual', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
             ].map(stat => (
               <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
@@ -108,36 +116,64 @@ export default async function HomePage() {
       {/* Category Grid */}
       <CategoryGrid />
 
-      {/* Featured Listings */}
+      {/* Flash Listings */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-2xl font-bold">Lelongan Aktif</h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Item dalam lelongan sekarang</p>
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Zap className="w-5 h-5" style={{ color: 'var(--orange)' }} />
+                Lelong Pantas
+              </h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bida sekarang, menang dalam 30 minit</p>
             </div>
-            <Link
-              href="/listings"
-              className="flex items-center gap-1.5 text-sm font-medium hover:underline"
-              style={{ color: 'var(--teal)' }}
-            >
+            <Link href="/listings?mode=flash" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: 'var(--teal)' }}>
               Lihat Semua <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          {listings.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Leaf className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--teal)' }} />
-              <p className="text-lg font-medium mb-2">Belum ada lelongan aktif</p>
-              <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>Jadilah yang pertama menjual barangan anda!</p>
-              <Link href="/sell" className="px-6 py-2.5 rounded-lg font-medium text-white gradient-teal">
-                Mula Jual Sekarang
-              </Link>
+          {flashListings.length === 0 ? (
+            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="font-medium mb-2">Belum ada lelongan aktif</p>
+              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Mula Jual</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {listings.map(listing => (
+              {flashListings.map(listing => (
                 <ListingCard key={listing.id} listing={listing as any} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Swap Listings */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
+                Tukar Barang
+              </h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Pertukaran barang terpakai tanpa wang</p>
+            </div>
+            <Link href="/listings?mode=swap" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: '#16a34a' }}>
+              Lihat Semua <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {swapListings.length === 0 ? (
+            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
+              <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="font-medium mb-2">Belum ada tawaran tukar barang</p>
+              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>Tawar Barang</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {swapListings.map(listing => (
+                <SwapListingCard key={listing.id} listing={listing as any} />
               ))}
             </div>
           )}

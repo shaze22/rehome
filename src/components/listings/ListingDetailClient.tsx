@@ -3,15 +3,33 @@
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
-  AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight
+  AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
+  Package, Home, Truck
 } from 'lucide-react'
 import { calculateDeliveryQuote, calculateDeliveryMarkup, calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
+
+interface FlashTransaction {
+  id: string
+  listingId: string
+  sellerId: string
+  buyerId: string
+  amount: number
+  platformFee: number
+  sellerPayout: number
+  status: string
+  shippingStatus: string
+  trackingNumber: string | null
+  deliveryConfirmed: boolean
+  pickupMethod: string | null
+  sellerPickupConfirmed: boolean
+}
 
 interface Bid {
   id: string
@@ -127,8 +145,20 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const { timeLeft, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt)
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [offerSubmitted, setOfferSubmitted] = useState(false)
+  const searchParams = useSearchParams()
+  const justPaid = searchParams.get('payment') === 'success'
+
+  const [flashTx, setFlashTx] = useState<FlashTransaction | null>(null)
+  const [txLoading, setTxLoading] = useState(false)
+  const [pickupSaving, setPickupSaving] = useState(false)
+  const [pickupConfirming, setPickupConfirming] = useState(false)
+  const [shipConfirming, setShipConfirming] = useState(false)
+  const [receiveConfirming, setReceiveConfirming] = useState(false)
+  const [trackingInput, setTrackingInput] = useState('')
 
   const isSwap = listing.mode === 'SWAP'
+  const isSeller = currentUserId === listing.seller.id
+  const isBuyer = !!(flashTx && currentUserId === flashTx.buyerId)
 
   // Trigger expiry when timer hits zero (client-side fallback for cron)
   useEffect(() => {
@@ -136,6 +166,18 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       fetch(`/api/listings/${listing.id}/expire`, { method: 'POST' }).catch(() => {})
     }
   }, [isEnded, listing.id, listing.status])
+
+  // Fetch Flash transaction when listing ENDED/SOLD and user is involved
+  useEffect(() => {
+    if (isSwap || !currentUserId) return
+    if (listing.status !== 'ENDED' && listing.status !== 'SOLD') return
+    setTxLoading(true)
+    fetch(`/api/transactions/${listing.id}`)
+      .then(r => r.json())
+      .then(data => { if (data.transaction) setFlashTx(data.transaction) })
+      .catch(() => {})
+      .finally(() => setTxLoading(false))
+  }, [listing.id, listing.status, isSwap, currentUserId])
 
   useEffect(() => {
     const supabase = createClient()
@@ -156,6 +198,62 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
     return () => { supabase.removeChannel(channel) }
   }, [listing.id])
+
+  async function handleSetPickup(method: 'DELIVERY' | 'PICKUP') {
+    setPickupSaving(true)
+    try {
+      const res = await fetch(`/api/transactions/${listing.id}/set-pickup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method }),
+      })
+      if (res.ok) {
+        setFlashTx(prev => prev ? { ...prev, pickupMethod: method } : prev)
+      }
+    } finally {
+      setPickupSaving(false)
+    }
+  }
+
+  async function handlePickupConfirm() {
+    setPickupConfirming(true)
+    try {
+      const res = await fetch(`/api/transactions/${listing.id}/pickup-confirm`, { method: 'POST' })
+      if (res.ok) {
+        setFlashTx(prev => prev ? { ...prev, sellerPickupConfirmed: true, status: 'RELEASED' } : prev)
+      }
+    } finally {
+      setPickupConfirming(false)
+    }
+  }
+
+  async function handleShipItem() {
+    setShipConfirming(true)
+    try {
+      const res = await fetch(`/api/transactions/${listing.id}/ship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumber: trackingInput || undefined }),
+      })
+      if (res.ok) {
+        setFlashTx(prev => prev ? { ...prev, shippingStatus: 'SHIPPED', trackingNumber: trackingInput || null } : prev)
+      }
+    } finally {
+      setShipConfirming(false)
+    }
+  }
+
+  async function handleConfirmReceive() {
+    setReceiveConfirming(true)
+    try {
+      const res = await fetch(`/api/transactions/${listing.id}/confirm`, { method: 'POST' })
+      if (res.ok) {
+        setFlashTx(prev => prev ? { ...prev, deliveryConfirmed: true, status: 'RELEASED' } : prev)
+      }
+    } finally {
+      setReceiveConfirming(false)
+    }
+  }
 
   const isFirstBid = listing._count.bids === 0
   const deliveryQuote = deliveryMethod === 'delivery' && buyerState
@@ -606,7 +704,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {!isSwap && isEnded && (
               <div className="text-center py-4">
                 <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Lelongan Telah Tamat</p>
-                {listing.currentBidder === currentUserId && (
+                {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
                     <p className="text-sm mb-3" style={{ color: 'var(--green)' }}>Tahniah! Anda pemenang!</p>
                     <Link href={`/api/payment/checkout?listingId=${listing.id}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
@@ -683,6 +781,177 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
         <div className="mt-10">
           <OwnerOffersPanel listingId={listing.id} listingTitle={listing.title} swapValueEstimate={listing.swapValueEstimate} />
+        </div>
+      )}
+
+      {/* Flash Transaction Panel */}
+      {!isSwap && flashTx && (
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Package className="w-5 h-5" style={{ color: 'var(--teal)' }} />
+            Status Transaksi
+          </h2>
+
+          {justPaid && !flashTx.pickupMethod && isBuyer && (
+            <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
+              Pembayaran berjaya! Sila pilih kaedah pengambilan barangan di bawah.
+            </div>
+          )}
+
+          {/* Pickup method selection — buyer only, before chosen */}
+          {!flashTx.pickupMethod && isBuyer && (
+            <div className="rounded-xl p-5 mb-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <p className="text-sm font-semibold mb-3">Pilih Kaedah Pengambilan Barangan</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleSetPickup('PICKUP')}
+                  disabled={pickupSaving}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-teal-400"
+                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
+                >
+                  <Home className="w-6 h-6" style={{ color: 'var(--teal)' }} />
+                  <span className="text-sm font-semibold">Ambil Sendiri</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Percuma · Atur terus dengan penjual</span>
+                </button>
+                <button
+                  onClick={() => handleSetPickup('DELIVERY')}
+                  disabled={pickupSaving}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-blue-400"
+                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
+                >
+                  <Truck className="w-6 h-6" style={{ color: 'var(--blue)' }} />
+                  <span className="text-sm font-semibold">Penghantaran Pos</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Penjual akan masukkan tracking</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Pickup mode — PICKUP */}
+          {flashTx.pickupMethod === 'PICKUP' && (
+            <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <Home className="w-4 h-4" style={{ color: 'var(--teal)' }} />
+                <span className="text-sm font-semibold">Ambil Sendiri</span>
+                {flashTx.sellerPickupConfirmed ? (
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Selesai</span>
+                ) : (
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: 'var(--yellow)' }}>Menunggu</span>
+                )}
+              </div>
+              {flashTx.sellerPickupConfirmed ? (
+                <div className="text-center py-4">
+                  <CheckCircle className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--green)' }} />
+                  <p className="font-semibold" style={{ color: 'var(--green)' }}>Transaksi Selesai</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Penjual telah mengesahkan pengambilan. Bayaran dilepaskan.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Hubungi penjual melalui chat untuk atur masa dan tempat pengambilan.
+                    {listing.seller.state && ` Lokasi penjual: ${listing.seller.state}.`}
+                  </p>
+                  {isBuyer && (
+                    <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(251,191,36,0.08)', color: 'var(--yellow)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                      Bayaran akan dilepaskan kepada penjual setelah beliau mengesahkan anda telah mengambil barangan.
+                    </p>
+                  )}
+                  {isSeller && !flashTx.sellerPickupConfirmed && (
+                    <button
+                      onClick={handlePickupConfirm}
+                      disabled={pickupConfirming}
+                      className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50"
+                    >
+                      {pickupConfirming ? 'Mengesahkan...' : 'Sahkan Pembeli Telah Ambil'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Delivery mode — DELIVERY */}
+          {flashTx.pickupMethod === 'DELIVERY' && (
+            <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <Truck className="w-4 h-4" style={{ color: 'var(--blue)' }} />
+                <span className="text-sm font-semibold">Penghantaran Pos</span>
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{
+                  backgroundColor: flashTx.status === 'RELEASED' ? 'rgba(0,217,165,0.1)' :
+                    flashTx.shippingStatus === 'SHIPPED' ? 'rgba(79,140,255,0.1)' : 'rgba(251,191,36,0.1)',
+                  color: flashTx.status === 'RELEASED' ? 'var(--green)' :
+                    flashTx.shippingStatus === 'SHIPPED' ? 'var(--blue)' : 'var(--yellow)',
+                }}>
+                  {flashTx.status === 'RELEASED' ? 'Selesai' :
+                    flashTx.shippingStatus === 'SHIPPED' ? 'Sedang Dihantar' : 'Menunggu Penghantaran'}
+                </span>
+              </div>
+
+              {/* Steps */}
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${flashTx.shippingStatus !== 'PENDING' ? 'bg-green-500' : 'bg-yellow-500'}`} style={{ color: 'white' }}>
+                    {flashTx.shippingStatus !== 'PENDING' ? '✓' : '1'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Penjual Hantar Barang</p>
+                    {flashTx.trackingNumber && (
+                      <p className="text-xs mt-0.5 font-mono px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--teal)' }}>
+                        No. Tracking: {flashTx.trackingNumber}
+                      </p>
+                    )}
+                    {isSeller && flashTx.shippingStatus === 'PENDING' && (
+                      <div className="mt-2 space-y-2">
+                        <input
+                          value={trackingInput}
+                          onChange={e => setTrackingInput(e.target.value)}
+                          placeholder="No. Tracking (pilihan)"
+                          className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                          style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                        />
+                        <button
+                          onClick={handleShipItem}
+                          disabled={shipConfirming}
+                          className="w-full py-2.5 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 text-sm"
+                        >
+                          {shipConfirming ? 'Mengesahkan...' : 'Sahkan Telah Hantar'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${flashTx.deliveryConfirmed ? 'bg-green-500' : 'bg-gray-600'}`} style={{ color: 'white' }}>
+                    {flashTx.deliveryConfirmed ? '✓' : '2'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Pembeli Sahkan Penerimaan</p>
+                    {isBuyer && flashTx.shippingStatus === 'SHIPPED' && !flashTx.deliveryConfirmed && (
+                      <button
+                        onClick={handleConfirmReceive}
+                        disabled={receiveConfirming}
+                        className="mt-2 w-full py-2.5 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 text-sm"
+                      >
+                        {receiveConfirming ? 'Mengesahkan...' : 'Sahkan Barang Diterima'}
+                      </button>
+                    )}
+                    {flashTx.deliveryConfirmed && (
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--green)' }}>Diterima · Bayaran dilepaskan kepada penjual</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* No pickup method yet — seller sees waiting message */}
+          {!flashTx.pickupMethod && isSeller && (
+            <div className="rounded-xl p-5 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <Clock className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Menunggu pembeli memilih kaedah pengambilan...</p>
+            </div>
+          )}
         </div>
       )}
 

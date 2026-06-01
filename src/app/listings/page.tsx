@@ -5,6 +5,8 @@ import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { Search, Zap, ArrowLeftRight } from 'lucide-react'
 import Link from 'next/link'
 
+const PAGE_SIZE = 12
+
 interface SearchParams {
   mode?: string
   category?: string
@@ -13,11 +15,14 @@ interface SearchParams {
   maxPrice?: string
   sort?: string
   q?: string
+  page?: string
 }
 
 async function getListings(params: SearchParams) {
   const now = new Date()
   const mode = params.mode === 'swap' ? 'SWAP' : 'FLASH'
+  const page = Math.max(1, parseInt(params.page ?? '1', 10))
+  const skip = (page - 1) * PAGE_SIZE
 
   const where: Record<string, unknown> = {
     status: 'ACTIVE',
@@ -48,23 +53,29 @@ async function getListings(params: SearchParams) {
     [{ createdAt: 'desc' as const }]
 
   try {
-    return await prisma.listing.findMany({
-      where,
-      include: {
-        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
-        _count: { select: { bids: true, offers: true } },
-      },
-      orderBy,
-    })
+    const [listings, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        include: {
+          seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+          _count: { select: { bids: true, offers: true } },
+        },
+        orderBy,
+        take: PAGE_SIZE,
+        skip,
+      }),
+      prisma.listing.count({ where }),
+    ])
+    return { listings, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
   } catch {
-    return []
+    return { listings: [], total: 0, page: 1, totalPages: 1 }
   }
 }
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const activeMode = params.mode === 'swap' ? 'swap' : 'flash'
-  const listings = await getListings(params)
+  const { listings, total, page, totalPages } = await getListings(params)
 
   const tabBase = 'flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all'
 
@@ -99,7 +110,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           {activeMode === 'flash' ? 'Lelongan Aktif' : 'Tukar Barang'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {listings.length} item {activeMode === 'flash' ? 'dalam lelongan' : 'ditawarkan untuk tukar'} sekarang
+          {total} item {activeMode === 'flash' ? 'dalam lelongan' : 'ditawarkan untuk tukar'} sekarang
         </p>
       </div>
 
@@ -118,13 +129,41 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {listings.map(listing =>
-                activeMode === 'swap'
-                  ? <SwapListingCard key={listing.id} listing={listing as any} />
-                  : <ListingCard key={listing.id} listing={listing as any} />
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {listings.map(listing =>
+                  activeMode === 'swap'
+                    ? <SwapListingCard key={listing.id} listing={listing as any} />
+                    : <ListingCard key={listing.id} listing={listing as any} />
+                )}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  {page > 1 && (
+                    <Link
+                      href={{ query: { ...params, page: page - 1 } }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
+                    >
+                      ← Sebelum
+                    </Link>
+                  )}
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Halaman {page} / {totalPages}
+                  </span>
+                  {page < totalPages && (
+                    <Link
+                      href={{ query: { ...params, page: page + 1 } }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
+                    >
+                      Seterusnya →
+                    </Link>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

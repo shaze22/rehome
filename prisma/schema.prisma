@@ -96,20 +96,22 @@ model Bid {
 }
 
 model Transaction {
-  id                String            @id @default(cuid())
-  listingId         String            @unique
-  sellerId          String
-  buyerId           String
-  amount            Float
-  platformFee       Float
-  sellerPayout      Float
-  stripePaymentId   String?
-  status            TransactionStatus @default(PENDING)
-  shippingStatus    ShippingStatus    @default(PENDING)
-  trackingNumber    String?
-  deliveryConfirmed Boolean           @default(false)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id                    String            @id @default(cuid())
+  listingId             String            @unique
+  sellerId              String
+  buyerId               String
+  amount                Float
+  platformFee           Float
+  sellerPayout          Float
+  stripePaymentId       String?
+  status                TransactionStatus @default(PENDING)
+  shippingStatus        ShippingStatus    @default(PENDING)
+  trackingNumber        String?
+  deliveryConfirmed     Boolean           @default(false)
+  pickupMethod          String?
+  sellerPickupConfirmed Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 }
 
 model Message {
