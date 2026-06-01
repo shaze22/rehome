@@ -6,6 +6,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats'
 import { SellerListingCard } from '@/components/dashboard/SellerListingCard'
 import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
 import { OrderCard } from '@/components/dashboard/OrderCard'
+import { ReferralSection } from '@/components/dashboard/ReferralSection'
 import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag } from 'lucide-react'
 
 async function getDashboardData(userId: string) {
@@ -239,6 +240,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
         </div>
       )}
+
+      {/* Referral Program */}
+      <ReferralSection />
     </div>
   )
 }

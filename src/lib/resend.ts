@@ -211,3 +211,23 @@ export async function sendSwapDisputeEmail(to: string, listingTitle: string, dis
     ),
   })
 }
+
+// ── Referral ──────────────────────────────────────────────────────
+
+export async function sendReferralRewardEmail(to: string, name: string, friendName: string, credit: number) {
+  await getResend().emails.send({
+    from: FROM, to,
+    subject: `🎁 RM${credit} credit masuk — kawan anda baru daftar!`,
+    html: baseTemplate(
+      '🎁 Credit Referral Diterima!',
+      `<p>Tahniah ${name}!</p>
+       <p><strong>${friendName}</strong> baru sahaja mendaftar BALLOUT menggunakan kod referral anda.</p>
+       <p style="background:#1e293b;padding:16px;border-radius:8px;text-align:center">
+         <span style="color:#94a3b8;font-size:12px">Credit ditambah</span><br>
+         <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">+RM${credit}</span>
+       </p>
+       <p style="color:#94a3b8;font-size:13px">Credit boleh digunakan sebagai diskaun semasa bid pada lelongan Flash.</p>`,
+      'Lihat Dashboard', `${BASE}/dashboard`
+    ),
+  })
+}

@@ -21,6 +21,10 @@ model User {
   swapScore       Float?
   successfulSwaps Int         @default(0)
   swapVerified    Boolean     @default(false)
+  referralCode    String?     @unique
+  creditBalance   Float       @default(0)
+  referrals       Referral[]  @relation("ReferrerReferrals")
+  referredBy      Referral?   @relation("ReferredUser")
   listings        Listing[]
   bids            Bid[]
   sentMessages    Message[]   @relation("MessageSender")
@@ -288,4 +292,16 @@ enum OfferStatus {
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referrer    User     @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+  referredId  String   @unique
+  referred    User     @relation("ReferredUser", fields: [referredId], references: [id])
+  rewardGiven Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([referrerId])
 }

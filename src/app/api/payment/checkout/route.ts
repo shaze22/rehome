@@ -16,10 +16,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'listingId diperlukan.' }, { status: 400 })
   }
 
-  const listing = await prisma.listing.findUnique({
-    where: { id: listingId },
-    include: { seller: { select: { email: true, name: true } } },
-  })
+  const [listing, dbUser] = await Promise.all([
+    prisma.listing.findUnique({
+      where: { id: listingId },
+      include: { seller: { select: { email: true, name: true } } },
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { creditBalance: true },
+    }),
+  ])
 
   if (!listing) {
     return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
@@ -29,30 +35,40 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Anda bukan pemenang lelongan ini.' }, { status: 403 })
   }
 
-  const { platformFee, sellerPayout } = calculateFees(listing.currentBid)
+  const creditAvailable = dbUser?.creditBalance ?? 0
+  // Apply credit — max discount is (bidAmount - 1) to keep Stripe minimum of RM1
+  const creditToUse = Math.min(creditAvailable, Math.max(0, listing.currentBid - 1))
+  const chargeAmount = listing.currentBid - creditToUse
+
+  const { platformFee, sellerPayout } = calculateFees(chargeAmount)
+
+  const lineItems = [
+    {
+      price_data: {
+        currency: 'myr',
+        product_data: {
+          name: listing.title,
+          description: creditToUse > 0
+            ? `Lelongan BALLOUT — ${listing.category} (RM${creditToUse.toFixed(0)} credit ditolak)`
+            : `Lelongan BALLOUT — ${listing.category}`,
+        },
+        unit_amount: Math.round(chargeAmount * 100),
+      },
+      quantity: 1,
+    },
+  ]
 
   const session = await getStripe().checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card'],
-    line_items: [
-      {
-        price_data: {
-          currency: 'myr',
-          product_data: {
-            name: listing.title,
-            description: `Lelongan BALLOUT — ${listing.category}`,
-          },
-          unit_amount: Math.round(listing.currentBid * 100),
-        },
-        quantity: 1,
-      },
-    ],
+    line_items: lineItems,
     metadata: {
       listingId,
       buyerId: user.id,
       sellerId: listing.sellerId,
       platformFee: platformFee.toString(),
       sellerPayout: sellerPayout.toString(),
+      creditUsed: creditToUse.toString(),
     },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=success`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}`,

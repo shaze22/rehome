@@ -98,6 +98,27 @@ const CATEGORY_LABELS: Record<string, string> = {
   BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
 }
 
+function CreditCheckoutButton({ listingId, bidAmount }: { listingId: string; bidAmount: number }) {
+  const [credit, setCredit] = useState(0)
+  useEffect(() => {
+    fetch('/api/referral').then(r => r.json()).then(d => setCredit(d.creditBalance ?? 0)).catch(() => {})
+  }, [])
+  const discount = Math.min(credit, Math.max(0, bidAmount - 1))
+  const chargeAmount = bidAmount - discount
+  return (
+    <div>
+      {discount > 0 && (
+        <div className="mb-2 text-xs text-center rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(20,184,166,0.08)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.2)' }}>
+          💳 RM{discount.toFixed(0)} credit akan ditolak — bayar RM{chargeAmount.toFixed(0)} sahaja
+        </div>
+      )}
+      <Link href={`/api/payment/checkout?listingId=${listingId}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
+        Buat Pembayaran {discount > 0 ? `— RM${chargeAmount.toFixed(0)}` : ''}
+      </Link>
+    </div>
+  )
+}
+
 function useCountdown(endsAt: string | null) {
   const [timeLeft, setTimeLeft] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
@@ -821,9 +842,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
                     <p className="text-sm mb-3" style={{ color: 'var(--green)' }}>Tahniah! Anda pemenang!</p>
-                    <Link href={`/api/payment/checkout?listingId=${listing.id}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
-                      Buat Pembayaran
-                    </Link>
+                    <CreditCheckoutButton listingId={listing.id} bidAmount={listing.currentBid} />
                   </div>
                 )}
               </div>

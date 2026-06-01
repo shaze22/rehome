@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
-    const { listingId, buyerId, sellerId, platformFee, sellerPayout } = session.metadata as Record<string, string>
+    const { listingId, buyerId, sellerId, platformFee, sellerPayout, creditUsed } = session.metadata as Record<string, string>
 
     // Validate metadata against DB to prevent tampering
     const [listing, existingTx] = await Promise.all([
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     // Idempotency: ignore duplicate webhook
     if (existingTx) return NextResponse.json({ received: true })
 
+    const creditAmount = parseFloat(creditUsed ?? '0')
     await prisma.$transaction([
       prisma.listing.update({
         where: { id: listingId },
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
           status: 'ESCROWED',
         },
       }),
+      ...(creditAmount > 0
+        ? [prisma.user.update({ where: { id: buyerId }, data: { creditBalance: { decrement: creditAmount } } })]
+        : []),
     ])
 
     // Notify seller
