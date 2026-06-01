@@ -1,6 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { Leaf, TreePine, Droplets, Recycle, TrendingUp, Users, Award } from 'lucide-react'
 import { BADGES } from '@/lib/badges'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Impak Alam',
+  description: 'Lihat impak nyata BALLOUT — CO₂ diselamatkan, pokok yang bersamaan, dan air yang dijimatkan daripada transaksi barangan terpakai di Malaysia.',
+}
 
 async function getImpactStats() {
   try {
