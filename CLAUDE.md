@@ -251,6 +251,8 @@ EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dari port
 LALAMOVE_API_KEY=            ← dari developers.lalamove.com
 LALAMOVE_API_SECRET=
 LALAMOVE_SANDBOX=true        ← tukar ke false untuk production
+UPSTASH_REDIS_REST_URL=      ← dari console.upstash.com (Redis database → REST API)
+UPSTASH_REDIS_REST_TOKEN=    ← dari console.upstash.com (Redis database → REST API)
 ```
 
 ## Deployment
@@ -357,9 +359,24 @@ Buyer pilih "Penghantaran Pos"
 ### Admin: Beta Users Table
 - `/admin` kini ada table semua users — email, role, skor, listing count, IC, tarikh daftar
 
+## Security Fixes (2026-06-01)
+- ✅ Admin routes sudah ada auth check (role === 'ADMIN')
+- ✅ Stripe webhook: validate metadata vs DB + idempotency check
+- ✅ Upload foto: had saiz 10MB + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
+- ✅ Rate limit: Upstash Redis sliding window (ganti in-memory yang tidak efektif di Vercel)
+- ⚠️  Supabase RLS: perlu verify manual di Supabase dashboard untuk semua tables
+
+## Cron Schedule (vercel.json)
+| Route | Schedule | Fungsi |
+|-------|----------|--------|
+| `/api/cron/expire-auctions` | Setiap minit | Expire Flash auctions |
+| `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
+
 ## Pending (Belum Selesai)
+- Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` di Vercel (dari console.upstash.com)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
 - Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
 - Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel (daftar di sentry.io — free tier)
 - Enable Vercel Analytics di dashboard Vercel
+- Verify Supabase RLS policies untuk semua tables di dashboard
 - Beta testing 100 users → LAUNCH 🚀
