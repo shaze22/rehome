@@ -247,7 +247,10 @@ GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
-EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dengan key dari portal.easyparcel.com
+EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dari portal.easyparcel.com
+LALAMOVE_API_KEY=            ← dari developers.lalamove.com
+LALAMOVE_API_SECRET=
+LALAMOVE_SANDBOX=true        ← tukar ke false untuk production
 ```
 
 ## Deployment
@@ -295,8 +298,16 @@ Buyer pilih "Penghantaran Pos"
 - Delivery-quote API guna EasyParcel (5s timeout), return `couriers[]` + `cheapest`
 - ListingDetailClient: fetch API (400ms debounce), expandable courier list
 - SellForm: weight slider 0.1–30kg
-- **Aktifkan**: set `EASYPARCEL_API_KEY` di Vercel env vars (portal.easyparcel.com)
+- **Aktifkan EasyParcel**: set `EASYPARCEL_API_KEY` di Vercel (portal.easyparcel.com)
 - Tanpa key → fallback hardcoded (masih berfungsi)
+
+## Lalamove Integration (commit f6a8cdd, 2026-06-01)
+- `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→koordinat, serviceType by weight
+  - < 3kg → MOTORCYCLE · < 25kg → CAR · ≥ 25kg → VAN
+- EasyParcel + Lalamove run **serentak** (Promise.all), hasil digabung sort cheapest first
+- `DeliveryQuoteResult.source` kini boleh jadi `'easyparcel' | 'lalamove' | 'fallback'`
+- **Aktifkan**: set `LALAMOVE_API_KEY` + `LALAMOVE_API_SECRET` di Vercel (developers.lalamove.com)
+- `LALAMOVE_SANDBOX=true` untuk test (default), tukar ke `false` untuk production
 
 ## Pending (Belum Selesai)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
