@@ -372,9 +372,7 @@ Buyer pilih "Penghantaran Pos"
 | `/api/cron/expire-auctions` | 0 0 * * * (daily) | Expire Flash auctions |
 | `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
 
-## Beta Bug Fixes (commit c5800bf, 2026-06-01)
-
-3 bugs dari beta test telah difix:
+## Beta Bug Fixes Round 1 (commit c5800bf, 2026-06-01)
 
 | Bug | Fix |
 |-----|-----|
@@ -383,8 +381,37 @@ Buyer pilih "Penghantaran Pos"
 | Profile not-found tiada navigasi | `profile/[id]/page.tsx`: inline not-found UI + "Balik ke Laman Utama" |
 | `SellerListingCard` crash bila Flash `endsAt=null` | `SellerListingCard.tsx`: `endsAt: null` → tunjuk "Menunggu bidder" |
 
+## Beta Bug Fixes Round 2 (commit 703ea8e, 2026-06-01)
+
+Missing page metadata — semua pages kini ada `<title>` yang betul:
+
+| Page | Title sebelum | Title sekarang |
+|------|--------------|----------------|
+| `/impact` | BALLOUT (default) | Impak Alam \| BALLOUT |
+| `/auth/login` | BALLOUT (default) | Log Masuk \| BALLOUT |
+| `/auth/register` | BALLOUT (default) | Daftar Akaun \| BALLOUT |
+
+- `impact/page.tsx`: tambah `export const metadata`
+- `auth/login/layout.tsx`: layout baru (client component tak boleh export metadata terus)
+- `auth/register/layout.tsx`: layout baru
+
+## Beta Test Full Report (2026-06-01)
+
+| Page | Status |
+|------|--------|
+| Home, Flash feed, Swap feed | ✅ |
+| Flash/Swap search + filters | ✅ |
+| Flash/Swap listing detail | ✅ |
+| Profile (valid + invalid) | ✅ |
+| Impact, Login, Register | ✅ |
+| Protected routes redirect | ✅ |
+| Mobile 390px | ✅ |
+| robots.txt, sitemap.xml | ✅ |
+| Pagination | ✅ |
+| Console errors | ✅ 0 errors |
+
 ## Last Deployed
-2026-06-01, commit `c5800bf` → beta bug fixes
+2026-06-01, commit `703ea8e` → metadata fixes (impact, login, register)
 Live: https://rehome-eta.vercel.app
 
 ## Pending (Belum Selesai)
