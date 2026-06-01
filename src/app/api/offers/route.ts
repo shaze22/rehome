@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   const listing = await prisma.listing.findUnique({
     where: { id: data.listingId },
-    select: { id: true, sellerId: true, mode: true, status: true, endsAt: true, swapAcceptCash: true },
+    select: { id: true, title: true, sellerId: true, mode: true, status: true, endsAt: true, swapAcceptCash: true },
   })
 
   if (!listing) return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
@@ -92,12 +92,13 @@ export async function POST(request: NextRequest) {
     include: { bidder: { select: { name: true, rehomeScore: true, swapScore: true, successfulSwaps: true } } },
   })
 
-  // Email seller — fire-and-forget
-  prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true, name: true } }).then(seller => {
+  // Email seller — awaited so it doesn't drop on Vercel serverless shutdown
+  try {
+    const seller = await prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true, name: true } })
     if (seller?.email) {
-      sendSwapOfferReceivedEmail(seller.email, seller.name ?? 'Pemilik', listing.id ?? data.listingId, data.offerType, data.listingId).catch(() => {})
+      await sendSwapOfferReceivedEmail(seller.email, seller.name ?? 'Pemilik', listing.title ?? data.listingId, data.offerType, data.listingId)
     }
-  })
+  } catch {}
 
   return NextResponse.json({ offer }, { status: 201 })
 }

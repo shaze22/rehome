@@ -8,12 +8,24 @@ export async function geminiGenerate(prompt: string): Promise<string> {
   return result.response.text()
 }
 
-async function urlToBase64(url: string): Promise<{ data: string; mimeType: string }> {
-  const res = await fetch(url)
-  const buffer = await res.arrayBuffer()
-  const mimeType = res.headers.get('content-type') ?? 'image/jpeg'
-  const data = Buffer.from(buffer).toString('base64')
-  return { data, mimeType }
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024 // 10MB
+const FETCH_TIMEOUT_MS = 8000
+
+async function urlToBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    if (!res.ok) return null
+    const buffer = await res.arrayBuffer()
+    if (buffer.byteLength > MAX_IMAGE_BYTES) return null
+    const mimeType = res.headers.get('content-type') ?? 'image/jpeg'
+    return { data: Buffer.from(buffer).toString('base64'), mimeType }
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export interface PhotoAnalysis {
@@ -28,12 +40,14 @@ export interface PhotoAnalysis {
 export async function analyzeItemPhotos(photoUrls: string[], category: string): Promise<PhotoAnalysis> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-  const imageParts: Part[] = await Promise.all(
-    photoUrls.slice(0, 3).map(async (url) => {
-      const { data, mimeType } = await urlToBase64(url)
-      return { inlineData: { data, mimeType } } as Part
-    })
-  )
+  const imageResults = await Promise.all(photoUrls.slice(0, 3).map(urlToBase64))
+  const imageParts: Part[] = imageResults
+    .filter((r): r is { data: string; mimeType: string } => r !== null)
+    .map(({ data, mimeType }) => ({ inlineData: { data, mimeType } } as Part))
+
+  if (imageParts.length === 0) {
+    return { conditionScore: 5, issues: [], title: '', description: '', isPhotoValid: false, invalidReason: 'Gambar tidak dapat dimuatkan.' }
+  }
 
   const prompt = `Kau adalah pakar penilaian barangan terpakai Malaysia. Analisa gambar-gambar ini dan balas JSON sahaja:
 
