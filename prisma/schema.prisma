@@ -94,6 +94,7 @@ model Bid {
 
   @@index([listingId])
   @@index([bidderId])
+  @@index([listingId, createdAt])
 }
 
 model Transaction {
@@ -181,6 +182,8 @@ model Offer {
   @@index([listingId])
   @@index([bidderId])
   @@index([status])
+  @@index([expiresAt])
+  @@index([listingId, status])
 }
 
 enum Role {
@@ -255,6 +258,8 @@ model SwapTransaction {
 
   @@index([sellerId])
   @@index([buyerId])
+  @@index([escrowStatus])
+  @@index([createdAt])
 }
 
 enum EscrowStatus {

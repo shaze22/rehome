@@ -43,7 +43,8 @@ export default async function AdminPage() {
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, createdAt: true },
     }),
     prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { successfulSwaps: 'desc' },
+      take: 50,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, swapScore: true, icVerified: true, createdAt: true, _count: { select: { listings: true } } },
     }),
     prisma.listing.groupBy({
@@ -61,6 +62,7 @@ export default async function AdminPage() {
         buyer: { select: { id: true, name: true, email: true } },
       },
       orderBy: { updatedAt: 'desc' },
+      take: 50,
     }),
   ])
 
