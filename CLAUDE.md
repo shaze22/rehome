@@ -232,6 +232,7 @@ proxy.ts              — Auth middleware (bukan middleware.ts!)
 ## Migrations
 - `20260601032951_add_swap_bid_feature` — Offer model, swap fields, ListingMode/OfferType/OfferStatus
 - `20260601041150_add_swap_transaction_escrow` — SwapTransaction, EscrowStatus
+- `20260601044752_add_pickup_method` — Transaction.pickupMethod + sellerPickupConfirmed
 
 ## Environment Variables
 ```
@@ -253,10 +254,42 @@ vercel deploy --prod --force --scope syedshazni-7682s-projects
 ```
 Live: https://rehome-eta.vercel.app
 
-## Pending (Phase 5 — Beta + Polish)
-- Beta testing 100 users
+## Phase 5 — Selesai Separa (commit 1add65b, 2026-06-01)
+
+### Flash: Self-Pickup Flow (BARU)
+Selepas Stripe payment berjaya, pembeli redirect ke listing page (`?payment=success`).
+
+**API baru:**
+- `GET  /api/transactions/[listingId]` — fetch flash tx (buyer/seller sahaja)
+- `POST /api/transactions/[listingId]/set-pickup` — `{ method: 'DELIVERY'|'PICKUP' }` — buyer pilih kaedah
+- `POST /api/transactions/[listingId]/pickup-confirm` — seller sahkan ambil sendiri → status RELEASED
+
+**Flow PICKUP:**
+```
+Buyer bayar → redirect ke listing?payment=success
+→ buyer klik "Ambil Sendiri"
+→ atur melalui chat → seller klik "Sahkan Pembeli Telah Ambil"
+→ Transaction.sellerPickupConfirmed=true, status=RELEASED, rehomeScore+5
+```
+
+**Flow DELIVERY:**
+```
+Buyer pilih "Penghantaran Pos"
+→ seller masuk tracking → POST /api/transactions/[id]/ship
+→ buyer klik "Sahkan Terima" → POST /api/transactions/[id]/confirm
+→ status=RELEASED
+```
+
+### Listings Pagination
+- 12 item/halaman, navigasi Sebelum/Seterusnya
+- `?page=N` query param
+
+### Home Page
+- Dual section: Lelong Pantas ⚡ + Tukar Barang 🔄
+- Stats live: sold, swapDone, CO₂
+
+## Pending (Belum Selesai)
 - Real EasyParcel API (sekarang hardcoded base rates)
-- Flash: winner email via cron (cron ada, email belum)
-- Flash: self-pickup arrangement flow selepas menang
-- Performance optimization (swap feed <2s target)
+- SEO meta/OG tags
+- Beta testing 100 users
 - Full public launch
