@@ -57,7 +57,7 @@ async function getListing(id: string) {
           orderBy: { createdAt: 'desc' },
           take: 20,
         },
-        review: { select: { rating: true, comment: true, createdAt: true } },
+        reviews: { select: { rating: true, comment: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 10 },
         _count: { select: { bids: true, offers: true } },
       },
     })

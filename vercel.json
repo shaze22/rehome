@@ -2,7 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/expire-auctions",
-      "schedule": "0 0 * * *"
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/auto-release-swaps",
+      "schedule": "0 18 * * *"
     }
   ]
 }

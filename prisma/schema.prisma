@@ -60,7 +60,7 @@ model Listing {
   swapValueEstimate  Float?
   bids               Bid[]
   messages           Message[]
-  review             Review?
+  reviews            Review[]
   watchlist          Watchlist[]
   offers             Offer[]
   swapTransaction    SwapTransaction?
@@ -129,7 +129,7 @@ model Message {
 
 model Review {
   id         String   @id @default(cuid())
-  listingId  String   @unique
+  listingId  String
   listing    Listing  @relation(fields: [listingId], references: [id])
   reviewerId String
   reviewer   User     @relation("ReviewAuthor", fields: [reviewerId], references: [id])
@@ -139,6 +139,7 @@ model Review {
   comment    String?
   createdAt  DateTime @default(now())
 
+  @@unique([listingId, reviewerId])
   @@index([sellerId])
 }
 
