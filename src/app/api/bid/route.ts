@@ -19,14 +19,12 @@ const HARD_CAP_MS = 30 * 60 * 1000 // maximum 30 min from first bid
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { allowed } = rateLimit(`bid:${user.id}`, 30, 5 * 60 * 1000)
-    if (!allowed) return NextResponse.json({ error: 'Terlalu banyak tawaran. Cuba lagi sebentar.' }, { status: 429 })
-  }
-
   if (!user) {
     return NextResponse.json({ error: 'Sila log masuk untuk membida.' }, { status: 401 })
   }
+
+  const { allowed } = await rateLimit('bid', user.id)
+  if (!allowed) return NextResponse.json({ error: 'Terlalu banyak tawaran. Cuba lagi sebentar.' }, { status: 429 })
 
   let body: unknown
   try {

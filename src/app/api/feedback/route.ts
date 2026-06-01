@@ -12,7 +12,7 @@ const Schema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
-  const { allowed } = rateLimit(`feedback:${ip}`, 5, 60 * 60 * 1000)
+  const { allowed } = await rateLimit('feedback', ip)
   if (!allowed) return NextResponse.json({ error: 'Terlalu banyak maklum balas. Cuba lagi sejam lagi.' }, { status: 429 })
 
   const supabase = await createClient()

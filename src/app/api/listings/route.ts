@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
   }
-  const { allowed } = rateLimit(`listing:${user.id}`, 5, 60 * 60 * 1000)
+  const { allowed } = await rateLimit('listing', user.id)
   if (!allowed) return NextResponse.json({ error: 'Had listing dicapai. Cuba lagi sejam lagi.' }, { status: 429 })
 
   let body: unknown

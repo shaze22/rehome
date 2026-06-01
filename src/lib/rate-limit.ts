@@ -1,33 +1,46 @@
-interface RateLimitRecord {
-  count: number
-  resetAt: number
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+let redis: Redis | null = null
+function getRedis(): Redis {
+  if (!redis) redis = Redis.fromEnv()
+  return redis
 }
 
-const store = new Map<string, RateLimitRecord>()
+function makeRatelimiter(max: number, window: `${number} ${'ms' | 's' | 'm' | 'h' | 'd'}`, prefix: string) {
+  return new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(max, window),
+    prefix,
+  })
+}
 
-// Clean up expired entries every 5 minutes
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, record] of store) {
-    if (now > record.resetAt) store.delete(key)
+const limiters = {
+  bid:      () => makeRatelimiter(30, '5 m',  'rl:bid'),
+  offer:    () => makeRatelimiter(10, '1 h',  'rl:offer'),
+  listing:  () => makeRatelimiter(5,  '1 h',  'rl:listing'),
+  feedback: () => makeRatelimiter(5,  '1 h',  'rl:feedback'),
+} as const
+
+type LimiterKey = keyof typeof limiters
+const cache = new Map<LimiterKey, Ratelimit>()
+
+function getLimiter(key: LimiterKey): Ratelimit {
+  if (!cache.has(key)) cache.set(key, limiters[key]())
+  return cache.get(key)!
+}
+
+export async function rateLimit(
+  type: LimiterKey,
+  identifier: string,
+): Promise<{ allowed: boolean; remaining: number }> {
+  try {
+    const { success, remaining } = await getLimiter(type).limit(identifier)
+    return { allowed: success, remaining }
+  } catch {
+    // If Redis is unreachable, fail open (don't block users)
+    return { allowed: true, remaining: 0 }
   }
-}, 5 * 60 * 1000)
-
-export function rateLimit(key: string, maxRequests: number, windowMs: number): { allowed: boolean; remaining: number } {
-  const now = Date.now()
-  const record = store.get(key)
-
-  if (!record || now > record.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs })
-    return { allowed: true, remaining: maxRequests - 1 }
-  }
-
-  if (record.count >= maxRequests) {
-    return { allowed: false, remaining: 0 }
-  }
-
-  record.count++
-  return { allowed: true, remaining: maxRequests - record.count }
 }
 
 export function getClientIp(request: Request): string {

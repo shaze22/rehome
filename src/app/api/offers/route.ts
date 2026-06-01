@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
-  const { allowed } = rateLimit(`offer:${user.id}`, 10, 60 * 60 * 1000)
+  const { allowed } = await rateLimit('offer', user.id)
   if (!allowed) return NextResponse.json({ error: 'Terlalu banyak tawaran. Cuba lagi sejam lagi.' }, { status: 429 })
 
   let body: unknown
