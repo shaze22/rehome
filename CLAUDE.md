@@ -233,6 +233,7 @@ proxy.ts              — Auth middleware (bukan middleware.ts!)
 - `20260601032951_add_swap_bid_feature` — Offer model, swap fields, ListingMode/OfferType/OfferStatus
 - `20260601041150_add_swap_transaction_escrow` — SwapTransaction, EscrowStatus
 - `20260601044752_add_pickup_method` — Transaction.pickupMethod + sellerPickupConfirmed
+- `20260601052748_add_listing_weight` — Listing.weightKg (default 1kg, untuk EasyParcel quote)
 
 ## Environment Variables
 ```
@@ -246,6 +247,7 @@ GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
+EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dengan key dari portal.easyparcel.com
 ```
 
 ## Deployment
@@ -288,8 +290,16 @@ Buyer pilih "Penghantaran Pos"
 - Dual section: Lelong Pantas ⚡ + Tukar Barang 🔄
 - Stats live: sold, swapDone, CO₂
 
+## EasyParcel Integration (commit 3f2602b, 2026-06-01)
+- `src/lib/easyparcel.ts` — state → postcode mapping, POST EasyParcel API, fallback hardcoded
+- Delivery-quote API guna EasyParcel (5s timeout), return `couriers[]` + `cheapest`
+- ListingDetailClient: fetch API (400ms debounce), expandable courier list
+- SellForm: weight slider 0.1–30kg
+- **Aktifkan**: set `EASYPARCEL_API_KEY` di Vercel env vars (portal.easyparcel.com)
+- Tanpa key → fallback hardcoded (masih berfungsi)
+
 ## Pending (Belum Selesai)
-- Real EasyParcel API (sekarang hardcoded base rates)
+- Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
 - SEO meta/OG tags
 - Beta testing 100 users
 - Full public launch
