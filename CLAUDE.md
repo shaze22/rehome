@@ -430,7 +430,26 @@ Buyer selects "Delivery"
 - ✅ Stripe webhook: validate metadata vs DB + idempotency check
 - ✅ Photo upload: 10MB size limit + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
 - ✅ Rate limit: Upstash Redis sliding window
-- ⚠️  Supabase RLS: needs manual verification in Supabase dashboard
+- ✅ Supabase RLS: enabled on ALL 12 tables with policies (migration: `enable_rls_all_tables`, 2026-06-01)
+
+## Supabase RLS Summary
+Prisma (DATABASE_URL) bypasses RLS as postgres superuser — all app writes are safe.
+RLS protects direct Supabase REST/client API access (anon key vectors).
+
+| Table | RLS | Key Rules |
+|-------|-----|-----------|
+| `User` | ✅ | authenticated can read any; update own only |
+| `Listing` | ✅ | anon+auth can read ACTIVE; seller: read/update/delete own |
+| `Bid` | ✅ | public read; authenticated create as own bidder |
+| `Offer` | ✅ | seller+bidder read; authenticated create as own |
+| `SwapTransaction` | ✅ | seller+buyer read+update only |
+| `Transaction` | ✅ | seller+buyer read only |
+| `Watchlist` | ✅ | own CRUD only |
+| `Message` | ✅ | seller+sender read; authenticated create as sender |
+| `Review` | ✅ | public read; authenticated create as own reviewer |
+| `Referral` | ✅ | referrer+referred read own |
+| `PushSubscription` | ✅ | own CRUD only |
+| `_prisma_migrations` | ✅ | no client access (0 policies) |
 
 ## All Routes
 | Route | Purpose |
@@ -444,17 +463,26 @@ Buyer selects "Delivery"
 | `/api/pwa-icon` | Edge: generate PWA icon PNG |
 | `/api/admin/feature-listing` | Toggle isFeatured (admin) |
 
+## Sentry Error Tracking
+- `@sentry/nextjs` v10.55.0 installed
+- `sentry.client.config.ts` — client init (NEXT_PUBLIC_SENTRY_DSN)
+- `sentry.server.config.ts` — server init
+- `sentry.edge.config.ts` — edge runtime init
+- `src/instrumentation.ts` — Next.js App Router hook: loads server/edge Sentry on `register()`
+- **Requires:** `NEXT_PUBLIC_SENTRY_DSN` env var in Vercel (get from sentry.io → New Project → Next.js)
+
 ## Last Deployed
 2026-06-01, commit `71b2e30` — Rebrand KASSIM + English UI + next-intl i18n foundation
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
-- Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com
+- ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
+- ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
+- ✅ Sentry: `instrumentation.ts` added; awaiting DSN from sentry.io
+- Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel → sentry.io → New Project → Next.js → DSN
+- Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com (optional, fallback works)
 - Lalamove API key needs activation by Lalamove (502 error)
-- Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel → sentry.io free tier
 - Enable Vercel Analytics in Vercel dashboard
-- Verify Supabase RLS policies for all tables
-- Mark listings as featured via `/admin` to activate "Friday Mega Auction"
 - Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
 - Beta testing 100 users → LAUNCH 🚀
