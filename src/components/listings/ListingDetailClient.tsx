@@ -217,6 +217,28 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
     return () => { supabase.removeChannel(channel) }
   }, [listing.id])
 
+  // Real-time swap offer notifications (seller sees new offers instantly)
+  useEffect(() => {
+    if (!isSwap || !isSeller) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`offers:${listing.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'offers',
+        filter: `listingId=eq.${listing.id}`,
+      }, () => {
+        setListing(prev => ({
+          ...prev,
+          _count: { bids: prev._count.bids + 1 },
+        }))
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [listing.id, isSwap, isSeller])
+
   async function handleSetPickup(method: 'DELIVERY' | 'PICKUP') {
     setPickupSaving(true)
     try {
