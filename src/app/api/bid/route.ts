@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { sendOutbidEmail } from '@/lib/resend'
+import { sendOutbidEmail, sendWatchlistAlertEmail } from '@/lib/resend'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
@@ -131,19 +131,38 @@ export async function POST(request: NextRequest) {
     },
   })
 
+  const excludeFromWatchlist = new Set([user.id])
+
   // Notify previous highest bidder they've been outbid
   if (listing.currentBidder && listing.currentBidder !== user.id) {
+    excludeFromWatchlist.add(listing.currentBidder)
     try {
       const prevBidder = await prisma.user.findUnique({
         where: { id: listing.currentBidder },
         select: { email: true, name: true },
       })
       if (prevBidder?.email) {
-        await sendOutbidEmail(prevBidder.email, prevBidder.name ?? 'Pengguna', listing.title, amount)
+        await sendOutbidEmail(prevBidder.email, prevBidder.name ?? 'Pengguna', listing.title, amount, listingId, newEndsAt)
       }
     } catch {
       // Email failure shouldn't fail the bid
     }
+  }
+
+  // Notify watchlist users (exclude new bidder + outbid user)
+  try {
+    const watchers = await prisma.watchlist.findMany({
+      where: { listingId, userId: { notIn: [...excludeFromWatchlist] } },
+      include: { user: { select: { email: true } } },
+    })
+    const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
+    await Promise.all(
+      watchers
+        .filter(w => w.user.email)
+        .map(w => sendWatchlistAlertEmail(w.user.email!, listing.title, amount, `${BASE}/listings/${listingId}`))
+    )
+  } catch {
+    // Email failure shouldn't fail the bid
   }
 
   return NextResponse.json({

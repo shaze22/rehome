@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendAuctionWonEmail } from '@/lib/resend'
+import { sendAuctionWonEmail, sendAuctionExpiredSellerEmail } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,21 +41,22 @@ export async function GET(request: NextRequest) {
           data: { status: 'ENDED' },
         })
 
-        // Notify winner
+        // Notify winner + seller
         try {
-          const winner = await prisma.user.findUnique({
-            where: { id: listing.currentBidder },
-            select: { email: true, name: true },
-          })
-          if (winner?.email) {
-            await sendAuctionWonEmail(
-              winner.email,
-              winner.name ?? 'Penawar',
-              listing.title,
-              listing.currentBid,
-              listing.id,
-            )
-          }
+          const [winner] = await Promise.all([
+            prisma.user.findUnique({
+              where: { id: listing.currentBidder },
+              select: { email: true, name: true },
+            }),
+          ])
+          await Promise.all([
+            winner?.email
+              ? sendAuctionWonEmail(winner.email, winner.name ?? 'Penawar', listing.title, listing.currentBid, listing.id)
+              : Promise.resolve(),
+            listing.seller.email
+              ? sendAuctionExpiredSellerEmail(listing.seller.email, listing.seller.name ?? 'Penjual', listing.title, listing.currentBid, listing.id)
+              : Promise.resolve(),
+          ])
         } catch {
           // Email failure is non-critical
         }

@@ -23,14 +23,46 @@ function baseTemplate(title: string, body: string, ctaLabel: string, ctaUrl: str
 
 // ── Flash Bid ─────────────────────────────────────────────────────
 
-export async function sendOutbidEmail(to: string, name: string, listingTitle: string, newBid: number) {
+export async function sendOutbidEmail(
+  to: string, name: string, listingTitle: string, newBid: number,
+  listingId: string, endsAt: Date | null
+) {
+  const url = `${BASE}/listings/${listingId}`
+  const timeStr = endsAt
+    ? `Lelongan tamat dalam ${Math.max(0, Math.round((endsAt.getTime() - Date.now()) / 60000))} minit.`
+    : ''
   await getResend().emails.send({
     from: FROM, to,
-    subject: `Anda telah ditawar di "${listingTitle}"`,
+    subject: `⚡ Tawaran anda dikalahkan — ${listingTitle}`,
     html: baseTemplate(
-      'Tawaran Baharu!',
-      `<p>Hai ${name},</p><p>Seseorang baru tawaran <strong style="color:#00d9a5">RM ${newBid}</strong> pada "<strong>${listingTitle}</strong>". Buat tawaran balas sekarang!</p>`,
-      'Lihat Lelongan', `${BASE}/listings`
+      '⚡ Tawaran Anda Dikalahkan!',
+      `<p>Hai ${name},</p>
+       <p>Seseorang baru sahaja mengatasi tawaran anda pada "<strong>${listingTitle}</strong>".</p>
+       <p style="background:#1e293b;padding:16px;border-radius:8px;text-align:center">
+         <span style="color:#94a3b8;font-size:12px">Tawaran semasa</span><br>
+         <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">RM ${newBid}</span>
+       </p>
+       ${timeStr ? `<p style="color:#f59e0b;font-size:13px">⏱ ${timeStr} Jangan bagi orang lain menang!</p>` : ''}`,
+      'Bid Semula Sekarang', url
+    ),
+  })
+}
+
+export async function sendWatchlistAlertEmail(
+  to: string, listingTitle: string, currentBid: number, listingUrl: string
+) {
+  await getResend().emails.send({
+    from: FROM, to,
+    subject: `🔔 Item yang anda simpan ada tawaran baru — ${listingTitle}`,
+    html: baseTemplate(
+      '🔔 Ada Tawaran Baru!',
+      `<p>Item yang anda simpan "<strong>${listingTitle}</strong>" baru sahaja mendapat tawaran baru.</p>
+       <p style="background:#1e293b;padding:16px;border-radius:8px;text-align:center">
+         <span style="color:#94a3b8;font-size:12px">Tawaran semasa</span><br>
+         <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">RM ${currentBid}</span>
+       </p>
+       <p style="color:#94a3b8;font-size:13px">Nak masuk bid? Jangan tunggu lama — lelongan ditutup bila masa tamat!</p>`,
+      'Lihat Listing', listingUrl
     ),
   })
 }
@@ -38,11 +70,33 @@ export async function sendOutbidEmail(to: string, name: string, listingTitle: st
 export async function sendAuctionWonEmail(to: string, name: string, listingTitle: string, amount: number, listingId: string) {
   await getResend().emails.send({
     from: FROM, to,
-    subject: `Tahniah! Anda menang lelongan "${listingTitle}"`,
+    subject: `🎉 Tahniah! Anda menang lelongan "${listingTitle}"`,
     html: baseTemplate(
       'Anda Menang! 🎉',
-      `<p>Tahniah ${name}!</p><p>Anda memenangi "<strong>${listingTitle}</strong>" dengan tawaran <strong style="color:#00d9a5">RM ${amount}</strong>. Buat pembayaran dalam masa 24 jam.</p>`,
-      'Buat Pembayaran', `${BASE}/listings/${listingId}`
+      `<p>Tahniah ${name}!</p>
+       <p>Anda memenangi "<strong>${listingTitle}</strong>" dengan tawaran <strong style="color:#00d9a5">RM ${amount}</strong>.</p>
+       <p>Buat pembayaran dalam masa 24 jam untuk mengesahkan pembelian anda.</p>`,
+      'Buat Pembayaran Sekarang', `${BASE}/listings/${listingId}`
+    ),
+  })
+}
+
+export async function sendAuctionExpiredSellerEmail(
+  to: string, sellerName: string, listingTitle: string, winnerBid: number, listingId: string
+) {
+  await getResend().emails.send({
+    from: FROM, to,
+    subject: `Lelongan anda tamat — ${listingTitle}`,
+    html: baseTemplate(
+      'Lelongan Anda Tamat! 🏁',
+      `<p>Tahniah ${sellerName}!</p>
+       <p>Lelongan "<strong>${listingTitle}</strong>" anda telah tamat. Pembeli memenangi dengan tawaran:</p>
+       <p style="background:#1e293b;padding:16px;border-radius:8px;text-align:center">
+         <span style="color:#94a3b8;font-size:12px">Tawaran menang</span><br>
+         <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">RM ${winnerBid}</span>
+       </p>
+       <p style="color:#94a3b8;font-size:13px">Tunggu pembeli membuat pembayaran. Sediakan barang untuk penghantaran.</p>`,
+      'Lihat Status Listing', `${BASE}/listings/${listingId}`
     ),
   })
 }

@@ -77,13 +77,21 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const [, relatedListings, supabase] = await Promise.all([
     prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => null),
     prisma.listing.findMany({
-      where: { sellerId: listing.sellerId, id: { not: listing.id }, status: 'ACTIVE' },
+      where: {
+        id: { not: listing.id },
+        status: 'ACTIVE',
+        category: listing.category,
+        mode: listing.mode,
+        ...(listing.mode === 'FLASH'
+          ? { OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] }
+          : { endsAt: { gt: new Date() } }),
+      },
       include: {
         seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
         _count: { select: { bids: true, offers: true } },
       },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
+      orderBy: { viewCount: 'desc' },
+      take: 4,
     }).catch(() => [] as typeof listing[]),
     createClient(),
   ])
@@ -92,8 +100,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const relatedSlot = relatedListings.length > 0 ? (
     <section className="mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-      <h2 className="text-xl font-bold mb-4">Listing Lain dari Penjual Ini</h2>
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <h2 className="text-xl font-bold mb-4">Mungkin Anda Suka Juga</h2>
+      <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
         {relatedListings.map((l: any) => (
           <div key={l.id} className="flex-shrink-0 w-64">
             {l.mode === 'SWAP'

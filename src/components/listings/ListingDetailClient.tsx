@@ -11,6 +11,7 @@ import {
   Package, Home, Truck, Trash2
 } from 'lucide-react'
 import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
+import { trackRecentlyViewed } from '@/components/home/RecentlyViewed'
 import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
@@ -166,6 +167,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const isSwap = listing.mode === 'SWAP'
   const isSeller = currentUserId === listing.seller.id
   const isBuyer = !!(flashTx && currentUserId === flashTx.buyerId)
+
+  useEffect(() => {
+    trackRecentlyViewed({
+      id: listing.id,
+      title: listing.title,
+      photo: listing.photos[0] ?? null,
+      mode: listing.mode as 'FLASH' | 'SWAP',
+      currentBid: listing.currentBid,
+    })
+  }, [listing.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Trigger expiry when timer hits zero (client-side fallback for cron)
   useEffect(() => {
@@ -458,8 +469,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   const url = window.location.href
                   const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
                   const text = isSwap
-                    ? `🔄 *${listing.title}* — Tukar barang dekat BALLOUT!\n\nNilai anggaran: ~RM ${listing.swapValueEstimate ?? 0}\n${interestCount > 0 ? `${interestCount} tawaran dah masuk!\n` : ''}Check sekarang: ${url}`
-                    : `🔥 *${listing.title}* — Bid dari RM ${listing.startingBid} je!\n\n${interestCount > 0 ? `${interestCount} orang dah bid. ` : 'Jadilah bidder pertama! '}Timer 30 minit je.\n${url}`
+                    ? `🔄 Aku jumpa *${listing.title}* dekat BALLOUT — tukar barang je, tak payah keluar duit!\n\nNilai anggaran: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} tawaran dah masuk!` : ''}\n\nKau ada barang nak tukar tak? ${url}`
+                    : `⚡ Aku jumpa *${listing.title}* dekat BALLOUT — harga start RM${listing.startingBid} je!\n\n${interestCount > 0 ? `${interestCount} orang dah bid. ` : 'Belum ada bid lagi! '}Kau nak bid tak? Timer 30 minit je.\n\n${url}`
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
                 }}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"

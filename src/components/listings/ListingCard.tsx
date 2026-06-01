@@ -17,6 +17,8 @@ interface ListingWithSeller {
   state: string
   co2Saved: number
   status: string
+  viewCount?: number
+  createdAt?: Date | string
   seller: {
     name: string | null
     rehomeScore: number
@@ -66,6 +68,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function ListingCard({ listing }: Props) {
   const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
+  const bidCount = listing._count?.bids ?? 0
+  const isHot = (listing.viewCount ?? 0) >= 20 || bidCount >= 3
+  const isWaitingLong = !listing.endsAt && listing.createdAt
+    ? (Date.now() - new Date(listing.createdAt).getTime()) > 7 * 24 * 60 * 60 * 1000
+    : false
+  const daysWaiting = listing.createdAt
+    ? Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000)
+    : 0
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
@@ -89,6 +99,12 @@ export function ListingCard({ listing }: Props) {
           <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-medium" style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)', backdropFilter: 'blur(4px)' }}>
             {CATEGORY_LABELS[listing.category] ?? listing.category}
           </div>
+          {/* HOT badge */}
+          {isHot && (
+            <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+              🔥 Popular
+            </div>
+          )}
           {/* Condition badge */}
           <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono" style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: listing.condition >= 7 ? 'var(--green)' : listing.condition >= 4 ? 'var(--yellow)' : 'var(--orange)', backdropFilter: 'blur(4px)' }}>
             {listing.condition}
@@ -111,10 +127,16 @@ export function ListingCard({ listing }: Props) {
             </div>
             <div className="text-right">
               <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Masa tinggal</p>
-              <p className={`text-sm font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>
-                <Clock className="w-3 h-3 inline mr-1" />
-                {timeLeft}
-              </p>
+              {isWaitingLong ? (
+                <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+                  Sudah {daysWaiting} hari
+                </p>
+              ) : (
+                <p className={`text-sm font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>
+                  <Clock className="w-3 h-3 inline mr-1" />
+                  {timeLeft}
+                </p>
+              )}
             </div>
           </div>
 

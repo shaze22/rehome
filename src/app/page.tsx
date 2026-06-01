@@ -5,7 +5,9 @@ import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { WasteCounter } from '@/components/home/WasteCounter'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
-import { ArrowRight, Leaf, Shield, Zap, TrendingUp, ArrowLeftRight, Bot, CheckCircle, Lock } from 'lucide-react'
+import { RecentlyViewed } from '@/components/home/RecentlyViewed'
+import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
+import { ArrowRight, Leaf, Zap, TrendingUp, ArrowLeftRight, Bot, CheckCircle, Lock, Flame } from 'lucide-react'
 
 async function getFeaturedListings() {
   try {
@@ -26,6 +28,53 @@ async function getFeaturedSwapListings() {
       where: { status: 'ACTIVE', mode: 'SWAP', endsAt: { gt: new Date() } },
       include: { seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
       orderBy: { createdAt: 'desc' },
+      take: 4,
+    })
+  } catch {
+    return []
+  }
+}
+
+async function getMegaLelongListings() {
+  try {
+    return await prisma.listing.findMany({
+      where: {
+        isFeatured: true,
+        status: 'ACTIVE',
+        OR: [
+          { mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+          { mode: 'SWAP', endsAt: { gt: new Date() } },
+        ],
+      },
+      include: {
+        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+        _count: { select: { bids: true, offers: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 4,
+    })
+  } catch {
+    return []
+  }
+}
+
+async function getTrendingListings() {
+  try {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    return await prisma.listing.findMany({
+      where: {
+        status: 'ACTIVE',
+        updatedAt: { gte: since },
+        OR: [
+          { mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+          { mode: 'SWAP', endsAt: { gt: new Date() } },
+        ],
+      },
+      include: {
+        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+        _count: { select: { bids: true, offers: true } },
+      },
+      orderBy: { viewCount: 'desc' },
       take: 4,
     })
   } catch {
@@ -67,10 +116,12 @@ const TESTIMONIALS = [
 ]
 
 export default async function HomePage() {
-  const [flashListings, swapListings, stats] = await Promise.all([
+  const [flashListings, swapListings, stats, trendingListings, megaListings] = await Promise.all([
     getFeaturedListings(),
     getFeaturedSwapListings(),
     getStats(),
+    getTrendingListings(),
+    getMegaLelongListings(),
   ])
   const { sold: totalTransactions, swapDone, co2: totalCO2 } = stats
   const hasRealData = totalTransactions > 0
@@ -167,8 +218,62 @@ export default async function HomePage() {
       {/* Waste Counter — only show when there's real data */}
       {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
 
+      {/* Recently Viewed — client component, reads localStorage */}
+      <RecentlyViewed />
+
       {/* Category Grid */}
       <CategoryGrid />
+
+      {/* Trending this week */}
+      {trendingListings.length >= 2 && (
+        <section className="py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-orange-400" />
+                  Trending Minggu Ini
+                </h2>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Barang paling popular 7 hari lepas</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {trendingListings.map(listing => (
+                listing.mode === 'SWAP'
+                  ? <SwapListingCard key={listing.id} listing={listing as any} />
+                  : <ListingCard key={listing.id} listing={listing as any} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Mega Lelong Jumaat */}
+      {megaListings.length > 0 && (
+        <section className="py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    ⚡ Mega Lelong Jumaat
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>FEATURED</span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Listing pilihan setiap Jumaat malam</p>
+              </div>
+              <MegaLelongCountdown />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {megaListings.map(listing => (
+                listing.mode === 'SWAP'
+                  ? <SwapListingCard key={listing.id} listing={listing as any} />
+                  : <ListingCard key={listing.id} listing={listing as any} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Flash Listings */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">

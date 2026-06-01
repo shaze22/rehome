@@ -18,6 +18,7 @@ interface SwapListing {
   swapOpenOffers: boolean
   swapAcceptCash: boolean
   swapValueEstimate: number | null
+  viewCount?: number
   seller: {
     name: string | null
     rehomeScore: number
@@ -64,6 +65,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function SwapListingCard({ listing }: Props) {
   const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
   const offerCount = listing._count?.offers ?? 0
+  const isHot = (listing.viewCount ?? 0) >= 20 || offerCount >= 3
 
   const wantedLabel = listing.swapOpenOffers
     ? 'Terbuka kepada semua tawaran'
@@ -93,6 +95,12 @@ export function SwapListingCard({ listing }: Props) {
             <ArrowLeftRight className="w-3 h-3" />
             SWAP
           </div>
+          {/* HOT badge */}
+          {isHot && (
+            <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+              🔥 Popular
+            </div>
+          )}
           {/* Condition badge */}
           <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono" style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: listing.condition >= 7 ? 'var(--green)' : listing.condition >= 4 ? 'var(--yellow)' : 'var(--orange)', backdropFilter: 'blur(4px)' }}>
             {listing.condition}

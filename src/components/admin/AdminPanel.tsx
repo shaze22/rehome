@@ -13,7 +13,7 @@ interface PendingIC {
 }
 
 interface Listing {
-  id: string; title: string; status: string; currentBid: number; createdAt: string
+  id: string; title: string; status: string; currentBid: number; createdAt: string; isFeatured: boolean
   seller: { name: string | null; icVerified: boolean }; _count: { bids: number }
 }
 
@@ -51,6 +51,65 @@ interface Props {
   allUsers: BetaUser[]
   disputedSwaps: DisputedSwap[]
   stats: Stats
+}
+
+function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boolean }) {
+  const [featured, setFeatured] = useState(listing.isFeatured)
+  const [loading, setLoading] = useState(false)
+
+  async function toggle() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/feature-listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: listing.id, featured: !featured }),
+      })
+      if (res.ok) setFeatured(f => !f)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3"
+      style={{ backgroundColor: 'var(--bg-card)', borderBottom: isLast ? 'none' : '1px solid var(--border)' }}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <Link href={`/listings/${listing.id}`} className="text-sm font-medium hover:underline line-clamp-1">
+            {listing.title}
+          </Link>
+          <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-xs"
+            style={{ backgroundColor: listing.status === 'ACTIVE' ? 'rgba(0,217,165,0.1)' : 'rgba(148,163,184,0.1)', color: listing.status === 'ACTIVE' ? 'var(--green)' : 'var(--text-muted)' }}>
+            {listing.status}
+          </span>
+          {featured && (
+            <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>⚡ FEATURED</span>
+          )}
+        </div>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+          {listing.seller.name ?? 'Tanpa Nama'} · {listing._count.bids} bids · RM {listing.currentBid.toFixed(0)}
+        </p>
+      </div>
+      <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {new Date(listing.createdAt).toLocaleDateString('ms-MY')}
+        </p>
+        <button
+          onClick={toggle}
+          disabled={loading}
+          className="text-xs px-2 py-1 rounded font-medium transition-colors"
+          style={{
+            backgroundColor: featured ? 'rgba(239,68,68,0.15)' : 'rgba(20,184,166,0.1)',
+            color: featured ? '#ef4444' : 'var(--teal)',
+            border: `1px solid ${featured ? 'rgba(239,68,68,0.3)' : 'rgba(20,184,166,0.3)'}`,
+          }}
+        >
+          {loading ? '...' : featured ? 'Unfeature' : '⚡ Feature'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, stats }: Props) {
@@ -192,26 +251,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
         </h2>
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           {recentListings.map((listing, i) => (
-            <div key={listing.id} className="flex items-center justify-between px-4 py-3"
-              style={{ backgroundColor: 'var(--bg-card)', borderBottom: i < recentListings.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Link href={`/listings/${listing.id}`} className="text-sm font-medium hover:underline line-clamp-1">
-                    {listing.title}
-                  </Link>
-                  <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-xs"
-                    style={{ backgroundColor: listing.status === 'ACTIVE' ? 'rgba(0,217,165,0.1)' : 'rgba(148,163,184,0.1)', color: listing.status === 'ACTIVE' ? 'var(--green)' : 'var(--text-muted)' }}>
-                    {listing.status}
-                  </span>
-                </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  {listing.seller.name ?? 'Tanpa Nama'} · {listing._count.bids} bids · RM {listing.currentBid.toFixed(0)}
-                </p>
-              </div>
-              <p className="text-xs flex-shrink-0 ml-4" style={{ color: 'var(--text-muted)' }}>
-                {new Date(listing.createdAt).toLocaleDateString('ms-MY')}
-              </p>
-            </div>
+            <FeaturedListingRow key={listing.id} listing={listing} isLast={i === recentListings.length - 1} />
           ))}
         </div>
       </div>
