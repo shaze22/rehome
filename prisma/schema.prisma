@@ -8,62 +8,75 @@ datasource db {
 }
 
 model User {
-  id             String      @id @default(cuid())
-  email          String      @unique
-  name           String?
-  avatar         String?
-  icVerified     Boolean     @default(false)
-  icStatus       ICStatus    @default(UNVERIFIED)
-  icPhoto        String?
-  rehomeScore    Int         @default(50)
-  state          String?
-  role           Role        @default(BUYER)
-  listings       Listing[]
-  bids           Bid[]
-  sentMessages   Message[]   @relation("MessageSender")
-  reviews        Review[]    @relation("ReviewAuthor")
-  receivedReviews Review[]   @relation("ReviewSeller")
-  watchlist      Watchlist[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  email           String      @unique
+  name            String?
+  avatar          String?
+  icVerified      Boolean     @default(false)
+  icStatus        ICStatus    @default(UNVERIFIED)
+  icPhoto         String?
+  rehomeScore     Int         @default(50)
+  state           String?
+  role            Role        @default(BUYER)
+  swapScore       Float?
+  successfulSwaps Int         @default(0)
+  swapVerified    Boolean     @default(false)
+  listings        Listing[]
+  bids            Bid[]
+  sentMessages    Message[]   @relation("MessageSender")
+  reviews         Review[]    @relation("ReviewAuthor")
+  receivedReviews Review[]    @relation("ReviewSeller")
+  watchlist       Watchlist[]
+  offers          Offer[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model Listing {
-  id               String        @id @default(cuid())
-  title            String
-  description      String
-  category         Category
-  condition        Int
-  originalPrice    Float
-  startingBid      Float         @default(0)
-  currentBid       Float         @default(0)
-  currentBidder    String?
-  photos           String[]
-  sellerId         String
-  seller           User          @relation(fields: [sellerId], references: [id])
-  state            String
-  status           ListingStatus @default(ACTIVE)
-  endsAt           DateTime?
-  firstBidAt       DateTime?
-  bids             Bid[]
-  messages         Message[]
-  review           Review?
-  watchlist        Watchlist[]
-  aiSuggestedMin   Float?
-  aiSuggestedMax   Float?
-  aiReasoning      String?
-  co2Saved         Float         @default(0)
-  hasScratch       Boolean       @default(false)
-  isFunctional     Boolean       @default(true)
-  hasCompleteParts Boolean       @default(true)
-  hasOriginalBox   Boolean       @default(false)
-  hasWarranty      Boolean       @default(false)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  title              String
+  description        String
+  category           Category
+  condition          Int
+  originalPrice      Float
+  startingBid        Float         @default(0)
+  currentBid         Float         @default(0)
+  currentBidder      String?
+  photos             String[]
+  sellerId           String
+  seller             User          @relation(fields: [sellerId], references: [id])
+  state              String
+  status             ListingStatus @default(ACTIVE)
+  mode               ListingMode   @default(FLASH)
+  endsAt             DateTime?
+  firstBidAt         DateTime?
+  swapWantedItem     String?
+  swapWantedCategory String?
+  swapOpenOffers     Boolean       @default(false)
+  swapMinCashTopup   Float?
+  swapAcceptCash     Boolean       @default(true)
+  swapValueEstimate  Float?
+  bids               Bid[]
+  messages           Message[]
+  review             Review?
+  watchlist          Watchlist[]
+  offers             Offer[]
+  aiSuggestedMin     Float?
+  aiSuggestedMax     Float?
+  aiReasoning        String?
+  co2Saved           Float         @default(0)
+  hasScratch         Boolean       @default(false)
+  isFunctional       Boolean       @default(true)
+  hasCompleteParts   Boolean       @default(true)
+  hasOriginalBox     Boolean       @default(false)
+  hasWarranty        Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@index([status, endsAt])
   @@index([sellerId])
   @@index([category])
+  @@index([mode, status])
 }
 
 model Bid {
@@ -135,6 +148,33 @@ model Watchlist {
   @@index([userId])
 }
 
+model Offer {
+  id                String      @id @default(cuid())
+  listingId         String
+  listing           Listing     @relation(fields: [listingId], references: [id])
+  bidderId          String
+  bidder            User        @relation(fields: [bidderId], references: [id])
+  offerType         OfferType
+  offeredItemPhotos String[]
+  offeredItemDesc   String?
+  offeredCashAmount Float?
+  offeredItemValue  Float?
+  totalOfferValue   Float?
+  message           String?
+  status            OfferStatus @default(PENDING)
+  counterRounds     Int         @default(0)
+  parentOfferId     String?
+  parentOffer       Offer?      @relation("OfferCounter", fields: [parentOfferId], references: [id])
+  counterOffers     Offer[]     @relation("OfferCounter")
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  expiresAt         DateTime?
+
+  @@index([listingId])
+  @@index([bidderId])
+  @@index([status])
+}
+
 enum Role {
   BUYER
   SELLER
@@ -175,4 +215,23 @@ enum ShippingStatus {
   PENDING
   SHIPPED
   DELIVERED
+}
+
+enum ListingMode {
+  FLASH
+  SWAP
+}
+
+enum OfferType {
+  CASH
+  SWAP
+  HYBRID
+}
+
+enum OfferStatus {
+  PENDING
+  COUNTERED
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }

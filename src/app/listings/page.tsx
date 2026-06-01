@@ -1,9 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { ListingsFilters } from '@/components/listings/ListingsFilters'
-import { Search } from 'lucide-react'
+import { SwapListingCard } from '@/components/listings/SwapListingCard'
+import { Search, Zap, ArrowLeftRight } from 'lucide-react'
+import Link from 'next/link'
 
 interface SearchParams {
+  mode?: string
   category?: string
   state?: string
   minPrice?: string
@@ -14,19 +17,24 @@ interface SearchParams {
 
 async function getListings(params: SearchParams) {
   const now = new Date()
-  // Include listings with no timer (waiting for first bid) AND listings whose timer hasn't expired yet
+  const mode = params.mode === 'swap' ? 'SWAP' : 'FLASH'
+
   const where: Record<string, unknown> = {
     status: 'ACTIVE',
-    OR: [
-      { endsAt: null },
-      { endsAt: { gt: now } },
-    ],
+    mode,
+  }
+
+  if (mode === 'FLASH') {
+    where.OR = [{ endsAt: null }, { endsAt: { gt: now } }]
+  } else {
+    where.endsAt = { gt: now }
   }
 
   if (params.category) where.category = params.category
   if (params.state) where.state = params.state
   if (params.q) where.title = { contains: params.q, mode: 'insensitive' }
-  if (params.minPrice || params.maxPrice) {
+
+  if (mode === 'FLASH' && (params.minPrice || params.maxPrice)) {
     where.currentBid = {}
     if (params.minPrice) (where.currentBid as Record<string, number>).gte = Number(params.minPrice)
     if (params.maxPrice) (where.currentBid as Record<string, number>).lte = Number(params.maxPrice)
@@ -36,14 +44,15 @@ async function getListings(params: SearchParams) {
     params.sort === 'ending' ? [{ endsAt: { sort: 'asc' as const, nulls: 'last' as const } }] :
     params.sort === 'price_asc' ? [{ currentBid: 'asc' as const }] :
     params.sort === 'price_desc' ? [{ currentBid: 'desc' as const }] :
+    params.sort === 'most_offers' ? [{ createdAt: 'desc' as const }] :
     [{ createdAt: 'desc' as const }]
 
   try {
     return await prisma.listing.findMany({
       where,
       include: {
-        seller: { select: { name: true, rehomeScore: true, icVerified: true } },
-        _count: { select: { bids: true } },
+        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+        _count: { select: { bids: true, offers: true } },
       },
       orderBy,
     })
@@ -54,36 +63,67 @@ async function getListings(params: SearchParams) {
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
+  const activeMode = params.mode === 'swap' ? 'swap' : 'flash'
   const listings = await getListings(params)
+
+  const tabBase = 'flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all'
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Lelongan Aktif</h1>
+      {/* Tab navigation */}
+      <div className="flex gap-2 mb-8 p-1.5 rounded-2xl w-fit" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <Link
+          href="/listings?mode=flash"
+          className={tabBase}
+          style={activeMode === 'flash'
+            ? { backgroundColor: 'var(--orange)', color: 'white' }
+            : { color: 'var(--text-secondary)' }}
+        >
+          <Zap className="w-4 h-4" />
+          Lelong Pantas
+        </Link>
+        <Link
+          href="/listings?mode=swap"
+          className={tabBase}
+          style={activeMode === 'swap'
+            ? { backgroundColor: '#16a34a', color: 'white' }
+            : { color: 'var(--text-secondary)' }}
+        >
+          <ArrowLeftRight className="w-4 h-4" />
+          Tukar Barang
+        </Link>
+      </div>
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">
+          {activeMode === 'flash' ? 'Lelongan Aktif' : 'Tukar Barang'}
+        </h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {listings.length} item dalam lelongan sekarang
+          {listings.length} item {activeMode === 'flash' ? 'dalam lelongan' : 'ditawarkan untuk tukar'} sekarang
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <ListingsFilters currentParams={params as Record<string, string | undefined>} />
         </aside>
 
-        {/* Listings grid */}
         <div className="flex-1">
           {listings.length === 0 ? (
             <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Search className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
               <p className="text-lg font-medium mb-2">Tiada item dijumpai</p>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Cuba ubah tapisan atau carian anda</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {activeMode === 'swap' ? 'Tiada listing Tukar Barang aktif buat masa ini.' : 'Cuba ubah tapisan atau carian anda'}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {listings.map(listing => (
-                <ListingCard key={listing.id} listing={listing as any} />
-              ))}
+              {listings.map(listing =>
+                activeMode === 'swap'
+                  ? <SwapListingCard key={listing.id} listing={listing as any} />
+                  : <ListingCard key={listing.id} listing={listing as any} />
+              )}
             </div>
           )}
         </div>

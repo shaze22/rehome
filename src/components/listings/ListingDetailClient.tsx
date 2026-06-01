@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
-  AlertCircle, ChevronLeft, ChevronRight, Bot, Share2
+  AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight
 } from 'lucide-react'
 import { calculateDeliveryQuote, calculateDeliveryMarkup, calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
+import { OfferModal } from './OfferModal'
+import { OwnerOffersPanel } from './OwnerOffersPanel'
 
 interface Bid {
   id: string
@@ -40,6 +42,7 @@ interface Listing {
   photos: string[]
   state: string
   status: string
+  mode: string
   endsAt: string | null
   co2Saved: number
   hasScratch: boolean
@@ -50,6 +53,12 @@ interface Listing {
   aiSuggestedMin: number | null
   aiSuggestedMax: number | null
   aiReasoning: string | null
+  swapWantedItem: string | null
+  swapWantedCategory: string | null
+  swapOpenOffers: boolean
+  swapAcceptCash: boolean
+  swapMinCashTopup: number | null
+  swapValueEstimate: number | null
   seller: Seller
   bids: Bid[]
   _count: { bids: number }
@@ -82,12 +91,14 @@ function useCountdown(endsAt: string | null) {
     setIsWaiting(false)
     function update() {
       const diff = new Date(endsAt as string).getTime() - Date.now()
-      if (diff <= 0) { setIsEnded(true); setTimeLeft('Lelongan Tamat'); return }
-      const h = Math.floor(diff / 3600000)
+      if (diff <= 0) { setIsEnded(true); setTimeLeft('Tamat'); return }
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-      setIsUrgent(diff < 300000)
-      if (h > 0) setTimeLeft(`${h} jam ${m} min ${s} saat`)
+      setIsUrgent(diff < 3600000)
+      if (d > 0) setTimeLeft(`${d} hari ${h} jam ${m} min`)
+      else if (h > 0) setTimeLeft(`${h} jam ${m} min ${s} saat`)
       else if (m > 0) setTimeLeft(`${m} min ${s} saat`)
       else setTimeLeft(`${s} saat`)
     }
@@ -113,6 +124,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
   const { timeLeft, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt)
+  const [showOfferModal, setShowOfferModal] = useState(false)
+  const [offerSubmitted, setOfferSubmitted] = useState(false)
+
+  const isSwap = listing.mode === 'SWAP'
 
   // Trigger expiry when timer hits zero (client-side fallback for cron)
   useEffect(() => {
@@ -322,18 +337,49 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             </div>
           )}
 
-          {/* Bid Box */}
-          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          {/* Bid Box / Swap Box */}
+          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: isSwap ? '1px solid rgba(22,163,74,0.3)' : '1px solid var(--border)' }}>
+
+            {/* Swap mode header */}
+            {isSwap && (
+              <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <ArrowLeftRight className="w-4 h-4" style={{ color: '#16a34a' }} />
+                <span className="text-sm font-bold" style={{ color: '#16a34a' }}>Tukar Barang</span>
+                {listing.swapValueEstimate && (
+                  <span className="ml-auto text-sm font-mono font-bold" style={{ color: '#16a34a' }}>
+                    ~RM {listing.swapValueEstimate.toFixed(0)}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Swap: wanted item */}
+            {isSwap && (listing.swapWantedItem || listing.swapWantedCategory || listing.swapOpenOffers) && (
+              <div className="mb-4 px-3 py-2.5 rounded-lg text-sm" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Pemilik mencari:</p>
+                <p style={{ color: '#16a34a' }}>
+                  {listing.swapOpenOffers ? 'Terbuka kepada semua tawaran' :
+                    [listing.swapWantedItem, listing.swapWantedCategory].filter(Boolean).join(' / ')}
+                </p>
+                {listing.swapAcceptCash && (
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Juga menerima tawaran wang tunai</p>
+                )}
+                {listing.swapMinCashTopup && (
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Min tambahan wang: RM {listing.swapMinCashTopup}</p>
+                )}
+              </div>
+            )}
+
             {/* Timer */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Clock className={`w-4 h-4 ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : 'var(--teal)' }} />
+                <Clock className={`w-4 h-4 ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : isSwap ? '#16a34a' : 'var(--teal)' }} />
                 <span className={`text-sm font-mono font-bold ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : 'var(--text-primary)' }}>
                   {timeLeft}
                 </span>
               </div>
               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {listing._count.bids} tawaran
+                {isSwap ? `${listing._count.bids} tawaran masuk` : `${listing._count.bids} tawaran`}
               </span>
             </div>
 
@@ -369,8 +415,44 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
             )}
 
-            {/* Bid form */}
-            {!isEnded && !isOwnListing && (
+            {/* Swap: Offer button (for non-owners, non-ended) */}
+            {isSwap && !isEnded && !isOwnListing && (
+              <div className="space-y-3">
+                {offerSubmitted ? (
+                  <div className="text-center py-4 px-4 rounded-xl" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                    <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#16a34a' }} />
+                    <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Tawaran dihantar!</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Tunggu respons pemilik. Anda akan diberitahu melalui notifikasi.</p>
+                    <button onClick={() => setOfferSubmitted(false)} className="mt-3 text-xs underline" style={{ color: 'var(--text-muted)' }}>
+                      Buat tawaran baru
+                    </button>
+                  </div>
+                ) : !currentUserId ? (
+                  <Link href="/auth/login" className="block w-full text-center py-3 rounded-xl font-semibold text-white" style={{ backgroundColor: '#16a34a' }}>
+                    Log Masuk untuk Buat Tawaran
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setShowOfferModal(true)}
+                    className="w-full py-3.5 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#16a34a' }}
+                  >
+                    <ArrowLeftRight className="w-4 h-4" />
+                    Buat Tawaran
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Swap: Owner sees offers panel here */}
+            {isSwap && isOwnListing && !isEnded && (
+              <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                Ini listing anda. Tawaran dipaparkan di bawah.
+              </div>
+            )}
+
+            {/* Flash Bid form */}
+            {!isSwap && !isEnded && !isOwnListing && (
               <form onSubmit={handleBid}>
                 {/* Step 1: Delivery method */}
                 <div className="mb-4">
@@ -511,7 +593,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </form>
             )}
 
-            {isEnded && (
+            {!isSwap && isEnded && (
               <div className="text-center py-4">
                 <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Lelongan Telah Tamat</p>
                 {listing.currentBidder === currentUserId && (
@@ -525,7 +607,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
             )}
 
-            {isOwnListing && (
+            {!isSwap && isOwnListing && (
               <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                 Ini adalah listing anda sendiri.
               </div>
@@ -575,47 +657,71 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
         </div>
       </div>
 
-      {/* Bid History */}
-      <div className="mt-10">
-        <h2 className="text-xl font-bold mb-4">Sejarah Tawaran</h2>
-        {bids.length === 0 ? (
-          <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-            <p style={{ color: 'var(--text-secondary)' }}>Belum ada tawaran. Jadilah yang pertama!</p>
-          </div>
-        ) : (
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {bids.map((bid, i) => (
-              <div
-                key={bid.id}
-                className={`flex items-center justify-between px-4 py-3 ${i === 0 ? 'bid-new' : ''}`}
-                style={{
-                  backgroundColor: i === 0 ? 'var(--bg-elevated)' : 'var(--bg-card)',
-                  borderBottom: i < bids.length - 1 ? '1px solid var(--border)' : 'none',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full gradient-teal flex items-center justify-center text-white text-xs font-bold">
-                    {bid.bidder.name?.[0]?.toUpperCase() ?? '?'}
+      {/* Swap: Owner Offers Panel */}
+      {isSwap && isOwnListing && (
+        <div className="mt-10">
+          <OwnerOffersPanel listingId={listing.id} listingTitle={listing.title} />
+        </div>
+      )}
+
+      {/* Bid History (Flash only) */}
+      {!isSwap && (
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-4">Sejarah Tawaran</h2>
+          {bids.length === 0 ? (
+            <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p style={{ color: 'var(--text-secondary)' }}>Belum ada tawaran. Jadilah yang pertama!</p>
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              {bids.map((bid, i) => (
+                <div
+                  key={bid.id}
+                  className={`flex items-center justify-between px-4 py-3 ${i === 0 ? 'bid-new' : ''}`}
+                  style={{
+                    backgroundColor: i === 0 ? 'var(--bg-elevated)' : 'var(--bg-card)',
+                    borderBottom: i < bids.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full gradient-teal flex items-center justify-center text-white text-xs font-bold">
+                      {bid.bidder.name?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{bid.bidder.name ?? 'Pengguna Tanpa Nama'}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {new Date(bid.createdAt).toLocaleString('ms-MY')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">{bid.bidder.name ?? 'Pengguna Tanpa Nama'}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {new Date(bid.createdAt).toLocaleString('ms-MY')}
+                  <div className="text-right">
+                    <p className="font-bold font-mono" style={{ color: i === 0 ? 'var(--teal)' : 'var(--text-secondary)' }}>
+                      RM {bid.amount.toFixed(0)}
                     </p>
+                    {i === 0 && <p className="text-xs" style={{ color: 'var(--green)' }}>Tertinggi</p>}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold font-mono" style={{ color: i === 0 ? 'var(--teal)' : 'var(--text-secondary)' }}>
-                    RM {bid.amount.toFixed(0)}
-                  </p>
-                  {i === 0 && <p className="text-xs" style={{ color: 'var(--green)' }}>Tertinggi</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Offer Modal */}
+      {showOfferModal && currentUserId && (
+        <OfferModal
+          listingId={listing.id}
+          listingTitle={listing.title}
+          swapValueEstimate={listing.swapValueEstimate}
+          swapAcceptCash={listing.swapAcceptCash}
+          swapWantedItem={listing.swapWantedItem}
+          swapWantedCategory={listing.swapWantedCategory}
+          userId={currentUserId}
+          onClose={() => setShowOfferModal(false)}
+          onSuccess={() => { setShowOfferModal(false); setOfferSubmitted(true) }}
+        />
+      )}
     </div>
   )
 }

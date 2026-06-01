@@ -10,14 +10,14 @@ async function getListing(id: string) {
     return await prisma.listing.findUnique({
       where: { id },
       include: {
-        seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, state: true, icStatus: true, createdAt: true } },
+        seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, state: true, icStatus: true, createdAt: true, swapScore: true, swapVerified: true } },
         bids: {
           include: { bidder: { select: { name: true, rehomeScore: true } } },
           orderBy: { createdAt: 'desc' },
           take: 20,
         },
         review: { select: { rating: true, comment: true, createdAt: true } },
-        _count: { select: { bids: true } },
+        _count: { select: { bids: true, offers: true } },
       },
     })
   } catch {
