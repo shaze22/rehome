@@ -25,15 +25,15 @@ export async function POST(request: NextRequest) {
     const { listingId, buyerId, sellerId, platformFee, sellerPayout } = session.metadata as Record<string, string>
 
     // Validate metadata against DB to prevent tampering
-    const listing = await prisma.listing.findUnique({
-      where: { id: listingId },
-      include: { transactions: { take: 1 } },
-    })
+    const [listing, existingTx] = await Promise.all([
+      prisma.listing.findUnique({ where: { id: listingId }, select: { currentBidder: true, sellerId: true } }),
+      prisma.transaction.findUnique({ where: { listingId } }),
+    ])
     if (!listing) return NextResponse.json({ error: 'Listing tidak wujud.' }, { status: 400 })
     if (listing.currentBidder !== buyerId) return NextResponse.json({ error: 'buyerId tidak sah.' }, { status: 400 })
     if (listing.sellerId !== sellerId) return NextResponse.json({ error: 'sellerId tidak sah.' }, { status: 400 })
     // Idempotency: ignore duplicate webhook
-    if (listing.transactions.length > 0) return NextResponse.json({ received: true })
+    if (existingTx) return NextResponse.json({ received: true })
 
     await prisma.$transaction([
       prisma.listing.update({
