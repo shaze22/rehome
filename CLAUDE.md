@@ -372,8 +372,19 @@ Buyer pilih "Penghantaran Pos"
 | `/api/cron/expire-auctions` | 0 0 * * * (daily) | Expire Flash auctions |
 | `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
 
+## Beta Bug Fixes (commit c5800bf, 2026-06-01)
+
+3 bugs dari beta test telah difix:
+
+| Bug | Fix |
+|-----|-----|
+| Flash feed search overwrite Flash time filter | `listings/page.tsx`: guna `AND` combine endsAt OR + search OR |
+| Profile tunjuk SWAP listings sebagai Flash card (RM 0) | `profile/[id]/page.tsx`: render `SwapListingCard` untuk SWAP, `ListingCard` untuk FLASH |
+| Profile not-found tiada navigasi | `profile/[id]/page.tsx`: inline not-found UI + "Balik ke Laman Utama" |
+| `SellerListingCard` crash bila Flash `endsAt=null` | `SellerListingCard.tsx`: `endsAt: null` → tunjuk "Menunggu bidder" |
+
 ## Last Deployed
-2026-06-01, commit `65066df` → redeploy dengan Upstash env vars aktif
+2026-06-01, commit `c5800bf` → beta bug fixes
 Live: https://rehome-eta.vercel.app
 
 ## Pending (Belum Selesai)
