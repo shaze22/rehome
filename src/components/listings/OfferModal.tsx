@@ -36,6 +36,11 @@ export function OfferModal({
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (itemPhotos.length + files.length > 5) { setError('Maksimum 5 foto.'); return }
+    const MAX_SIZE = 10 * 1024 * 1024
+    for (const file of files) {
+      if (file.size > MAX_SIZE) { setError('Saiz fail tidak boleh melebihi 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setError('Hanya fail imej dibenarkan.'); return }
+    }
     setPhotoUploading(true)
     const supabase = createClient()
     for (const file of files) {

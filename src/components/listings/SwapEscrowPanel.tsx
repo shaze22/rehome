@@ -52,6 +52,11 @@ function ShipModal({
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (photos.length + files.length > 5) return
+    const MAX_SIZE = 10 * 1024 * 1024
+    for (const file of files) {
+      if (file.size > MAX_SIZE) { setError('Saiz fail tidak boleh melebihi 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setError('Hanya fail imej dibenarkan.'); return }
+    }
     setUploading(true)
     const supabase = createClient()
     for (const file of files) {

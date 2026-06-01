@@ -147,6 +147,11 @@ export function SellForm({ userId }: Props) {
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (photos.length + files.length > 5) { alert('Maksimum 5 foto sahaja.'); return }
+    const MAX_SIZE = 10 * 1024 * 1024
+    for (const file of files) {
+      if (file.size > MAX_SIZE) { setSubmitError('Saiz fail tidak boleh melebihi 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setSubmitError('Hanya fail imej dibenarkan.'); return }
+    }
     setPhotoUploading(true)
     const supabase = createClient()
     for (const file of files) {
