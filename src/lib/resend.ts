@@ -125,6 +125,27 @@ export async function sendSwapCompletedEmail(to: string, name: string, listingTi
   })
 }
 
+export async function sendWelcomeEmail(to: string, name: string) {
+  await getResend().emails.send({
+    from: FROM, to,
+    subject: 'Selamat datang ke BALLOUT! 🎉',
+    html: baseTemplate(
+      'Selamat Datang ke BALLOUT!',
+      `<p>Hai ${name},</p>
+      <p>Terima kasih kerana menyertai <strong>BALLOUT</strong> — platform lelongan dan tukar barang pertama Malaysia!</p>
+      <p>Apa yang boleh anda buat:</p>
+      <ul style="padding-left:20px;color:#94a3b8;line-height:2">
+        <li>⚡ <strong style="color:#e2e8f0">Lelong Pantas</strong> — bida barangan terpakai dalam 30 minit</li>
+        <li>🔄 <strong style="color:#e2e8f0">Tukar Barang</strong> — tukar barang anda tanpa wang</li>
+        <li>🤖 <strong style="color:#e2e8f0">Harga AI</strong> — cadangan harga automatik</li>
+        <li>🛡️ <strong style="color:#e2e8f0">Escrow Selamat</strong> — wang terjamin sehingga barang tiba</li>
+      </ul>
+      <p style="margin-top:16px">Mula dengan semak imbas listing atau letak barangan pertama anda!</p>`,
+      'Semak Imbas Lelongan', `${BASE}/listings`,
+    ),
+  })
+}
+
 export async function sendSwapDisputeEmail(to: string, listingTitle: string, disputerName: string, reason: string, listingId: string) {
   await getResend().emails.send({
     from: FROM, to,

@@ -15,7 +15,7 @@ export default async function AdminPage() {
     pendingICs, recentListings,
     totalUsers, activeListings, soldListings, endedListings,
     volumeResult, totalBids, totalMessages, avgRatingResult,
-    recentUsers, topSellers, disputedSwaps,
+    recentUsers, topSellers, disputedSwaps, allUsers,
   ] = await Promise.all([
     prisma.user.findMany({
       where: { icStatus: 'PENDING' },
@@ -41,6 +41,10 @@ export default async function AdminPage() {
     prisma.user.findMany({
       orderBy: { createdAt: 'desc' }, take: 5,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, createdAt: true },
+    }),
+    prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, name: true, email: true, role: true, rehomeScore: true, swapScore: true, icVerified: true, createdAt: true, _count: { select: { listings: true } } },
     }),
     prisma.listing.groupBy({
       by: ['sellerId'],
@@ -69,6 +73,7 @@ export default async function AdminPage() {
       pendingICs={pendingICs as any}
       recentListings={recentListings as any}
       recentUsers={recentUsers as any}
+      allUsers={allUsers as any}
       disputedSwaps={disputedSwaps as any}
       stats={{
         totalUsers, activeListings, soldListings, endedListings,

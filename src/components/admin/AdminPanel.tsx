@@ -38,15 +38,22 @@ interface DisputedSwap {
   buyer: { id: string; name: string | null; email: string }
 }
 
+interface BetaUser {
+  id: string; name: string | null; email: string; role: string
+  rehomeScore: number; swapScore: number | null; icVerified: boolean
+  createdAt: string; _count: { listings: number }
+}
+
 interface Props {
   pendingICs: PendingIC[]
   recentListings: Listing[]
   recentUsers: RecentUser[]
+  allUsers: BetaUser[]
   disputedSwaps: DisputedSwap[]
   stats: Stats
 }
 
-export function AdminPanel({ pendingICs, recentListings, recentUsers, disputedSwaps, stats }: Props) {
+export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, stats }: Props) {
   const [verifying, setVerifying] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(pendingICs)
   const [localDisputes, setLocalDisputes] = useState(disputedSwaps)
@@ -274,6 +281,48 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, disputedSw
             ))}
           </div>
         )}
+      </div>
+      {/* Beta Users — full list */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5" style={{ color: 'var(--purple)' }} />
+          Semua Beta Users ({allUsers.length})
+        </h2>
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ backgroundColor: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                  {['Nama', 'Email', 'Role', 'Skor', 'Listing', 'IC', 'Daftar'].map(h => (
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {allUsers.map((u, i) => (
+                  <tr key={u.id} style={{ backgroundColor: 'var(--bg-card)', borderBottom: i < allUsers.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    <td className="px-4 py-2.5 font-medium">{u.name ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="px-1.5 py-0.5 rounded text-xs font-mono"
+                        style={{ backgroundColor: u.role === 'ADMIN' ? 'rgba(168,85,247,0.15)' : u.role === 'SELLER' ? 'rgba(20,184,166,0.1)' : 'rgba(148,163,184,0.1)', color: u.role === 'ADMIN' ? 'var(--purple)' : u.role === 'SELLER' ? 'var(--teal)' : 'var(--text-secondary)' }}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--yellow)' }}>⭐{u.rehomeScore}</td>
+                    <td className="px-4 py-2.5 text-center text-xs">{u._count.listings}</td>
+                    <td className="px-4 py-2.5 text-center">
+                      {u.icVerified ? <CheckCircle className="w-4 h-4 inline" style={{ color: 'var(--green)' }} /> : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(u.createdAt).toLocaleDateString('ms-MY')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )

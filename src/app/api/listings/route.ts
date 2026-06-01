@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getAIPriceSuggestion } from '@/lib/gemini'
 import { calculateCO2Saved } from '@/lib/co2'
+import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 const FlashListingSchema = z.object({
@@ -60,6 +61,8 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
   }
+  const { allowed } = rateLimit(`listing:${user.id}`, 5, 60 * 60 * 1000)
+  if (!allowed) return NextResponse.json({ error: 'Had listing dicapai. Cuba lagi sejam lagi.' }, { status: 429 })
 
   let body: unknown
   try {

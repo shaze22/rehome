@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmail } from '@/lib/resend'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+
+  const existing = await prisma.user.findUnique({ where: { id: user.id }, select: { id: true } })
 
   const dbUser = await prisma.user.upsert({
     where: { id: user.id },
@@ -20,6 +23,13 @@ export async function POST(request: NextRequest) {
       avatar: user.user_metadata?.avatar_url,
     },
   })
+
+  // Send welcome email only on first registration
+  if (!existing && user.email) {
+    try {
+      await sendWelcomeEmail(user.email, dbUser.name ?? 'Pengguna Baru')
+    } catch { /* non-critical */ }
+  }
 
   return NextResponse.json({ user: dbUser })
 }

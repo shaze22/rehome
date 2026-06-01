@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { Analytics } from '@vercel/analytics/next'
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
 const SITE_NAME = 'BALLOUT'
@@ -42,6 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        <FeedbackWidget />
+        <Analytics />
       </body>
     </html>
   )
