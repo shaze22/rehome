@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   const sig = request.headers.get('stripe-signature')
 
   if (!sig) {
-    return NextResponse.json({ error: 'Tiada tandatangan.' }, { status: 400 })
+    return NextResponse.json({ error: 'No signature.' }, { status: 400 })
   }
 
   const stripe = getStripe()
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
-    return NextResponse.json({ error: 'Webhook tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid webhook.' }, { status: 400 })
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
       prisma.listing.findUnique({ where: { id: listingId }, select: { currentBidder: true, sellerId: true } }),
       prisma.transaction.findUnique({ where: { listingId } }),
     ])
-    if (!listing) return NextResponse.json({ error: 'Listing tidak wujud.' }, { status: 400 })
-    if (listing.currentBidder !== buyerId) return NextResponse.json({ error: 'buyerId tidak sah.' }, { status: 400 })
-    if (listing.sellerId !== sellerId) return NextResponse.json({ error: 'sellerId tidak sah.' }, { status: 400 })
+    if (!listing) return NextResponse.json({ error: 'Listing does not exist.' }, { status: 400 })
+    if (listing.currentBidder !== buyerId) return NextResponse.json({ error: 'Invalid buyerId.' }, { status: 400 })
+    if (listing.sellerId !== sellerId) return NextResponse.json({ error: 'Invalid sellerId.' }, { status: 400 })
     // Idempotency: ignore duplicate webhook
     if (existingTx) return NextResponse.json({ received: true })
 

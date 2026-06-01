@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const listingId = request.nextUrl.searchParams.get('listingId')
   if (!listingId) {
-    return NextResponse.json({ error: 'listingId diperlukan.' }, { status: 400 })
+    return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
   }
 
   const [listing, dbUser] = await Promise.all([
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
   ])
 
   if (!listing) {
-    return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
+    return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   }
 
   if (listing.currentBidder !== user.id) {
-    return NextResponse.json({ error: 'Anda bukan pemenang lelongan ini.' }, { status: 403 })
+    return NextResponse.json({ error: 'You are not the winner of this auction.' }, { status: 403 })
   }
 
   const creditAvailable = dbUser?.creditBalance ?? 0
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
         product_data: {
           name: listing.title,
           description: creditToUse > 0
-            ? `Lelongan BALLOUT — ${listing.category} (RM${creditToUse.toFixed(0)} credit ditolak)`
-            : `Lelongan BALLOUT — ${listing.category}`,
+            ? `KASSIM Auction — ${listing.category} (RM${creditToUse.toFixed(0)} credit ditolak)`
+            : `KASSIM Auction — ${listing.category}`,
         },
         unit_amount: Math.round(chargeAmount * 100),
       },

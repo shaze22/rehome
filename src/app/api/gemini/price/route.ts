@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = Schema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
   }
 
   try {
@@ -27,6 +27,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(suggestion)
   } catch (err) {
     console.error('Gemini error:', err)
-    return NextResponse.json({ error: 'AI tidak tersedia sekarang.' }, { status: 500 })
+    return NextResponse.json({ error: 'AI is not available right now.' }, { status: 500 })
   }
 }

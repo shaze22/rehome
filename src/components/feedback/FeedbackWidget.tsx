@@ -103,7 +103,7 @@ export function FeedbackWidget() {
                 </button>
 
                 <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-                  Maklum balas anda membantu kami memperbaiki BALLOUT untuk semua pengguna.
+                  Your feedback helps us improve KASSIM for all users.
                 </p>
               </form>
             )}

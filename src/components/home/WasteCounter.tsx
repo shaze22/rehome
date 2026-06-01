@@ -13,9 +13,9 @@ export function WasteCounter({ totalCO2, totalTransactions }: Props) {
     <section className="py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-xl font-bold mb-2">Impak Platform Kami</h2>
+          <h2 className="text-xl font-bold mb-2">Our Platform Impact</h2>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Bersama kita membina Malaysia yang lebih hijau
+            Together we&apos;re building a greener Malaysia
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -26,8 +26,8 @@ export function WasteCounter({ totalCO2, totalTransactions }: Props) {
             <p className="text-3xl font-bold font-mono mb-1" style={{ color: 'var(--green)' }}>
               {Math.round(totalCO2).toLocaleString()}kg
             </p>
-            <p className="text-sm font-medium mb-1">CO₂ Diselamatkan</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>berbanding membeli baru</p>
+            <p className="text-sm font-medium mb-1">CO₂ Saved</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>vs buying new</p>
           </div>
 
           <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(20,184,166,0.2)' }}>
@@ -37,8 +37,8 @@ export function WasteCounter({ totalCO2, totalTransactions }: Props) {
             <p className="text-3xl font-bold font-mono mb-1" style={{ color: 'var(--teal)' }}>
               {trees.toLocaleString()}
             </p>
-            <p className="text-sm font-medium mb-1">Pokok Bersamaan</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>CO₂ diserap setiap tahun</p>
+            <p className="text-sm font-medium mb-1">Trees Equivalent</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>CO₂ absorbed per year</p>
           </div>
 
           <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(79,140,255,0.2)' }}>
@@ -48,8 +48,8 @@ export function WasteCounter({ totalCO2, totalTransactions }: Props) {
             <p className="text-3xl font-bold font-mono mb-1" style={{ color: 'var(--blue)' }}>
               {waterLitres.toLocaleString()}L
             </p>
-            <p className="text-sm font-medium mb-1">Air Dijimatkan</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>daripada pengeluaran baharu</p>
+            <p className="text-sm font-medium mb-1">Water Saved</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>from new production</p>
           </div>
         </div>
       </div>

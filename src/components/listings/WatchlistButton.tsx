@@ -41,10 +41,10 @@ export function WatchlistButton({ listingId, currentUserId }: Props) {
         border: `1px solid ${watching ? 'rgba(239,68,68,0.4)' : 'var(--border)'}`,
         color: watching ? 'var(--red)' : 'var(--text-secondary)',
       }}
-      title={currentUserId ? (watching ? 'Buang daripada simpanan' : 'Simpan listing') : 'Log masuk untuk simpan'}
+      title={currentUserId ? (watching ? 'Remove from saved' : 'Save listing') : 'Sign in to save'}
     >
       <Heart className="w-3.5 h-3.5" fill={watching ? 'currentColor' : 'none'} />
-      {watching ? 'Disimpan' : 'Simpan'}
+      {watching ? 'Saved' : 'Save'}
     </button>
   )
 }

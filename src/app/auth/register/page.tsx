@@ -17,7 +17,7 @@ export default function RegisterPage() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (password.length < 6) { setError('Kata laluan mesti sekurang-kurangnya 6 aksara.'); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     const { error } = await createClient().auth.signUp({
       email,
@@ -43,12 +43,12 @@ export default function RegisterPage() {
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: 'rgba(0,217,165,0.1)' }}>
             <CheckCircle className="w-8 h-8" style={{ color: 'var(--green)' }} />
           </div>
-          <h1 className="text-2xl font-bold mb-3">Semak Emel Anda!</h1>
+          <h1 className="text-2xl font-bold mb-3">Check Your Email!</h1>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Kami telah menghantar pautan pengesahan ke <strong>{email}</strong>. Sila klik pautan tersebut untuk aktifkan akaun anda.
+            We have sent a verification link to <strong>{email}</strong>. Please click the link to activate your account.
           </p>
           <Link href="/auth/login" className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal inline-block">
-            Kembali ke Log Masuk
+            Back to Login
           </Link>
         </div>
       </div>
@@ -62,8 +62,8 @@ export default function RegisterPage() {
           <div className="w-12 h-12 rounded-2xl gradient-teal flex items-center justify-center mx-auto mb-4">
             <Recycle className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Sertai BALLOUT</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Mulakan perjalanan pekeliling anda hari ini</p>
+          <h1 className="text-2xl font-bold mb-2">Join KASSIM</h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Start your circular economy journey today</p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -78,7 +78,7 @@ export default function RegisterPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Daftar dengan Google
+            Register with Google
           </button>
 
           <div className="relative mb-6">
@@ -86,13 +86,13 @@ export default function RegisterPage() {
               <div className="w-full" style={{ borderTop: '1px solid var(--border)' }} />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-2" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)' }}>atau</span>
+              <span className="px-2" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)' }}>or</span>
             </div>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nama Penuh</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <input
@@ -100,7 +100,7 @@ export default function RegisterPage() {
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Nama anda"
+                  placeholder="Your name"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
                   style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 />
@@ -108,7 +108,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Emel</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <input
@@ -116,7 +116,7 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="anda@contoh.com"
+                  placeholder="you@example.com"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
                   style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 />
@@ -124,7 +124,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Kata Laluan</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <input
@@ -132,7 +132,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Sekurang-kurangnya 6 aksara"
+                  placeholder="At least 6 characters"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
                   style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                 />
@@ -150,14 +150,14 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-60 transition-all hover:scale-105 active:scale-95"
             >
-              {loading ? 'Mendaftar...' : 'Daftar Sekarang'}
+              {loading ? 'Registering...' : 'Register Now'}
             </button>
           </form>
 
           <p className="text-center text-sm mt-6" style={{ color: 'var(--text-secondary)' }}>
-            Sudah ada akaun?{' '}
+            Already have an account?{' '}
             <Link href="/auth/login" className="font-medium hover:underline" style={{ color: 'var(--teal)' }}>
-              Log masuk
+              Log in
             </Link>
           </p>
         </div>

@@ -141,19 +141,19 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
   }
 
   const statCards = [
-    { label: 'Pengguna', value: stats.totalUsers, icon: Users, color: 'var(--blue)' },
-    { label: 'Listing Aktif', value: stats.activeListings, icon: Package, color: 'var(--teal)' },
-    { label: 'Item Dijual', value: stats.soldListings, icon: CheckCircle, color: 'var(--green)' },
-    { label: 'Tawaran', value: stats.totalBids, icon: Gavel, color: 'var(--orange)' },
-    { label: 'Mesej', value: stats.totalMessages, icon: MessageCircle, color: 'var(--purple)' },
-    { label: 'Rating Avg', value: `${stats.avgRating}★`, icon: Star, color: 'var(--yellow)' },
-    { label: 'Jumlah GMV', value: `RM ${Math.round(stats.totalVolume).toLocaleString()}`, icon: TrendingUp, color: 'var(--teal)' },
+    { label: 'Users', value: stats.totalUsers, icon: Users, color: 'var(--blue)' },
+    { label: 'Active Listings', value: stats.activeListings, icon: Package, color: 'var(--teal)' },
+    { label: 'Items Sold', value: stats.soldListings, icon: CheckCircle, color: 'var(--green)' },
+    { label: 'Total Bids', value: stats.totalBids, icon: Gavel, color: 'var(--orange)' },
+    { label: 'Messages', value: stats.totalMessages, icon: MessageCircle, color: 'var(--purple)' },
+    { label: 'Avg Rating', value: `${stats.avgRating}★`, icon: Star, color: 'var(--yellow)' },
+    { label: 'Total GMV', value: `RM ${Math.round(stats.totalVolume).toLocaleString()}`, icon: TrendingUp, color: 'var(--teal)' },
     { label: 'Revenue (15%)', value: `RM ${Math.round(stats.totalRevenue).toLocaleString()}`, icon: DollarSign, color: 'var(--green)' },
   ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-8">Panel Admin</h1>
+      <h1 className="text-3xl font-bold mb-8">Admin Panel</h1>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -220,7 +220,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
         <div>
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Users className="w-5 h-5" style={{ color: 'var(--blue)' }} />
-            Pengguna Terbaru
+            Recent Users
           </h2>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {recentUsers.map((u, i) => (
@@ -278,8 +278,8 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                       <a href={`/listings/${tx.listing.id}`} className="font-medium text-sm hover:underline">{tx.listing.title}</a>
                     </div>
                     <div className="flex flex-wrap gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <span>Penjual: <strong>{tx.seller.name ?? tx.seller.email}</strong></span>
-                      <span>Pembeli: <strong>{tx.buyer.name ?? tx.buyer.email}</strong></span>
+                      <span>Seller: <strong>{tx.seller.name ?? tx.seller.email}</strong></span>
+                      <span>Buyer: <strong>{tx.buyer.name ?? tx.buyer.email}</strong></span>
                       <span>{new Date(tx.updatedAt).toLocaleDateString('ms-MY')}</span>
                     </div>
                   </div>

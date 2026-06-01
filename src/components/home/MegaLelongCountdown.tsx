@@ -24,12 +24,12 @@ export function MegaLelongCountdown() {
 
     function update() {
       const diff = getNextFriday9pm().getTime() - Date.now()
-      if (diff <= 0) { setTimeLeft('MALAM INI!'); return }
+      if (diff <= 0) { setTimeLeft('TONIGHT!'); return }
       const d = Math.floor(diff / 86400000)
       const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-      setTimeLeft(d > 0 ? `${d}h ${h}j ${m}m` : `${h}j ${m}m ${s}s`)
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`)
     }
     update()
     const id = setInterval(update, 1000)
@@ -40,7 +40,7 @@ export function MegaLelongCountdown() {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono" style={{ backgroundColor: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: '#eab308' }}>
-      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Bermula dalam</span>
+      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Starts in</span>
       <span className="font-bold">{timeLeft}</span>
     </div>
   )

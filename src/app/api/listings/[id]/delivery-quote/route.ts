@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const buyerState = request.nextUrl.searchParams.get('buyerState')
 
   if (!buyerState) {
-    return NextResponse.json({ error: 'buyerState diperlukan.' }, { status: 400 })
+    return NextResponse.json({ error: 'buyerState is required.' }, { status: 400 })
   }
 
   const listing = await prisma.listing.findUnique({
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   })
 
   if (!listing) {
-    return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
+    return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   }
 
   const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg)

@@ -35,11 +35,11 @@ export function OfferModal({
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
-    if (itemPhotos.length + files.length > 5) { setError('Maksimum 5 foto.'); return }
+    if (itemPhotos.length + files.length > 5) { setError('Maximum 5 photos.'); return }
     const MAX_SIZE = 10 * 1024 * 1024
     for (const file of files) {
-      if (file.size > MAX_SIZE) { setError('Saiz fail tidak boleh melebihi 10MB.'); return }
-      if (!file.type.startsWith('image/')) { setError('Hanya fail imej dibenarkan.'); return }
+      if (file.size > MAX_SIZE) { setError('File size cannot exceed 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setError('Only image files are allowed.'); return }
     }
     setPhotoUploading(true)
     const supabase = createClient()
@@ -60,11 +60,11 @@ export function OfferModal({
     setError('')
 
     if ((offerType === 'SWAP' || offerType === 'HYBRID') && itemPhotos.length === 0) {
-      setError('Sila muat naik sekurang-kurangnya 1 foto barang tawaran anda.')
+      setError('Please upload at least 1 photo of your offered item.')
       return
     }
     if ((offerType === 'CASH' || offerType === 'HYBRID') && !cashAmount) {
-      setError('Sila masukkan jumlah wang tunai.')
+      setError('Please enter a cash amount.')
       return
     }
 
@@ -84,10 +84,10 @@ export function OfferModal({
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Gagal hantar tawaran.'); return }
+      if (!res.ok) { setError(data.error ?? 'Failed to submit offer.'); return }
       onSuccess()
     } catch {
-      setError('Ralat rangkaian. Sila cuba lagi.')
+      setError('Network error. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -100,9 +100,9 @@ export function OfferModal({
   }
 
   const allTabs: { type: OfferType; label: string; icon: React.ReactNode; show: boolean }[] = [
-    { type: 'CASH' as OfferType, label: 'Wang', icon: <DollarSign className="w-4 h-4" />, show: swapAcceptCash },
-    { type: 'SWAP' as OfferType, label: 'Barang', icon: <ArrowLeftRight className="w-4 h-4" />, show: true },
-    { type: 'HYBRID' as OfferType, label: 'Barang + Wang', icon: <Layers className="w-4 h-4" />, show: true },
+    { type: 'CASH' as OfferType, label: 'Cash', icon: <DollarSign className="w-4 h-4" />, show: swapAcceptCash },
+    { type: 'SWAP' as OfferType, label: 'Item', icon: <ArrowLeftRight className="w-4 h-4" />, show: true },
+    { type: 'HYBRID' as OfferType, label: 'Item + Cash', icon: <Layers className="w-4 h-4" />, show: true },
   ]
   const tabs = allTabs.filter(t => t.show)
 
@@ -112,7 +112,7 @@ export function OfferModal({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
           <div>
-            <h2 className="text-lg font-semibold">Buat Tawaran</h2>
+            <h2 className="text-lg font-semibold">Make an Offer</h2>
             <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text-secondary)' }}>{listingTitle}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5">
@@ -124,7 +124,7 @@ export function OfferModal({
           {/* Value reference */}
           {swapValueEstimate && (
             <div className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Nilai anggaran item ini</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Estimated value of this item</span>
               <span className="font-bold font-mono" style={{ color: '#16a34a' }}>~RM {swapValueEstimate.toFixed(0)}</span>
             </div>
           )}
@@ -132,7 +132,7 @@ export function OfferModal({
           {/* Wanted info */}
           {(swapWantedItem || swapWantedCategory) && (
             <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Pemilik mencari: </span>
+              <span style={{ color: 'var(--text-muted)' }}>Owner is looking for: </span>
               <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                 {[swapWantedItem, swapWantedCategory].filter(Boolean).join(' / ')}
               </span>
@@ -141,7 +141,7 @@ export function OfferModal({
 
           {/* Offer type tabs */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Jenis Tawaran</label>
+            <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Offer Type</label>
             <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
               {tabs.map(tab => (
                 <button
@@ -164,7 +164,7 @@ export function OfferModal({
           {(offerType === 'CASH' || offerType === 'HYBRID') && (
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                {offerType === 'HYBRID' ? 'Tambahan wang tunai (RM)' : 'Jumlah wang tunai (RM)'} *
+                {offerType === 'HYBRID' ? 'Additional cash (RM)' : 'Cash amount (RM)'} *
               </label>
               <input
                 type="number" min={0} step={1} value={cashAmount}
@@ -182,14 +182,14 @@ export function OfferModal({
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Foto barang anda (maks 5) *
+                  Photos of your item (max 5) *
                 </label>
                 <label className="flex flex-col items-center gap-2 p-5 rounded-xl cursor-pointer" style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--bg-elevated)' }}>
                   <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" disabled={itemPhotos.length >= 5} />
                   {photoUploading ? <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--teal)' }} /> : (
                     <>
                       <Upload className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Klik untuk muat naik ({itemPhotos.length}/5)</p>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Click to upload ({itemPhotos.length}/5)</p>
                     </>
                   )}
                 </label>
@@ -208,10 +208,10 @@ export function OfferModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Penerangan barang anda</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Description of your item</label>
                 <textarea
                   value={itemDesc} onChange={e => setItemDesc(e.target.value)}
-                  placeholder="Jenama, model, keadaan, aksesori disertakan..."
+                  placeholder="Brand, model, condition, accessories included..."
                   rows={3}
                   className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
                   style={inputStyle}
@@ -219,7 +219,7 @@ export function OfferModal({
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Anggaran nilai barang anda (RM)</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Estimated value of your item (RM)</label>
                 <input
                   type="number" min={0} step={1} value={itemValue} onChange={e => setItemValue(e.target.value)}
                   placeholder="0"
@@ -233,7 +233,7 @@ export function OfferModal({
           {/* Total */}
           {(cashAmount || itemValue) && (
             <div className="flex justify-between items-center px-4 py-2.5 rounded-xl font-mono text-sm" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Jumlah tawaran</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Total offer</span>
               <span className="font-bold" style={{ color: 'var(--teal)' }}>
                 RM {((Number(cashAmount) || 0) + (Number(itemValue) || 0)).toFixed(0)}
               </span>
@@ -242,10 +242,10 @@ export function OfferModal({
 
           {/* Message */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Nota kepada pemilik (pilihan)</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Note to owner (optional)</label>
             <textarea
               value={message} onChange={e => setMessage(e.target.value)}
-              placeholder="Terangkan tawaran anda atau tanya soalan..."
+              placeholder="Explain your offer or ask a question..."
               rows={2}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
               style={inputStyle}
@@ -265,8 +265,8 @@ export function OfferModal({
             style={{ backgroundColor: '#16a34a' }}
           >
             {submitting ? (
-              <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Menghantar...</span>
-            ) : 'Hantar Tawaran'}
+              <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Sending...</span>
+            ) : 'Submit Offer'}
           </button>
         </form>
       </div>

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Recycle, Heart, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -34,19 +35,19 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
               <Recycle className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>BALLOUT</span>
+            <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
           </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
             <Link href="/listings" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
-              Semak Imbas
+              Browse
             </Link>
             <Link href="/jual" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
-              Jual Barangan
+              Sell
             </Link>
             <Link href="/impact" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
-              Impak
+              Impact
             </Link>
             {user ? (
               <div className="flex items-center gap-3">
@@ -56,14 +57,14 @@ export function Navbar() {
                 </Link>
                 <Link href="/dashboard/watchlist" className="flex items-center gap-1.5 text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
                   <Heart className="w-4 h-4" />
-                  Simpanan
+                  Saved
                 </Link>
                 <Link
                   href="/sell"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white gradient-teal"
                 >
                   <Plus className="w-4 h-4" />
-                  Jual
+                  Sell
                 </Link>
                 <button
                   onClick={handleSignOut}
@@ -71,25 +72,29 @@ export function Navbar() {
                   style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                 >
                   <UserIcon className="w-4 h-4" />
-                  Keluar
+                  Sign Out
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
                 <Link href="/auth/login" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
-                  Log Masuk
+                  Sign In
                 </Link>
                 <Link
                   href="/auth/register"
                   className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal"
                 >
-                  Daftar
+                  Register
                 </Link>
               </div>
             )}
+            <LanguageSwitcher />
           </div>
 
-          {/* Mobile menu button */}
+          {/* Language Switcher + Mobile menu button */}
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+          </div>
           <button
             className="md:hidden p-2 rounded-lg"
             style={{ color: 'var(--text-secondary)' }}
@@ -103,10 +108,10 @@ export function Navbar() {
         {menuOpen && (
           <div className="md:hidden pb-4 space-y-2">
             <Link href="/listings" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
-              Semak Imbas
+              Browse
             </Link>
             <Link href="/jual" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
-              Jual Barangan
+              Sell
             </Link>
             {user ? (
               <>
@@ -114,16 +119,16 @@ export function Navbar() {
                   Dashboard
                 </Link>
                 <button onClick={handleSignOut} className="w-full text-left px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Log Keluar
+                  Sign Out
                 </button>
               </>
             ) : (
               <>
                 <Link href="/auth/login" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
-                  Log Masuk
+                  Sign In
                 </Link>
                 <Link href="/auth/register" className="block px-3 py-2 rounded-lg text-sm font-medium text-white gradient-teal" onClick={() => setMenuOpen(false)}>
-                  Daftar
+                  Register
                 </Link>
               </>
             )}

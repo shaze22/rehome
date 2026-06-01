@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'BALLOUT',
-    short_name: 'BALLOUT',
-    description: 'Platform Lelongan & Tukar Barang #1 Malaysia',
+    name: 'KASSIM',
+    short_name: 'KASSIM',
+    description: 'Malaysia\'s #1 Flash Auction & Item Swap Platform',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
@@ -18,8 +18,8 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/api/pwa-icon?size=512', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
-      { name: 'Lelong Pantas', short_name: 'Flash', url: '/listings?mode=flash', description: 'Semak lelongan aktif' },
-      { name: 'Jual Sekarang', short_name: 'Jual', url: '/sell', description: 'Letak listing baru' },
+      { name: 'Flash Auctions', short_name: 'Flash', url: '/listings?mode=flash', description: 'Browse active auctions' },
+      { name: 'Sell Now', short_name: 'Sell', url: '/sell', description: 'Create a new listing' },
     ],
   }
 }

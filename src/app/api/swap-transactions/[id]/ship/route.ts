@@ -17,13 +17,13 @@ export async function POST(
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const { id } = await params
 
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = ShipSchema.safeParse(body)
@@ -32,19 +32,19 @@ export async function POST(
   const data = parsed.data
 
   const tx = await prisma.swapTransaction.findUnique({ where: { id } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
   if (tx.escrowStatus === 'COMPLETED' || tx.escrowStatus === 'DISPUTED') {
-    return NextResponse.json({ error: 'Transaksi sudah selesai atau dalam pertikaian.' }, { status: 400 })
+    return NextResponse.json({ error: 'Transaction is already completed or disputed.' }, { status: 400 })
   }
 
   const isSeller = tx.sellerId === user.id
   const isBuyer = tx.buyerId === user.id
-  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
   // Prevent double-shipping
-  if (isSeller && tx.sellerItemShipped) return NextResponse.json({ error: 'Anda sudah menandakan item telah dihantar.' }, { status: 400 })
-  if (isBuyer && tx.buyerItemShipped) return NextResponse.json({ error: 'Anda sudah menandakan item telah dihantar.' }, { status: 400 })
-  if (isBuyer && tx.buyerItemShipped === null) return NextResponse.json({ error: 'Pembeli tidak perlu hantar barang untuk tawaran wang tunai.' }, { status: 400 })
+  if (isSeller && tx.sellerItemShipped) return NextResponse.json({ error: 'You have already marked the item as shipped.' }, { status: 400 })
+  if (isBuyer && tx.buyerItemShipped) return NextResponse.json({ error: 'You have already marked the item as shipped.' }, { status: 400 })
+  if (isBuyer && tx.buyerItemShipped === null) return NextResponse.json({ error: 'Buyer does not need to ship for cash offers.' }, { status: 400 })
 
   // Build update payload
   const update: Record<string, unknown> = {}
@@ -95,7 +95,7 @@ export async function POST(
       ).catch(() => {})
     }
     sendPushToUser(recipientId, {
-      title: '📦 Barang sedang dalam perjalanan!',
+      title: '📦 Item on its way!',
       body: updated.listing.title,
       url: `/listings/${tx.listingId}`,
       tag: `ship-${tx.id}`,

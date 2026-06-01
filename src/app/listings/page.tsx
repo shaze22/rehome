@@ -7,11 +7,11 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Semak Imbas Lelongan',
-  description: 'Semak imbas lelongan barangan terpakai aktif dan tawaran tukar barang di seluruh Malaysia.',
+  title: 'Browse Listings',
+  description: 'Browse active pre-loved item auctions and item swaps across Malaysia.',
   openGraph: {
-    title: 'Semak Imbas Lelongan | BALLOUT',
-    description: 'Lelongan progresif 30 minit dan tawaran tukar barang. Barangan elektronik, perabot, fesyen & lebih lagi.',
+    title: 'Browse Listings | KASSIM',
+    description: 'Progressive 30-min auctions and item swaps. Electronics, furniture, fashion & more.',
   },
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Bell, BellOff } from 'lucide-react'
 
-const ASKED_KEY = 'ballout_push_asked'
+const ASKED_KEY = 'kassim_push_asked'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -70,9 +70,9 @@ export function PushPermission({ userId }: { userId: string }) {
           <Bell className="w-5 h-5" style={{ color: '#eab308' }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">Aktifkan notifikasi bid</p>
+          <p className="text-sm font-semibold">Enable bid notifications</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-            Dapat tahu bila tawaran anda dikalahkan atau ada offer baru
+            Get notified when you&apos;ve been outbid or receive a new offer
           </p>
           <div className="flex gap-2 mt-3">
             <button
@@ -81,7 +81,7 @@ export function PushPermission({ userId }: { userId: string }) {
               style={{ backgroundColor: '#eab308', color: '#000' }}
             >
               <Bell className="w-3.5 h-3.5" />
-              Aktifkan
+              Enable
             </button>
             <button
               onClick={dismiss}

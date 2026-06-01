@@ -12,21 +12,21 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
 
   const { listingId, rating, comment } = parsed.data
 
   const tx = await prisma.transaction.findUnique({ where: { listingId } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
-  if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Hanya pembeli boleh beri ulasan.' }, { status: 403 })
-  if (!tx.deliveryConfirmed) return NextResponse.json({ error: 'Sahkan terima item dahulu.' }, { status: 400 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Only the buyer can submit a review.' }, { status: 403 })
+  if (!tx.deliveryConfirmed) return NextResponse.json({ error: 'Please confirm receipt of the item first.' }, { status: 400 })
 
   const existing = await prisma.review.findFirst({ where: { listingId, reviewerId: user.id } })
-  if (existing) return NextResponse.json({ error: 'Ulasan sudah diberikan.' }, { status: 400 })
+  if (existing) return NextResponse.json({ error: 'Review already submitted.' }, { status: 400 })
 
   const review = await prisma.review.create({
     data: { listingId, reviewerId: user.id, sellerId: tx.sellerId, rating, comment },

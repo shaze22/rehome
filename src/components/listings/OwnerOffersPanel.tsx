@@ -34,9 +34,9 @@ interface Props {
 }
 
 const OFFER_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  CASH: { label: 'Wang Tunai', icon: <DollarSign className="w-3.5 h-3.5" />, color: 'var(--yellow)' },
-  SWAP: { label: 'Tukar Barang', icon: <ArrowLeftRight className="w-3.5 h-3.5" />, color: '#16a34a' },
-  HYBRID: { label: 'Barang + Wang', icon: <Layers className="w-3.5 h-3.5" />, color: 'var(--teal)' },
+  CASH: { label: 'Cash', icon: <DollarSign className="w-3.5 h-3.5" />, color: 'var(--yellow)' },
+  SWAP: { label: 'Swap', icon: <ArrowLeftRight className="w-3.5 h-3.5" />, color: '#16a34a' },
+  HYBRID: { label: 'Item + Cash', icon: <Layers className="w-3.5 h-3.5" />, color: 'var(--teal)' },
 }
 
 function CounterModal({
@@ -77,28 +77,28 @@ function CounterModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
       <div className="w-full max-w-sm rounded-2xl p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Counter Tawaran</h3>
+          <h3 className="font-semibold">Counter Offer</h3>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Cadangkan jumlah wang (RM)</label>
+            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Suggest cash amount (RM)</label>
             <input type="number" min={0} step={1} value={cashAmount} onChange={e => setCashAmount(e.target.value)}
-              placeholder="Kosongkan jika tiada perubahan"
+              placeholder="Leave blank if no change"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono" style={inputStyle} />
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Pesanan</label>
+            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Message</label>
             <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3}
-              placeholder="Terangkan syarat counter tawaran anda..."
+              placeholder="Explain your counter offer terms..."
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none" style={inputStyle} />
           </div>
           {error && <p className="text-xs" style={{ color: 'var(--red)' }}>{error}</p>}
           <button type="submit" disabled={submitting}
             className="w-full py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
             style={{ backgroundColor: 'var(--teal)' }}>
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Hantar Counter'}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Send Counter'}
           </button>
         </form>
       </div>
@@ -151,9 +151,9 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
               )}
             </div>
             <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <span>Skor: {offer.bidder.rehomeScore}</span>
+              <span>Score: {offer.bidder.rehomeScore}</span>
               {(offer.bidder.successfulSwaps ?? 0) > 0 && (
-                <span>{offer.bidder.successfulSwaps} swap berjaya</span>
+                <span>{offer.bidder.successfulSwaps} successful swaps</span>
               )}
             </div>
           </div>
@@ -179,19 +179,19 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
         <div className="space-y-1.5 mb-3">
           {latestOffer.offeredCashAmount != null && (
             <div className="flex justify-between text-sm">
-              <span style={{ color: 'var(--text-secondary)' }}>Wang tunai</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Cash</span>
               <span className="font-mono font-bold" style={{ color: 'var(--yellow)' }}>RM {latestOffer.offeredCashAmount}</span>
             </div>
           )}
           {latestOffer.offeredItemValue != null && (
             <div className="flex justify-between text-sm">
-              <span style={{ color: 'var(--text-secondary)' }}>Nilai barang</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Item value</span>
               <span className="font-mono font-bold" style={{ color: '#16a34a' }}>~RM {latestOffer.offeredItemValue}</span>
             </div>
           )}
           {latestOffer.totalOfferValue != null && (
             <div className="flex justify-between text-sm font-semibold pt-1" style={{ borderTop: '1px solid var(--border)' }}>
-              <span>Jumlah</span>
+              <span>Total</span>
               <span className="font-mono" style={{ color: 'var(--teal)' }}>RM {latestOffer.totalOfferValue}</span>
             </div>
           )}
@@ -223,7 +223,7 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
         {offer.counterOffers.length > 0 && (
           <button onClick={() => setExpanded(e => !e)} className="flex items-center gap-1 text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            {offer.counterOffers.length} pusingan rundingan
+            {offer.counterOffers.length} negotiation rounds
           </button>
         )}
 
@@ -234,7 +234,7 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-60"
               style={{ backgroundColor: '#16a34a' }}>
               {acting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-              Terima
+              Accept
             </button>
             <button onClick={() => setShowCounter(true)} disabled={acting || offer.counterRounds >= 3}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium disabled:opacity-40"
@@ -257,7 +257,7 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
                 backgroundColor: offer.status === 'ACCEPTED' ? 'rgba(22,163,74,0.15)' : 'rgba(100,100,100,0.15)',
                 color: offer.status === 'ACCEPTED' ? '#16a34a' : 'var(--text-muted)',
               }}>
-              {offer.status === 'ACCEPTED' ? '✓ Diterima' : offer.status === 'REJECTED' ? 'Ditolak' : 'Tamat tempoh'}
+              {offer.status === 'ACCEPTED' ? '✓ Accepted' : offer.status === 'REJECTED' ? 'Rejected' : 'Expired'}
             </span>
           </div>
         )}
@@ -266,12 +266,12 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
       {/* Counter history expanded */}
       {expanded && offer.counterOffers.length > 0 && (
         <div className="border-t space-y-2 p-3" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-card)' }}>
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Sejarah rundingan</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Negotiation history</p>
           {[offer, ...offer.counterOffers].map((o, idx) => (
             <div key={o.id} className="text-xs flex gap-2 items-start">
               <span className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{idx + 1}</span>
               <div>
-                <span style={{ color: 'var(--text-secondary)' }}>{o.bidder?.name ?? 'Pemilik'}: </span>
+                <span style={{ color: 'var(--text-secondary)' }}>{o.bidder?.name ?? 'Owner'}: </span>
                 {o.offeredCashAmount != null && <span className="font-mono">RM {o.offeredCashAmount} </span>}
                 {o.message && <span className="italic" style={{ color: 'var(--text-muted)' }}>"{o.message}"</span>}
               </div>
@@ -316,8 +316,8 @@ export function OwnerOffersPanel({ listingId, listingTitle, swapValueEstimate }:
     return (
       <div className="text-center py-8 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
         <MessageSquare className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-        <p className="text-sm font-medium mb-1">Belum ada tawaran</p>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tawaran akan muncul di sini apabila seseorang membuat tawaran.</p>
+        <p className="text-sm font-medium mb-1">No offers yet</p>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Offers will appear here when someone makes an offer.</p>
       </div>
     )
   }
@@ -325,22 +325,22 @@ export function OwnerOffersPanel({ listingId, listingTitle, swapValueEstimate }:
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Tawaran Masuk</h3>
+        <h3 className="font-semibold">Incoming Offers</h3>
         <span className="text-sm px-2.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(22,163,74,0.15)', color: '#16a34a' }}>
-          {activeCount} aktif
+          {activeCount} active
         </span>
       </div>
 
       {cashOffers.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tawaran Wang ({cashOffers.length})</p>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Cash Offers ({cashOffers.length})</p>
           {cashOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} listingValue={swapValueEstimate} />)}
         </div>
       )}
 
       {swapOffers.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tawaran Tukar ({swapOffers.length})</p>
+          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Swap Offers ({swapOffers.length})</p>
           {swapOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} listingValue={swapValueEstimate} />)}
         </div>
       )}

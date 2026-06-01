@@ -46,22 +46,22 @@ export async function analyzeItemPhotos(photoUrls: string[], category: string): 
     .map(({ data, mimeType }) => ({ inlineData: { data, mimeType } } as Part))
 
   if (imageParts.length === 0) {
-    return { conditionScore: 5, issues: [], title: '', description: '', isPhotoValid: false, invalidReason: 'Gambar tidak dapat dimuatkan.' }
+    return { conditionScore: 5, issues: [], title: '', description: '', isPhotoValid: false, invalidReason: 'Could not load image.' }
   }
 
-  const prompt = `Kau adalah pakar penilaian barangan terpakai Malaysia. Analisa gambar-gambar ini dan balas JSON sahaja:
+  const prompt = `You are a Malaysian pre-loved item condition expert. Analyze these photos and reply with JSON only:
 
 {
-  "conditionScore": <integer 1-10, 10=seperti baru>,
-  "issues": ["senarai kerosakan/masalah yang nampak, max 4, dalam BM"],
-  "title": "<tajuk listing ringkas & menarik dalam BM, max 60 chars>",
-  "description": "<penerangan 2-3 ayat tentang keadaan barang dalam BM>",
-  "isPhotoValid": <true jika gambar jelas tunjuk barang, false jika blur/gelap/salah item>,
-  "invalidReason": "<sebab tidak sah, atau null>"
+  "conditionScore": <integer 1-10, 10=like new>,
+  "issues": ["list of visible damage/issues, max 4, in English"],
+  "title": "<concise & attractive listing title in English, max 60 chars>",
+  "description": "<2-3 sentence description of the item condition in English>",
+  "isPhotoValid": <true if photo clearly shows the item, false if blurry/dark/wrong item>,
+  "invalidReason": "<reason if invalid, or null>"
 }
 
-Kategori barang: ${category}
-Panduan skor: 9-10=hampir baru, 7-8=baik, 5-6=sederhana, 3-4=lusuh, 1-2=rosak teruk`
+Item category: ${category}
+Score guide: 9-10=near new, 7-8=good, 5-6=average, 3-4=worn, 1-2=heavily damaged`
 
   const result = await model.generateContent([...imageParts, prompt])
   const text = result.response.text()
@@ -75,7 +75,7 @@ export interface SwapSuggestion {
   suggestedCategories: string[]
   valueSuggestion: string
   reasoning: string
-  confidence: 'tinggi' | 'sederhana' | 'rendah'
+  confidence: 'high' | 'medium' | 'low'
 }
 
 export async function getSwapSuggestions(params: {
@@ -84,22 +84,22 @@ export async function getSwapSuggestions(params: {
   condition: number
   estimatedValue: number
 }): Promise<SwapSuggestion> {
-  const prompt = `Kau adalah pakar barter/tukar-barang di Malaysia. Seorang pengguna nak tukar barang berikut:
+  const prompt = `You are a Malaysian barter/item-swap expert. A user wants to swap the following item:
 
 Item: ${params.title}
-Kategori: ${params.category}
-Keadaan: ${params.condition}/10
-Nilai anggaran: RM ${params.estimatedValue}
+Category: ${params.category}
+Condition: ${params.condition}/10
+Estimated value: RM ${params.estimatedValue}
 
-Cadangkan barang apa yang sesuai untuk ditukar berdasarkan pasaran Malaysia (Mudah.my, Carousell, Facebook Marketplace). Pertimbangkan nilai setara dan permintaan semasa.
+Suggest suitable items to swap based on the Malaysian market (Mudah.my, Carousell, Facebook Marketplace). Consider equivalent value and current demand.
 
-Balas JSON sahaja:
+Reply with JSON only:
 {
-  "suggestedItems": ["<item spesifik 1>", "<item spesifik 2>", "<item spesifik 3>"],
-  "suggestedCategories": ["<kategori 1>", "<kategori 2>"],
-  "valueSuggestion": "<cadangan nilai setara dalam BM, 1 ayat>",
-  "reasoning": "<sebab cadangan ini masuk akal, 2 ayat dalam BM>",
-  "confidence": "<'tinggi' | 'sederhana' | 'rendah'>"
+  "suggestedItems": ["<specific item 1>", "<specific item 2>", "<specific item 3>"],
+  "suggestedCategories": ["<category 1>", "<category 2>"],
+  "valueSuggestion": "<equivalent value suggestion in English, 1 sentence>",
+  "reasoning": "<why this suggestion makes sense, 2 sentences in English>",
+  "confidence": "<'high' | 'medium' | 'low'>"
 }`
 
   const text = await geminiGenerate(prompt)
@@ -125,7 +125,7 @@ export async function getAIPriceSuggestion(params: {
 }): Promise<AIPriceSuggestion> {
   const prompt = `You are an expert in Malaysian second-hand goods pricing and circular economy market analysis.
 
-Analyze this item and suggest a fair starting bid range for a Malaysian online auction platform (BALLOUT):
+Analyze this item and suggest a fair starting bid range for a Malaysian online auction platform (KASSIM):
 
 Item Details:
 - Category: ${params.category}

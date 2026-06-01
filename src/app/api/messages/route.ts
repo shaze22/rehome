@@ -11,16 +11,16 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
 
   const { listingId, content } = parsed.data
 
   const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, status: true } })
-  if (!listing) return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
+  if (!listing) return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
 
   const msg = await prisma.message.create({
     data: { listingId, senderId: user.id, content },
@@ -38,10 +38,10 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const listingId = request.nextUrl.searchParams.get('listingId')
-  if (!listingId) return NextResponse.json({ error: 'listingId diperlukan.' }, { status: 400 })
+  if (!listingId) return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
 
   const messages = await prisma.message.findMany({
     where: { listingId },

@@ -7,13 +7,13 @@ import { MALAYSIAN_STATES } from '@/lib/delivery'
 import { createClient } from '@/lib/supabase/client'
 
 const CATEGORIES = [
-  { value: 'FURNITURE', label: 'Perabot' },
-  { value: 'ELECTRONICS', label: 'Elektronik' },
-  { value: 'FASHION', label: 'Fesyen' },
-  { value: 'BOOKS', label: 'Buku' },
-  { value: 'SPORTS', label: 'Sukan' },
-  { value: 'KITCHEN', label: 'Dapur' },
-  { value: 'OTHERS', label: 'Lain-lain' },
+  { value: 'FURNITURE', label: 'Furniture' },
+  { value: 'ELECTRONICS', label: 'Electronics' },
+  { value: 'FASHION', label: 'Fashion' },
+  { value: 'BOOKS', label: 'Books' },
+  { value: 'SPORTS', label: 'Sports' },
+  { value: 'KITCHEN', label: 'Kitchen' },
+  { value: 'OTHERS', label: 'Others' },
 ]
 
 interface AISuggestion {
@@ -75,7 +75,7 @@ export function SellForm({ userId }: Props) {
   const [submitError, setSubmitError] = useState('')
 
   async function analysePhotos() {
-    if (photos.length === 0) { setPhotoAnalysisError('Muat naik sekurang-kurangnya 1 foto dahulu.'); return }
+    if (photos.length === 0) { setPhotoAnalysisError('Please upload at least 1 photo first.'); return }
     setPhotoAnalysing(true)
     setPhotoAnalysisError('')
     try {
@@ -86,12 +86,12 @@ export function SellForm({ userId }: Props) {
       })
       const data = await res.json()
       if (!res.ok) { setPhotoAnalysisError(data.error ?? 'AI gagal.'); return }
-      if (!data.isPhotoValid) { setPhotoAnalysisError(`Gambar tidak jelas: ${data.invalidReason ?? 'Sila muat naik gambar yang lebih jelas.'}`); return }
+      if (!data.isPhotoValid) { setPhotoAnalysisError(`Photo is unclear: ${data.invalidReason ?? 'Please upload a clearer photo.'}`); return }
       if (data.title) setTitle(data.title)
       if (data.description) setDescription(data.description)
       if (data.conditionScore) setCondition(data.conditionScore)
     } catch {
-      setPhotoAnalysisError('Gagal menghubungi AI. Sila cuba lagi.')
+      setPhotoAnalysisError('Failed to contact AI. Please try again.')
     } finally {
       setPhotoAnalysing(false)
     }
@@ -121,7 +121,7 @@ export function SellForm({ userId }: Props) {
 
   async function getAISuggestion() {
     if (!category || !originalPrice || !state) {
-      setAiError('Sila isi kategori, harga asal dan negeri dahulu.')
+      setAiError('Please fill in the category, original price, and state first.')
       return
     }
     setAiLoading(true)
@@ -138,7 +138,7 @@ export function SellForm({ userId }: Props) {
       setAiSuggestion(data)
       if (mode === 'FLASH') setStartingBid(String(data.suggested_min))
     } catch {
-      setAiError('Gagal menghubungi AI. Sila cuba lagi.')
+      setAiError('Failed to contact AI. Please try again.')
     } finally {
       setAiLoading(false)
     }
@@ -146,11 +146,11 @@ export function SellForm({ userId }: Props) {
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
-    if (photos.length + files.length > 5) { alert('Maksimum 5 foto sahaja.'); return }
+    if (photos.length + files.length > 5) { alert('Maximum 5 photos only.'); return }
     const MAX_SIZE = 10 * 1024 * 1024
     for (const file of files) {
-      if (file.size > MAX_SIZE) { setSubmitError('Saiz fail tidak boleh melebihi 10MB.'); return }
-      if (!file.type.startsWith('image/')) { setSubmitError('Hanya fail imej dibenarkan.'); return }
+      if (file.size > MAX_SIZE) { setSubmitError('File size cannot exceed 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setSubmitError('Only image files are allowed.'); return }
     }
     setPhotoUploading(true)
     const supabase = createClient()
@@ -169,10 +169,10 @@ export function SellForm({ userId }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitError('')
-    if (!state) { setSubmitError('Sila pilih negeri.'); return }
-    if (photos.length === 0) { setSubmitError('Sila muat naik sekurang-kurangnya 1 foto.'); return }
+    if (!state) { setSubmitError('Please select a state.'); return }
+    if (photos.length === 0) { setSubmitError('Please upload at least 1 photo.'); return }
     if (mode === 'SWAP' && !swapOpenOffers && !swapWantedItem && !swapWantedCategory) {
-      setSubmitError('Sila nyatakan barang atau kategori yang anda mahukan, atau aktifkan "Terima tawaran apa sahaja".')
+      setSubmitError('Please specify an item or category you want, or enable "Accept any offer".')
       return
     }
     setSubmitting(true)
@@ -201,10 +201,10 @@ export function SellForm({ userId }: Props) {
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-      if (!res.ok) { setSubmitError(data.error ?? 'Gagal mencipta listing.'); return }
+      if (!res.ok) { setSubmitError(data.error ?? 'Failed to create listing.'); return }
       router.push(`/listings/${data.listing.id}`)
     } catch {
-      setSubmitError('Ralat rangkaian. Sila cuba lagi.')
+      setSubmitError('Network error. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -231,7 +231,7 @@ export function SellForm({ userId }: Props) {
               : { color: 'var(--text-secondary)' }}
           >
             <Zap className="w-4 h-4" />
-            Lelong Pantas
+            Flash Auction
           </button>
           <button
             type="button"
@@ -242,36 +242,36 @@ export function SellForm({ userId }: Props) {
               : { color: 'var(--text-secondary)' }}
           >
             <ArrowLeftRight className="w-4 h-4" />
-            Tukar Barang
+            Swap
           </button>
         </div>
         <p className="text-xs text-center mt-2 pb-1" style={{ color: 'var(--text-muted)' }}>
           {mode === 'FLASH'
-            ? 'Lelongan 30 minit selepas bid pertama — dapat wang tunai'
-            : 'Tawar 3 hari — tukar barang, wang, atau gabungan'}
+            ? '30-minute auction after first bid — get cash'
+            : '3-day offer period — swap items, cash, or a combination'}
         </p>
       </section>
 
       {/* Basic Info */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-5">Maklumat Asas</h2>
+        <h2 className="text-lg font-semibold mb-5">Basic Information</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tajuk Item *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Item Title *</label>
             <input
               type="text" required value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="cth: iPhone 13 Pro 256GB Space Gray"
+              placeholder="e.g. iPhone 13 Pro 256GB Space Gray"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
               style={inputStyle}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Penerangan *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Description *</label>
             <textarea
               required value={description} onChange={e => setDescription(e.target.value)}
-              placeholder="Terangkan keadaan, aksesori disertakan, sebab menjual/tukar..."
+              placeholder="Describe the condition, accessories included, reason for selling/swapping..."
               rows={4}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
               style={inputStyle}
@@ -280,7 +280,7 @@ export function SellForm({ userId }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Kategori *</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Category *</label>
               <select
                 required value={category} onChange={e => setCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none"
@@ -290,13 +290,13 @@ export function SellForm({ userId }: Props) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Negeri *</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>State *</label>
               <select
                 required value={state} onChange={e => setState(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none"
                 style={inputStyle}
               >
-                <option value="">Pilih Negeri</option>
+                <option value="">Select State</option>
                 {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -304,7 +304,7 @@ export function SellForm({ userId }: Props) {
 
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Anggaran Berat (kg) — untuk sebut harga penghantaran
+              Estimated Weight (kg) — for delivery quote
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -318,12 +318,12 @@ export function SellForm({ userId }: Props) {
               </span>
             </div>
             <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-              Lebih tepat → sebut harga penghantaran lebih jitu. Min 0.1kg, Maks 30kg.
+              More accurate → more precise delivery quote. Min 0.1kg, Max 30kg.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Harga Asal (RM) *</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Original Price (RM) *</label>
             <input
               type="number" required min={0} step={1} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
               placeholder="0"
@@ -334,8 +334,8 @@ export function SellForm({ userId }: Props) {
 
           <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: mode === 'SWAP' ? 'rgba(22,163,74,0.08)' : 'rgba(20,184,166,0.08)', border: `1px solid ${mode === 'SWAP' ? 'rgba(22,163,74,0.2)' : 'rgba(20,184,166,0.2)'}`, color: 'var(--text-secondary)' }}>
             {mode === 'FLASH'
-              ? 'Listing aktif selama-lamanya sehingga ada bidder pertama. Selepas itu, lelongan hanya 30 minit.'
-              : 'Listing aktif selama 3 hari (72 jam). Semua tawaran diterima dalam tempoh ini.'}
+              ? 'Listing stays active until the first bidder. After that, auction lasts only 30 minutes.'
+              : 'Listing stays active for 3 days (72 hours). All offers are accepted within this period.'}
           </div>
         </div>
       </section>
@@ -345,7 +345,7 @@ export function SellForm({ userId }: Props) {
         <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
           <div className="flex items-center gap-2 mb-5">
             <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
-            <h2 className="text-lg font-semibold">Tetapan Tukar Barang</h2>
+            <h2 className="text-lg font-semibold">Swap Settings</h2>
           </div>
 
           <div className="space-y-4">
@@ -358,12 +358,12 @@ export function SellForm({ userId }: Props) {
               style={{ border: '1px solid rgba(22,163,74,0.5)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}
             >
               {swapAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {swapAiLoading ? 'AI sedang cari cadangan...' : '✨ AI Cadangkan Barang Swap'}
+              {swapAiLoading ? 'AI is finding suggestions...' : '✨ AI Suggest Swap Items'}
             </button>
 
             {swapAiSuggestion && (
               <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)' }}>
-                <p className="text-xs font-medium" style={{ color: '#16a34a' }}>Cadangan AI ({swapAiSuggestion.confidence} keyakinan):</p>
+                <p className="text-xs font-medium" style={{ color: '#16a34a' }}>AI Suggestion ({swapAiSuggestion.confidence} confidence):</p>
                 <div className="flex flex-wrap gap-2">
                   {swapAiSuggestion.suggestedItems.map((item, i) => (
                     <button key={i} type="button" onClick={() => setSwapWantedItem(item)}
@@ -378,23 +378,23 @@ export function SellForm({ userId }: Props) {
             )}
 
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Apa yang anda mahukan? (pilihan)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>What are you looking for? (optional)</label>
               <input
                 type="text" value={swapWantedItem} onChange={e => setSwapWantedItem(e.target.value)}
-                placeholder="cth: Laptop MacBook, Basikal, Kamera DSLR..."
+                placeholder="e.g. MacBook Laptop, Bicycle, DSLR Camera..."
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none"
                 style={inputStyle}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Kategori yang dicari (pilihan)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Category you are looking for (optional)</label>
               <select
                 value={swapWantedCategory} onChange={e => setSwapWantedCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none"
                 style={inputStyle}
               >
-                <option value="">Semua kategori</option>
+                <option value="">All categories</option>
                 {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
@@ -406,8 +406,8 @@ export function SellForm({ userId }: Props) {
                   className="w-4 h-4 accent-green-600"
                 />
                 <div>
-                  <p className="text-sm font-medium">Terima tawaran apa sahaja</p>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Buka kepada semua jenis tawaran walaupun kategori berbeza</p>
+                  <p className="text-sm font-medium">Accept any offer</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Open to all offer types even if category differs</p>
                 </div>
               </label>
 
@@ -417,15 +417,15 @@ export function SellForm({ userId }: Props) {
                   className="w-4 h-4 accent-green-600"
                 />
                 <div>
-                  <p className="text-sm font-medium">Terima tawaran wang tunai</p>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Benarkan tawaran wang sahaja sebagai pilihan terakhir</p>
+                  <p className="text-sm font-medium">Accept cash offers</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Allow cash-only offers as a last resort</p>
                 </div>
               </label>
             </div>
 
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Minimum tambahan wang (RM) jika tukar + wang (pilihan)
+                Minimum cash top-up (RM) for swap + cash (optional)
               </label>
               <input
                 type="number" min={0} step={1} value={swapMinCashTopup} onChange={e => setSwapMinCashTopup(e.target.value)}
@@ -434,7 +434,7 @@ export function SellForm({ userId }: Props) {
                 style={inputStyle}
               />
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Jika tukar + wang, bidder mesti tambah sekurang-kurangnya RM ini.
+                If swap + cash, the bidder must add at least this amount in RM.
               </p>
             </div>
           </div>
@@ -443,12 +443,12 @@ export function SellForm({ userId }: Props) {
 
       {/* Condition */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-2">Skor Keadaan</h2>
-        <p className="text-xs mb-5" style={{ color: 'var(--text-secondary)' }}>1 = Sangat lusuh, 10 = Seperti baru</p>
+        <h2 className="text-lg font-semibold mb-2">Condition Score</h2>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-secondary)' }}>1 = Very worn, 10 = Like new</p>
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Keadaan</span>
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Condition</span>
             <span className="text-2xl font-bold font-mono" style={{ color: condition >= 7 ? 'var(--green)' : condition >= 4 ? 'var(--yellow)' : 'var(--orange)' }}>
               {condition}/10
             </span>
@@ -461,11 +461,11 @@ export function SellForm({ userId }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Ada calar?', value: hasScratch, setter: setHasScratch },
-            { label: 'Masih berfungsi?', value: isFunctional, setter: setIsFunctional },
-            { label: 'Bahagian lengkap?', value: hasCompleteParts, setter: setHasCompleteParts },
-            { label: 'Ada kotak asal?', value: hasOriginalBox, setter: setHasOriginalBox },
-            { label: 'Dalam waranti?', value: hasWarranty, setter: setHasWarranty },
+            { label: 'Has scratches?', value: hasScratch, setter: setHasScratch },
+            { label: 'Still functional?', value: isFunctional, setter: setIsFunctional },
+            { label: 'Complete parts?', value: hasCompleteParts, setter: setHasCompleteParts },
+            { label: 'Original box?', value: hasOriginalBox, setter: setHasOriginalBox },
+            { label: 'Under warranty?', value: hasWarranty, setter: setHasWarranty },
           ].map(item => (
             <label key={item.label} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--bg-elevated)' }}>
               <input
@@ -485,7 +485,7 @@ export function SellForm({ userId }: Props) {
         <div className="flex items-center gap-2 mb-4">
           <Bot className="w-5 h-5" style={{ color: 'var(--purple)' }} />
           <h2 className="text-lg font-semibold">
-            {mode === 'FLASH' ? 'Cadangan Harga AI' : 'Anggaran Nilai AI'}
+            {mode === 'FLASH' ? 'AI Price Suggestion' : 'AI Value Estimate'}
           </h2>
         </div>
 
@@ -497,7 +497,7 @@ export function SellForm({ userId }: Props) {
           style={{ border: '1px solid rgba(168,85,247,0.5)', color: 'var(--purple)', backgroundColor: 'rgba(168,85,247,0.08)' }}
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-          {aiLoading ? 'AI sedang menganalisis...' : mode === 'FLASH' ? 'Dapatkan Cadangan AI' : 'Anggar Nilai Barang'}
+          {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'Get AI Suggestion' : 'Estimate Item Value'}
         </button>
 
         {aiError && (
@@ -510,9 +510,9 @@ export function SellForm({ userId }: Props) {
           <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
             <div className="grid grid-cols-3 gap-3 mb-3">
               {[
-                { label: 'Rendah', value: aiSuggestion.low, color: 'var(--yellow)' },
-                { label: 'Wajar', value: aiSuggestion.fair, color: 'var(--purple)' },
-                { label: 'Tinggi', value: aiSuggestion.high, color: 'var(--green)' },
+                { label: 'Low', value: aiSuggestion.low, color: 'var(--yellow)' },
+                { label: 'Fair', value: aiSuggestion.fair, color: 'var(--purple)' },
+                { label: 'High', value: aiSuggestion.high, color: 'var(--green)' },
               ].map(s => (
                 <div key={s.label} className="text-center">
                   <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
@@ -526,7 +526,7 @@ export function SellForm({ userId }: Props) {
             </div>
             {mode === 'SWAP' && (
               <p className="text-xs mt-2 text-center" style={{ color: 'var(--text-muted)' }}>
-                Nilai wajar ini akan dipaparkan kepada bidder sebagai rujukan.
+                This fair value will be displayed to bidders as a reference.
               </p>
             )}
           </div>
@@ -535,7 +535,7 @@ export function SellForm({ userId }: Props) {
         {mode === 'FLASH' && (
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Tawaran Permulaan (RM, 0 = tiada harga minimum) *
+              Starting Bid (RM, 0 = no minimum price) *
             </label>
             <input
               type="number" required min={0} step={1} value={startingBid} onChange={e => setStartingBid(e.target.value)}
@@ -548,7 +548,7 @@ export function SellForm({ userId }: Props) {
 
       {/* Photos */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-4">Foto Item (Maks 5)</h2>
+        <h2 className="text-lg font-semibold mb-4">Item Photos (Max 5)</h2>
 
         <label className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl cursor-pointer transition-colors" style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--bg-elevated)' }}>
           <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" disabled={photos.length >= 5} />
@@ -557,8 +557,8 @@ export function SellForm({ userId }: Props) {
           ) : (
             <>
               <Upload className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Klik untuk muat naik foto</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{photos.length}/5 foto</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Click to upload photos</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{photos.length}/5 photos</p>
             </>
           )}
         </label>
@@ -567,7 +567,7 @@ export function SellForm({ userId }: Props) {
           <div className="flex flex-wrap gap-3 mt-4">
             {photos.map((url, i) => (
               <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => setPhotos(p => p.filter((_, j) => j !== i))}
@@ -591,14 +591,14 @@ export function SellForm({ userId }: Props) {
               style={{ border: '1px solid rgba(20,184,166,0.5)', color: 'var(--teal)', backgroundColor: 'rgba(20,184,166,0.08)' }}
             >
               {photoAnalysing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {photoAnalysing ? 'AI sedang analisis foto...' : '✨ Auto-isi dari Foto (AI)'}
+              {photoAnalysing ? 'AI is analysing photos...' : '✨ Auto-fill from Photo (AI)'}
             </button>
             {photoAnalysisError && (
               <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg mt-2" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {photoAnalysisError}
               </div>
             )}
-            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>AI akan isi tajuk, penerangan dan skor keadaan secara automatik.</p>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>AI will automatically fill in the title, description and condition score.</p>
           </div>
         )}
       </section>
@@ -618,10 +618,10 @@ export function SellForm({ userId }: Props) {
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
-            {mode === 'FLASH' ? 'Mencipta Lelongan...' : 'Menyiarkan Tukar Barang...'}
+            {mode === 'FLASH' ? 'Creating Auction...' : 'Publishing Swap...'}
           </span>
         ) : (
-          mode === 'FLASH' ? 'Siarkan Lelongan' : 'Siarkan Tukar Barang'
+          mode === 'FLASH' ? 'Publish Auction' : 'Publish Swap'
         )}
       </button>
     </form>

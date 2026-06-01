@@ -20,7 +20,7 @@ function useServiceWorker() {
 
 // ── Install Prompt ────────────────────────────────────────────────
 
-const DISMISS_KEY = 'ballout_install_dismissed'
+const DISMISS_KEY = 'kassim_install_dismissed'
 
 export function PWASetup() {
   useServiceWorker()
@@ -74,9 +74,9 @@ export function PWASetup() {
           ⚡
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">Tambah BALLOUT ke skrin utama</p>
+          <p className="text-sm font-semibold">Add KASSIM to your home screen</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-            Akses laju, notifikasi bid, dan guna offline
+            Fast access, bid notifications, and offline use
           </p>
           <div className="flex gap-2 mt-3">
             <button
@@ -91,7 +91,7 @@ export function PWASetup() {
               className="px-3 py-1.5 rounded-lg text-xs"
               style={{ color: 'var(--text-muted)', backgroundColor: 'var(--bg-elevated)' }}
             >
-              Tidak, terima kasih
+              No thanks
             </button>
           </div>
         </div>

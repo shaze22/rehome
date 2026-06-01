@@ -9,7 +9,7 @@ export async function DELETE(
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const listing = await prisma.listing.findUnique({
     where: { id },
@@ -19,15 +19,15 @@ export async function DELETE(
     },
   })
 
-  if (!listing) return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
-  if (listing.sellerId !== user.id) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
-  if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Hanya listing aktif boleh ditarik balik.' }, { status: 400 })
+  if (!listing) return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
+  if (listing.sellerId !== user.id) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+  if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Only active listings can be withdrawn.' }, { status: 400 })
 
   if (listing.mode === 'FLASH' && listing.bids.length > 0) {
-    return NextResponse.json({ error: 'Listing yang sudah ada tawaran tidak boleh ditarik balik.' }, { status: 400 })
+    return NextResponse.json({ error: 'Listings with existing bids cannot be withdrawn.' }, { status: 400 })
   }
   if (listing.mode === 'SWAP' && listing.offers.length > 0) {
-    return NextResponse.json({ error: 'Listing yang sudah ada tawaran aktif tidak boleh ditarik balik.' }, { status: 400 })
+    return NextResponse.json({ error: 'Listings with active offers cannot be withdrawn.' }, { status: 400 })
   }
 
   await prisma.listing.update({ where: { id }, data: { status: 'CANCELLED' } })

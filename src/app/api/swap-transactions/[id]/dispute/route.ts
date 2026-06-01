@@ -16,26 +16,26 @@ export async function POST(
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const { id } = await params
 
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = DisputeSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
 
   const tx = await prisma.swapTransaction.findUnique({ where: { id } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
-  if (tx.escrowStatus === 'COMPLETED') return NextResponse.json({ error: 'Transaksi sudah selesai, pertikaian tidak boleh difailkan.' }, { status: 400 })
-  if (tx.escrowStatus === 'DISPUTED') return NextResponse.json({ error: 'Pertikaian sudah pun difailkan.' }, { status: 400 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  if (tx.escrowStatus === 'COMPLETED') return NextResponse.json({ error: 'Transaction is completed, dispute cannot be filed.' }, { status: 400 })
+  if (tx.escrowStatus === 'DISPUTED') return NextResponse.json({ error: 'Dispute has already been filed.' }, { status: 400 })
 
   const isSeller = tx.sellerId === user.id
   const isBuyer = tx.buyerId === user.id
-  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
   const updated = await prisma.swapTransaction.update({
     where: { id },
@@ -57,8 +57,8 @@ export async function POST(
   // Push the other party
   const otherPartyId = isSeller ? tx.buyerId : tx.sellerId
   sendPushToUser(otherPartyId, {
-    title: '⚠️ Pertikaian difailkan',
-    body: `${listing?.title ?? 'Listing'} — admin akan selesaikan pertikaian ini.`,
+    title: '⚠️ Dispute filed',
+    body: `${listing?.title ?? 'Listing'} — admin will resolve this dispute.`,
     url: `/listings/${tx.listingId}`,
     tag: `dispute-${tx.id}`,
   }).catch(() => {})

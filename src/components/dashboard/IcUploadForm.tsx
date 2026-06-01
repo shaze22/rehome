@@ -16,24 +16,24 @@ const STATUS_INFO = {
     color: 'var(--red)',
     bg: 'rgba(239,68,68,0.08)',
     border: 'rgba(239,68,68,0.3)',
-    title: 'IC Belum Disahkan',
-    desc: 'Muat naik foto IC anda untuk mendapat lencana "Disahkan" dan meningkatkan kepercayaan pembeli.',
+    title: 'IC Not Verified',
+    desc: 'Upload your IC photo to get a "Verified" badge and increase buyer trust.',
   },
   PENDING: {
     icon: Clock,
     color: 'var(--yellow)',
     bg: 'rgba(251,191,36,0.08)',
     border: 'rgba(251,191,36,0.3)',
-    title: 'Sedang Disemak',
-    desc: 'IC anda sedang disemak oleh pasukan BALLOUT. Proses ini mengambil masa 1-2 hari bekerja.',
+    title: 'Under Review',
+    desc: 'Your IC is being reviewed by the KASSIM team. This process takes 1-2 business days.',
   },
   VERIFIED: {
     icon: CheckCircle,
     color: 'var(--green)',
     bg: 'rgba(0,217,165,0.08)',
     border: 'rgba(0,217,165,0.3)',
-    title: 'IC Disahkan',
-    desc: 'Tahniah! Akaun anda telah disahkan. Pembeli akan lebih yakin untuk membida listing anda.',
+    title: 'IC Verified',
+    desc: 'Congratulations! Your account has been verified. Buyers will be more confident bidding on your listings.',
   },
 }
 
@@ -57,14 +57,14 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
     const ext = file.name.split('.').pop()
     const path = `ic/${userId}/${Date.now()}.${ext}`
     const { data, error: uploadError } = await supabase.storage.from('rehome-photos').upload(path, file)
-    if (uploadError) { setError('Gagal muat naik foto. Cuba lagi.'); setUploading(false); return }
+    if (uploadError) { setError('Failed to upload photo. Please try again.'); setUploading(false); return }
     const { data: { publicUrl } } = supabase.storage.from('rehome-photos').getPublicUrl(data.path)
     setPhotoUrl(publicUrl)
     setUploading(false)
   }
 
   async function handleSubmit() {
-    if (!photoUrl) { setError('Sila muat naik foto IC dahulu.'); return }
+    if (!photoUrl) { setError('Please upload your IC photo first.'); return }
     setSubmitting(true)
     setError('')
     try {
@@ -78,10 +78,10 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
         setSuccess(true)
       } else {
         const data = await res.json()
-        setError(data.error ?? 'Ralat menghantar.')
+        setError(data.error ?? 'Submission error.')
       }
     } catch {
-      setError('Ralat rangkaian. Cuba lagi.')
+      setError('Network error. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -108,14 +108,14 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
             ) : photoUrl ? (
               <>
                 <CheckCircle className="w-6 h-6" style={{ color: 'var(--green)' }} />
-                <span className="text-xs" style={{ color: 'var(--green)' }}>Foto berjaya dimuat naik</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Klik untuk tukar</span>
+                <span className="text-xs" style={{ color: 'var(--green)' }}>Photo uploaded successfully</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Click to change</span>
               </>
             ) : (
               <>
                 <Upload className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Muat naik foto IC (depan)</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>JPG, PNG — maksimum 5MB</span>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Upload IC photo (front)</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>JPG, PNG — maximum 5MB</span>
               </>
             )}
           </label>
@@ -132,14 +132,14 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
             className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))' }}
           >
-            {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Menghantar...</span> : 'Hantar untuk Pengesahan'}
+            {submitting ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Sending...</span> : 'Submit for Verification'}
           </button>
         </div>
       )}
 
       {localStatus === 'PENDING' && currentIcPhoto && (
         <div className="mt-2">
-          <img src={currentIcPhoto} alt="IC anda" className="w-full max-w-sm rounded-lg object-cover" style={{ border: '1px solid var(--border)' }} />
+          <img src={currentIcPhoto} alt="Your IC" className="w-full max-w-sm rounded-lg object-cover" style={{ border: '1px solid var(--border)' }} />
         </div>
       )}
     </div>

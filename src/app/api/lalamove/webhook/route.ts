@@ -34,14 +34,14 @@ export async function POST(request: NextRequest) {
 
   // Allow empty-signature verification pings from Lalamove during webhook registration
   if (signature && !verifySignature(rawBody, signature)) {
-    return NextResponse.json({ error: 'Signature tidak sah.' }, { status: 401 })
+    return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 })
   }
 
   let payload: Record<string, unknown>
   try {
     payload = JSON.parse(rawBody)
   } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const event = payload.event as string

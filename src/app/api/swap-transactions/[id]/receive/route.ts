@@ -16,32 +16,32 @@ export async function POST(
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const { id } = await params
 
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = ReceiveSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
 
   const tx = await prisma.swapTransaction.findUnique({ where: { id } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
-  if (tx.escrowStatus === 'COMPLETED') return NextResponse.json({ error: 'Transaksi sudah selesai.' }, { status: 400 })
-  if (tx.escrowStatus === 'DISPUTED') return NextResponse.json({ error: 'Transaksi dalam pertikaian.' }, { status: 400 })
-  if (tx.escrowStatus === 'PENDING') return NextResponse.json({ error: 'Barang belum dihantar lagi.' }, { status: 400 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  if (tx.escrowStatus === 'COMPLETED') return NextResponse.json({ error: 'Transaction is already completed.' }, { status: 400 })
+  if (tx.escrowStatus === 'DISPUTED') return NextResponse.json({ error: 'Transaction is under dispute.' }, { status: 400 })
+  if (tx.escrowStatus === 'PENDING') return NextResponse.json({ error: 'Item has not been shipped yet.' }, { status: 400 })
 
   const isSeller = tx.sellerId === user.id
   const isBuyer = tx.buyerId === user.id
-  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+  if (!isSeller && !isBuyer) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
-  if (isBuyer && tx.buyerItemReceived) return NextResponse.json({ error: 'Anda sudah mengesahkan penerimaan.' }, { status: 400 })
-  if (isSeller && tx.sellerItemReceived) return NextResponse.json({ error: 'Anda sudah mengesahkan penerimaan.' }, { status: 400 })
+  if (isBuyer && tx.buyerItemReceived) return NextResponse.json({ error: 'You have already confirmed receipt.' }, { status: 400 })
+  if (isSeller && tx.sellerItemReceived) return NextResponse.json({ error: 'You have already confirmed receipt.' }, { status: 400 })
   // For CASH, seller doesn't need to confirm receiving (buyer received is enough)
-  if (isSeller && tx.offerType === 'CASH') return NextResponse.json({ error: 'Pengesahan ini tidak diperlukan untuk tawaran wang tunai.' }, { status: 400 })
+  if (isSeller && tx.offerType === 'CASH') return NextResponse.json({ error: 'This confirmation is not required for cash offers.' }, { status: 400 })
 
   const update: Record<string, unknown> = {}
   if (isBuyer) update.buyerItemReceived = true
@@ -100,8 +100,8 @@ export async function POST(
     const listingTitle = await prisma.listing.findUnique({ where: { id: tx.listingId }, select: { title: true } }).then(l => l?.title ?? 'Listing')
     if (seller?.email) sendSwapCompletedEmail(seller.email, seller.name ?? 'Penjual', listingTitle).catch(() => {})
     if (buyer?.email) sendSwapCompletedEmail(buyer.email, buyer.name ?? 'Pembeli', listingTitle).catch(() => {})
-    sendPushToUser(tx.sellerId, { title: '✅ Swap selesai!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
-    sendPushToUser(tx.buyerId, { title: '✅ Swap selesai!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
+    sendPushToUser(tx.sellerId, { title: '✅ Swap completed!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
+    sendPushToUser(tx.buyerId, { title: '✅ Swap completed!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
   }
 
   return NextResponse.json({ transaction: updated, completed: !!allReceived })

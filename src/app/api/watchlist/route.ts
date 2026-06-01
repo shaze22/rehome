@@ -8,11 +8,11 @@ const Schema = z.object({ listingId: z.string().min(1) })
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
 
   const { listingId } = parsed.data
   const existing = await prisma.watchlist.findUnique({ where: { userId_listingId: { userId: user.id, listingId } } })

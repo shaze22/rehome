@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Impak Alam',
-  description: 'Lihat impak nyata BALLOUT — CO₂ diselamatkan, pokok yang bersamaan, dan air yang dijimatkan daripada transaksi barangan terpakai di Malaysia.',
+  description: 'See the real impact of KASSIM — CO₂ saved, trees equivalent, and water conserved from pre-loved item transactions in Malaysia.',
 }
 
 async function getImpactStats() {
@@ -45,16 +45,16 @@ export default async function ImpactPage() {
       <div className="text-center mb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
           <Leaf className="w-3.5 h-3.5" />
-          Impak Nyata BALLOUT
+          KASSIM Real Impact
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-          Bersama Kita{' '}
+          Together We{' '}
           <span style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Mengubah Malaysia
+            Change Malaysia
           </span>
         </h1>
         <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          Setiap transaksi di BALLOUT adalah langkah ke arah Malaysia yang lebih hijau, lebih mampan, dan lebih bertanggungjawab.
+          Every transaction on KASSIM is a step towards a greener, more sustainable, and more responsible Malaysia.
         </p>
       </div>
 

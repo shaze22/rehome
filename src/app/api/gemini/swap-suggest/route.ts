@@ -12,7 +12,7 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = Schema.safeParse(body)
@@ -22,6 +22,6 @@ export async function POST(request: NextRequest) {
     const suggestion = await getSwapSuggestions(parsed.data)
     return NextResponse.json(suggestion)
   } catch {
-    return NextResponse.json({ error: 'AI tidak dapat membuat cadangan. Sila cuba lagi.' }, { status: 500 })
+    return NextResponse.json({ error: 'AI could not generate suggestions. Please try again.' }, { status: 500 })
   }
 }

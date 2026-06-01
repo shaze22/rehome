@@ -1,0 +1,180 @@
+{
+  "nav": {
+    "browse": "Semak Imbas",
+    "sell": "Jual",
+    "impact": "Impak",
+    "dashboard": "Dashboard",
+    "saved": "Simpanan",
+    "signIn": "Log Masuk",
+    "register": "Daftar",
+    "signOut": "Keluar"
+  },
+  "home": {
+    "badge": "Platform Lelongan Barangan Terpakai #1 Malaysia",
+    "hero": {
+      "title": "Jual Barang Lama.",
+      "titleHighlight": "Duit Masuk Hari Ini.",
+      "subtitle": "Lelongan progresif 30 minit. Tukar barang tanpa wang. Escrow selamat.",
+      "ctaSell": "Mula Jual Sekarang",
+      "ctaBrowse": "Semak Barangan"
+    },
+    "stats": {
+      "itemsSold": "Item Dijual",
+      "co2Saved": "CO₂ Diselamatkan",
+      "swapsCompleted": "Pertukaran Selesai",
+      "avgSellTime": "Masa Purata Jual"
+    },
+    "trust": {
+      "title": "Kenapa KASSIM Selamat?",
+      "subtitle": "Dibina untuk melindungi pembeli dan penjual Malaysia"
+    },
+    "flash": {
+      "title": "Lelong Pantas ⚡",
+      "subtitle": "Bida sekarang, menang dalam 30 minit",
+      "viewAll": "Lihat Semua",
+      "empty": "Belum ada lelongan aktif",
+      "startSelling": "Mula Jual"
+    },
+    "swap": {
+      "title": "Tukar Barang 🔄",
+      "subtitle": "Pertukaran barang terpakai tanpa wang",
+      "viewAll": "Lihat Semua",
+      "empty": "Belum ada tawaran tukar barang",
+      "listItem": "Tawar Barang"
+    },
+    "trending": {
+      "title": "Trending Minggu Ini 🔥",
+      "subtitle": "Barang paling popular 7 hari lepas"
+    },
+    "megaAuction": {
+      "title": "⚡ Mega Lelong Jumaat",
+      "subtitle": "Listing pilihan setiap Jumaat malam",
+      "startsIn": "Bermula dalam",
+      "tonight": "MALAM INI!"
+    },
+    "recentlyViewed": "Anda Baru Tengok",
+    "testimonials": {
+      "title": "Apa Kata Pengguna KASSIM?",
+      "subtitle": "Pengalaman sebenar dari komuniti kami"
+    }
+  },
+  "listing": {
+    "currentBid": "Tawaran semasa",
+    "timeLeft": "Masa tinggal",
+    "waitingFirstBid": "Menunggu bidder pertama",
+    "waitingDays": "Sudah {days} hari menunggu",
+    "noTimeLimit": "Tiada had masa",
+    "ended": "Tamat",
+    "hot": "🔥 Popular",
+    "wants": "Dicari:",
+    "cashOk": "Wang ok",
+    "estValue": "Nilai anggaran",
+    "openToAll": "Terbuka kepada semua tawaran",
+    "viewDetails": "Lihat butiran",
+    "firstBid": "Bid Pertama — Mungkin Menang Percuma!",
+    "placeBid": "Bida RM {amount}",
+    "placingBid": "Menghantar...",
+    "bidPlaced": "✓ Tawaran Dihantar!",
+    "gettingRate": "Mendapatkan kadar...",
+    "chooseDelivery": "Pilih penghantaran dahulu",
+    "submitOffer": "Hantar Tawaran",
+    "aiPriceSuggestion": "Cadangan Harga AI",
+    "conditionScore": "Skor keadaan barangan",
+    "profile": "Profil",
+    "score": "Skor {score}",
+    "repliesTime": "Balas < 24 jam",
+    "activeListings": "listing aktif"
+  },
+  "errors": {
+    "signInRequired": "Sila log masuk untuk membida.",
+    "ownListing": "Anda tidak boleh membida barangan anda sendiri.",
+    "auctionEnded": "Lelongan telah tamat.",
+    "bidTooLow": "Tawaran mesti lebih tinggi daripada RM {amount}.",
+    "listingNotFound": "Listing tidak dijumpai.",
+    "unauthorized": "Tidak dibenarkan.",
+    "invalidData": "Data tidak sah."
+  },
+  "sell": {
+    "title": "Jual Barangan",
+    "subtitle": "Isi butiran item anda. AI akan cadangkan harga permulaan yang adil.",
+    "flashAuction": "Lelong Pantas",
+    "swap": "Tukar Barang",
+    "conditionScore": "Skor Keadaan"
+  },
+  "dashboard": {
+    "myListings": "Listing Saya",
+    "myBids": "Tawaran Saya",
+    "orders": "Pesanan",
+    "referralProgram": "Program Referral",
+    "startSelling": "Mula Jual"
+  },
+  "referral": {
+    "availableCredit": "Credit tersedia",
+    "friendsInvited": "Kawan dijemput",
+    "totalEarned": "Total diterima",
+    "howItWorks": "Cara kerja",
+    "yourLink": "Link referral anda",
+    "shareWhatsApp": "Kongsi via WhatsApp",
+    "copy": "Salin",
+    "copied": "Disalin!"
+  },
+  "offline": {
+    "title": "Tiada Sambungan Internet",
+    "subtitle": "Semak sambungan internet anda dan cuba lagi. Halaman yang pernah dilawati tersedia secara offline.",
+    "tryAgain": "Cuba Lagi",
+    "browse": "Semak Lelongan"
+  },
+  "notFound": {
+    "title": "Halaman Tidak Dijumpai",
+    "subtitle": "Halaman yang anda cari tidak wujud atau telah dialihkan.",
+    "backHome": "Kembali ke Laman Utama",
+    "browse": "Semak Imbas Lelongan"
+  },
+  "auth": {
+    "signIn": "Log Masuk KASSIM",
+    "signInSubtitle": "Sambung pengalaman lelongan anda",
+    "register": "Sertai KASSIM",
+    "registerSubtitle": "Mulakan perjalanan pekeliling anda hari ini",
+    "checkEmail": "Semak Emel Anda!",
+    "verificationSent": "Kami telah menghantar pautan pengesahan ke emel anda. Klik pautan untuk mengaktifkan akaun.",
+    "backToLogin": "Kembali ke log masuk"
+  },
+  "pwa": {
+    "addToHome": "Tambah KASSIM ke skrin utama",
+    "addSubtitle": "Akses laju, notifikasi bid, dan guna offline",
+    "install": "Install",
+    "noThanks": "Tidak, terima kasih",
+    "enableNotifications": "Aktifkan notifikasi bid",
+    "notificationsSubtitle": "Dapat tahu bila tawaran anda dikalahkan atau ada offer baru",
+    "enable": "Aktifkan",
+    "dismiss": "Tidak"
+  },
+  "impact": {
+    "title": "Impak Nyata KASSIM",
+    "heading": "Bersama Kita Mengubah Malaysia",
+    "subtitle": "Setiap transaksi di KASSIM adalah langkah ke arah Malaysia yang lebih hijau, lebih mampan, dan lebih bertanggungjawab.",
+    "co2Saved": "CO₂ Diselamatkan",
+    "treesEquivalent": "Pokok Bersamaan",
+    "waterSaved": "Air Dijimatkan"
+  },
+  "footer": {
+    "description": "Platform ekonomi pekeliling Malaysia. Beri barangan anda kehidupan baharu melalui lelongan progresif yang selamat dan telus.",
+    "ecoFriendly": "Eco-friendly",
+    "safeSecure": "Selamat & Terjamin",
+    "realTime": "Masa Nyata",
+    "platform": "Platform",
+    "account": "Akaun",
+    "copyright": "© 2026 KASSIM. Hak cipta terpelihara. Dibina untuk Malaysia yang lebih hijau.",
+    "fees": "15% fi platform · Escrow selamat · IC disahkan"
+  },
+  "categories": {
+    "title": "Semak Imbas Mengikut Kategori",
+    "FURNITURE": "Perabot",
+    "ELECTRONICS": "Elektronik",
+    "FASHION": "Fesyen",
+    "BOOKS": "Buku",
+    "SPORTS": "Sukan",
+    "KITCHEN": "Dapur",
+    "OTHERS": "Lain-lain"
+  }
+}

@@ -4,8 +4,8 @@ import { SellForm } from '@/components/sell/SellForm'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Jual Barangan',
-  description: 'Letak barangan terpakai anda untuk lelongan atau tukar barang. AI akan cadangkan harga permulaan yang adil.',
+  title: 'Sell Item',
+  description: 'List your pre-loved item for auction or swap. AI will suggest a fair starting price.',
   robots: { index: false, follow: false },
 }
 
@@ -18,9 +18,9 @@ export default async function SellPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Jual Barangan</h1>
+        <h1 className="text-3xl font-bold mb-2">Sell an Item</h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Isi butiran item anda. AI akan cadangkan harga permulaan yang adil.
+          Fill in your item details. AI will suggest a fair starting price.
         </p>
       </div>
       <SellForm userId={user.id} />

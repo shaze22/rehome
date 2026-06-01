@@ -7,13 +7,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { listingId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const tx = await prisma.transaction.findUnique({ where: { listingId } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
-  if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Bukan pembeli.' }, { status: 403 })
-  if (tx.shippingStatus !== 'SHIPPED') return NextResponse.json({ error: 'Item belum dihantar oleh penjual.' }, { status: 400 })
-  if (tx.deliveryConfirmed) return NextResponse.json({ error: 'Sudah disahkan.' }, { status: 400 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Not the buyer.' }, { status: 403 })
+  if (tx.shippingStatus !== 'SHIPPED') return NextResponse.json({ error: 'Item has not been shipped by the seller yet.' }, { status: 400 })
+  if (tx.deliveryConfirmed) return NextResponse.json({ error: 'Already confirmed.' }, { status: 400 })
 
   // Release escrow → mark delivered + released
   await prisma.transaction.update({

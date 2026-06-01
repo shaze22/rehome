@@ -11,7 +11,7 @@ const genCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 8)
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const existing = await prisma.user.findUnique({
     where: { id: user.id },
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Process referral cookie
     try {
       const jar = await cookies()
-      const refCode = jar.get('ballout_ref')?.value
+      const refCode = jar.get('kassim_ref')?.value
       if (refCode) {
         const referrer = await prisma.user.findUnique({
           where: { referralCode: refCode },

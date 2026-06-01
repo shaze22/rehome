@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
-  const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
+  const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
 
   if (!code) return NextResponse.redirect(`${BASE}/auth/register`)
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   if (!referrer) return NextResponse.redirect(`${BASE}/auth/register`)
 
   const response = NextResponse.redirect(`${BASE}/auth/register`)
-  response.cookies.set('ballout_ref', code, {
+  response.cookies.set('kassim_ref', code, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

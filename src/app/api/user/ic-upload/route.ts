@@ -10,13 +10,13 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   let body: unknown
-  try { body = await request.json() } catch { return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 }) }
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }) }
 
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'URL foto tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid photo URL.' }, { status: 400 })
 
   await prisma.user.update({
     where: { id: user.id },

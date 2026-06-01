@@ -12,10 +12,10 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
                 <Recycle className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>BALLOUT</span>
+              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
             </div>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Platform ekonomi pekeliling Malaysia. Beri barangan anda kehidupan baharu melalui lelongan progresif yang selamat dan telus.
+              Malaysia&apos;s circular economy platform. Give your items a new life through safe and transparent progressive auctions.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--green)' }}>
@@ -24,11 +24,11 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--teal)' }}>
                 <Shield className="w-3.5 h-3.5" />
-                Selamat & Terjamin
+                Safe & Secure
               </div>
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--blue)' }}>
                 <Zap className="w-3.5 h-3.5" />
-                Masa Nyata
+                Real-time
               </div>
             </div>
           </div>
@@ -38,8 +38,8 @@ export function Footer() {
             <h4 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Platform</h4>
             <ul className="space-y-2">
               {[
-                { href: '/listings', label: 'Semak Imbas' },
-                { href: '/sell', label: 'Jual Barangan' },
+                { href: '/listings', label: 'Browse' },
+                { href: '/sell', label: 'Sell' },
                 { href: '/dashboard', label: 'Dashboard' },
               ].map(link => (
                 <li key={link.href}>
@@ -52,11 +52,11 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Akaun</h4>
+            <h4 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Account</h4>
             <ul className="space-y-2">
               {[
-                { href: '/auth/login', label: 'Log Masuk' },
-                { href: '/auth/register', label: 'Daftar' },
+                { href: '/auth/login', label: 'Sign In' },
+                { href: '/auth/register', label: 'Register' },
               ].map(link => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
@@ -70,10 +70,10 @@ export function Footer() {
 
         <div className="mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid var(--border)' }}>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            © 2026 BALLOUT. Hak cipta terpelihara. Dibina untuk Malaysia yang lebih hijau.
+            © 2026 KASSIM. All rights reserved. Built for a greener Malaysia.
           </p>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            15% fi platform · Escrow selamat · IC disahkan
+            15% platform fee · Secure escrow · IC verified
           </p>
         </div>
       </div>

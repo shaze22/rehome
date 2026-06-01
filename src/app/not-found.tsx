@@ -9,16 +9,16 @@ export default function NotFound() {
           <Recycle className="w-10 h-10 text-white" />
         </div>
         <h1 className="text-6xl font-bold font-mono mb-4" style={{ color: 'var(--teal)' }}>404</h1>
-        <h2 className="text-2xl font-bold mb-3">Halaman Tidak Dijumpai</h2>
+        <h2 className="text-2xl font-bold mb-3">Page Not Found</h2>
         <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
-          Halaman yang anda cari tidak wujud atau telah dialihkan.
+          The page you are looking for does not exist or has been moved.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/" className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal">
-            Kembali ke Laman Utama
+            Back to Home
           </Link>
           <Link href="/listings" className="px-6 py-3 rounded-xl font-semibold" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-            Semak Imbas Lelongan
+            Browse Listings
           </Link>
         </div>
       </div>

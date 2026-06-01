@@ -8,7 +8,7 @@ import { z } from 'zod'
 
 const BidSchema = z.object({
   listingId: z.string().min(1),
-  amount: z.number().int('Tawaran mesti nombor bulat').min(0, 'Tawaran tidak boleh negatif'),
+  amount: z.number().int('Bid must be a whole number').min(0, 'Bid cannot be negative'),
 })
 
 // Progressive timer constants (milliseconds)
@@ -21,22 +21,22 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return NextResponse.json({ error: 'Sila log masuk untuk membida.' }, { status: 401 })
+    return NextResponse.json({ error: 'Please sign in to bid.' }, { status: 401 })
   }
 
   const { allowed } = await rateLimit('bid', user.id)
-  if (!allowed) return NextResponse.json({ error: 'Terlalu banyak tawaran. Cuba lagi sebentar.' }, { status: 429 })
+  if (!allowed) return NextResponse.json({ error: 'Too many bids. Please try again later.' }, { status: 429 })
 
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'Badan permintaan tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
   }
 
   const parsed = BidSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Data tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid data.' }, { status: 400 })
   }
 
   const { listingId, amount } = parsed.data
@@ -51,26 +51,26 @@ export async function POST(request: NextRequest) {
   })
 
   if (!listing) {
-    return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
+    return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   }
 
   if (listing.status !== 'ACTIVE') {
-    return NextResponse.json({ error: 'Lelongan tidak aktif.' }, { status: 400 })
+    return NextResponse.json({ error: 'Auction is not active.' }, { status: 400 })
   }
 
   const now = new Date()
 
   // If endsAt is set and already past, auction is over
   if (listing.endsAt && now > listing.endsAt) {
-    return NextResponse.json({ error: 'Lelongan telah tamat.' }, { status: 400 })
+    return NextResponse.json({ error: 'Auction has ended.' }, { status: 400 })
   }
 
   if (listing.seller.id === user.id) {
-    return NextResponse.json({ error: 'Anda tidak boleh membida barangan anda sendiri.' }, { status: 400 })
+    return NextResponse.json({ error: 'You cannot bid on your own listing.' }, { status: 400 })
   }
 
   if (listing.currentBidder === user.id) {
-    return NextResponse.json({ error: 'Anda tidak boleh membida dua kali berturut-turut.' }, { status: 400 })
+    return NextResponse.json({ error: 'You cannot bid twice in a row.' }, { status: 400 })
   }
 
   const bidCount = listing._count.bids
@@ -79,11 +79,11 @@ export async function POST(request: NextRequest) {
   // Counter bid: must be > currentBid
   if (bidCount === 0) {
     if (amount < listing.startingBid) {
-      return NextResponse.json({ error: `Tawaran minimum ialah RM ${listing.startingBid}.` }, { status: 400 })
+      return NextResponse.json({ error: `Minimum bid is RM ${listing.startingBid}.` }, { status: 400 })
     }
   } else {
     if (amount <= listing.currentBid) {
-      return NextResponse.json({ error: `Tawaran mesti lebih tinggi daripada RM ${listing.currentBid}.` }, { status: 400 })
+      return NextResponse.json({ error: `Bid must be higher than RM ${listing.currentBid}.` }, { status: 400 })
     }
   }
 
@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
       }
       // Push notification
       sendPushToUser(listing.currentBidder, {
-        title: '⚡ Tawaran anda dikalahkan!',
-        body: `${listing.title} — tawaran semasa RM${amount}`,
+        title: '⚡ You\'ve been outbid!',
+        body: `${listing.title} — current bid RM${amount}`,
         url: `/listings/${listingId}`,
         tag: `outbid-${listingId}`,
       }).catch(() => {})
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       where: { listingId, userId: { notIn: [...excludeFromWatchlist] } },
       include: { user: { select: { email: true } } },
     })
-    const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
+    const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
     await Promise.all(
       watchers
         .filter(w => w.user.email)

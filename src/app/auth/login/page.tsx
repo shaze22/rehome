@@ -37,8 +37,8 @@ export default function LoginPage() {
           <div className="w-12 h-12 rounded-2xl gradient-teal flex items-center justify-center mx-auto mb-4">
             <Recycle className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Log Masuk BALLOUT</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Sambung pengalaman lelongan anda</p>
+          <h1 className="text-2xl font-bold mb-2">Sign In to KASSIM</h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Continue your auction experience</p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>

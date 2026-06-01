@@ -94,8 +94,8 @@ interface Props {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  FURNITURE: 'Perabot', ELECTRONICS: 'Elektronik', FASHION: 'Fesyen',
-  BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
+  FURNITURE: 'Furniture', ELECTRONICS: 'Electronics', FASHION: 'Fashion',
+  BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
 function CreditCheckoutButton({ listingId, bidAmount }: { listingId: string; bidAmount: number }) {
@@ -109,11 +109,11 @@ function CreditCheckoutButton({ listingId, bidAmount }: { listingId: string; bid
     <div>
       {discount > 0 && (
         <div className="mb-2 text-xs text-center rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(20,184,166,0.08)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.2)' }}>
-          💳 RM{discount.toFixed(0)} credit akan ditolak — bayar RM{chargeAmount.toFixed(0)} sahaja
+          💳 RM{discount.toFixed(0)} credit will be deducted — pay only RM{chargeAmount.toFixed(0)}
         </div>
       )}
       <Link href={`/api/payment/checkout?listingId=${listingId}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
-        Buat Pembayaran {discount > 0 ? `— RM${chargeAmount.toFixed(0)}` : ''}
+        Make Payment {discount > 0 ? `— RM${chargeAmount.toFixed(0)}` : ''}
       </Link>
     </div>
   )
@@ -128,22 +128,22 @@ function useCountdown(endsAt: string | null) {
   useEffect(() => {
     if (!endsAt) {
       setIsWaiting(true)
-      setTimeLeft('Menunggu bidder pertama...')
+      setTimeLeft('Waiting for first bidder...')
       return
     }
     setIsWaiting(false)
     function update() {
       const diff = new Date(endsAt as string).getTime() - Date.now()
-      if (diff <= 0) { setIsEnded(true); setTimeLeft('Tamat'); return }
+      if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); return }
       const d = Math.floor(diff / 86400000)
       const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
       setIsUrgent(diff < 3600000)
-      if (d > 0) setTimeLeft(`${d} hari ${h} jam ${m} min`)
-      else if (h > 0) setTimeLeft(`${h} jam ${m} min ${s} saat`)
-      else if (m > 0) setTimeLeft(`${m} min ${s} saat`)
-      else setTimeLeft(`${s} saat`)
+      if (d > 0) setTimeLeft(`${d}d ${h}h ${m}m`)
+      else if (h > 0) setTimeLeft(`${h}h ${m}m ${s}s`)
+      else if (m > 0) setTimeLeft(`${m}m ${s}s`)
+      else setTimeLeft(`${s}s`)
     }
     update()
     const id = setInterval(update, 1000)
@@ -331,7 +331,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   }
 
   async function handleCancelListing() {
-    if (!confirm('Tarik balik listing ini? Tindakan ini tidak boleh dibatalkan.')) return
+    if (!confirm('Withdraw this listing? This action cannot be undone.')) return
     setCancelling(true)
     try {
       const res = await fetch(`/api/listings/${listing.id}`, { method: 'DELETE' })
@@ -350,14 +350,14 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   async function handleBid(e: React.FormEvent) {
     e.preventDefault()
     setBidError('')
-    if (!currentUserId) { setBidError('Sila log masuk untuk membida.'); return }
-    if (!deliveryReady) { setBidError('Sila pilih kaedah penghantaran dahulu.'); return }
-    if (!Number.isInteger(bidAmount) || bidAmount < 0) { setBidError('Tawaran mesti nombor bulat (Ringgit sahaja).'); return }
+    if (!currentUserId) { setBidError('Please log in to bid.'); return }
+    if (!deliveryReady) { setBidError('Please choose a delivery method first.'); return }
+    if (!Number.isInteger(bidAmount) || bidAmount < 0) { setBidError('Bid must be a whole number (Ringgit only).'); return }
     if (isFirstBid && bidAmount < listing.startingBid) {
-      setBidError(`Tawaran minimum ialah RM ${listing.startingBid}.`); return
+      setBidError(`Minimum bid is RM ${listing.startingBid}.`); return
     }
     if (!isFirstBid && bidAmount <= listing.currentBid) {
-      setBidError(`Tawaran mesti lebih tinggi daripada RM ${listing.currentBid}.`); return
+      setBidError(`Bid must be higher than RM ${listing.currentBid}.`); return
     }
 
     setBidLoading(true)
@@ -368,11 +368,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
         body: JSON.stringify({ listingId: listing.id, amount: bidAmount }),
       })
       const data = await res.json()
-      if (!res.ok) { setBidError(data.error ?? 'Ralat semasa membida.'); return }
+      if (!res.ok) { setBidError(data.error ?? 'Error while placing bid.'); return }
       setBidSuccess(true)
       setTimeout(() => setBidSuccess(false), 2000)
     } catch {
-      setBidError('Ralat rangkaian. Sila cuba lagi.')
+      setBidError('Network error. Please try again.')
     } finally {
       setBidLoading(false)
     }
@@ -387,7 +387,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        <Link href="/listings" className="hover:text-teal transition-colors">Lelongan</Link>
+        <Link href="/listings" className="hover:text-teal transition-colors">Listings</Link>
         <span className="mx-2">›</span>
         <span style={{ color: 'var(--text-primary)' }}>{CATEGORY_LABELS[listing.category]}</span>
       </nav>
@@ -424,7 +424,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             <div className="flex gap-2">
               {listing.photos.map((photo, i) => (
                 <button key={i} onClick={() => setPhotoIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden relative flex-shrink-0 ${i === photoIdx ? 'ring-2' : 'opacity-60'}`} style={{ ringColor: 'var(--teal)' } as React.CSSProperties}>
-                  <Image src={photo} alt={`Foto ${i + 1}`} fill className="object-cover" />
+                  <Image src={photo} alt={`Photo ${i + 1}`} fill className="object-cover" />
                 </button>
               ))}
             </div>
@@ -434,15 +434,15 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           <div className="mt-6 rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-              Laporan Keadaan (Ballout Shield)
+              Condition Report (Ballout Shield)
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Tiada Calar', value: !listing.hasScratch },
-                { label: 'Berfungsi', value: listing.isFunctional },
-                { label: 'Lengkap', value: listing.hasCompleteParts },
-                { label: 'Kotak Asal', value: listing.hasOriginalBox },
-                { label: 'Dalam Waranti', value: listing.hasWarranty },
+                { label: 'No Scratches', value: !listing.hasScratch },
+                { label: 'Functional', value: listing.isFunctional },
+                { label: 'Complete', value: listing.hasCompleteParts },
+                { label: 'Original Box', value: listing.hasOriginalBox },
+                { label: 'Under Warranty', value: listing.hasWarranty },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-2 text-xs">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${item.value ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
@@ -460,7 +460,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {listing.condition}/10
               </span>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Skor keadaan barangan</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Item condition score</p>
           </div>
         </div>
 
@@ -474,12 +474,12 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </span>
               {listing.seller.icVerified && (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)', border: '1px solid rgba(0,217,165,0.3)' }}>
-                  <CheckCircle className="w-3 h-3" /> IC Disahkan
+                  <CheckCircle className="w-3 h-3" /> IC Verified
                 </span>
               )}
               {listing.co2Saved > 0 && (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)', border: '1px solid rgba(0,217,165,0.3)' }}>
-                  <Leaf className="w-3 h-3" /> Jimat {listing.co2Saved}kg CO₂
+                  <Leaf className="w-3 h-3" /> Save {listing.co2Saved}kg CO₂
                 </span>
               )}
             </div>
@@ -490,8 +490,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   const url = window.location.href
                   const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
                   const text = isSwap
-                    ? `🔄 Aku jumpa *${listing.title}* dekat BALLOUT — tukar barang je, tak payah keluar duit!\n\nNilai anggaran: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} tawaran dah masuk!` : ''}\n\nKau ada barang nak tukar tak? ${url}`
-                    : `⚡ Aku jumpa *${listing.title}* dekat BALLOUT — harga start RM${listing.startingBid} je!\n\n${interestCount > 0 ? `${interestCount} orang dah bid. ` : 'Belum ada bid lagi! '}Kau nak bid tak? Timer 30 minit je.\n\n${url}`
+                    ? `I found *${listing.title}* on KASSIM — swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap? ${url}`
+                    : `I found *${listing.title}* on KASSIM — starting at RM${listing.startingBid}!\n\n${interestCount > 0 ? `${interestCount} people already bid. ` : 'No bids yet! '}Bid now, timer is only 30 mins.\n\n${url}`
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
                 }}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -503,9 +503,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             </div>
             {/* View count + interest indicator */}
             <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <span>👁 {listing.viewCount ?? 0} tontonan</span>
+              <span>👁 {listing.viewCount ?? 0} views</span>
               <span>·</span>
-              <span>{isSwap ? `${listing._count.offers ?? 0} tawaran masuk` : `${listing._count.bids} minat`}</span>
+              <span>{isSwap ? `${listing._count.offers ?? 0} offers received` : `${listing._count.bids} interested`}</span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{listing.description}</p>
           </div>
@@ -515,7 +515,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <Bot className="w-4 h-4" style={{ color: 'var(--purple)' }} />
-                <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>Cadangan Harga AI</span>
+                <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>AI Price Suggestion</span>
               </div>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--purple)' }}>
                 RM {listing.aiSuggestedMin} — RM {listing.aiSuggestedMax}
@@ -533,8 +533,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {isSwap && listing.status === 'SOLD' && (
               <div className="text-center py-3 px-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
                 <CheckCircle className="w-6 h-6 mx-auto mb-1" style={{ color: '#16a34a' }} />
-                <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Tawaran telah diterima</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Proses pertukaran sedang berjalan</p>
+                <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Offer has been accepted</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Swap process is underway</p>
               </div>
             )}
 
@@ -542,7 +542,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {isSwap && (
               <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
                 <ArrowLeftRight className="w-4 h-4" style={{ color: '#16a34a' }} />
-                <span className="text-sm font-bold" style={{ color: '#16a34a' }}>Tukar Barang</span>
+                <span className="text-sm font-bold" style={{ color: '#16a34a' }}>Swap</span>
                 {listing.swapValueEstimate && (
                   <span className="ml-auto text-sm font-mono font-bold" style={{ color: '#16a34a' }}>
                     ~RM {listing.swapValueEstimate.toFixed(0)}
@@ -554,16 +554,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Swap: wanted item */}
             {isSwap && (listing.swapWantedItem || listing.swapWantedCategory || listing.swapOpenOffers) && (
               <div className="mb-4 px-3 py-2.5 rounded-lg text-sm" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
-                <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Pemilik mencari:</p>
+                <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Owner is looking for:</p>
                 <p style={{ color: '#16a34a' }}>
-                  {listing.swapOpenOffers ? 'Terbuka kepada semua tawaran' :
+                  {listing.swapOpenOffers ? 'Open to all offers' :
                     [listing.swapWantedItem, listing.swapWantedCategory].filter(Boolean).join(' / ')}
                 </p>
                 {listing.swapAcceptCash && (
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Juga menerima tawaran wang tunai</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Also accepts cash offers</p>
                 )}
                 {listing.swapMinCashTopup && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Min tambahan wang: RM {listing.swapMinCashTopup}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Min cash top-up: RM {listing.swapMinCashTopup}</p>
                 )}
               </div>
             )}
@@ -577,27 +577,27 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 </span>
               </div>
               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {isSwap ? `${listing._count.bids} tawaran masuk` : `${listing._count.bids} tawaran`}
+                {isSwap ? `${listing._count.bids} offers received` : `${listing._count.bids} bids`}
               </span>
             </div>
 
             {isWaiting && (
               <div className="mb-4 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: 'var(--text-secondary)' }}>
-                Jadilah bidder pertama! Timer 30 minit akan bermula sebaik sahaja ada tawaran masuk.
+                Be the first bidder! The 30-minute timer starts as soon as the first bid comes in.
               </div>
             )}
 
             {/* Current bid */}
             <div className="mb-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
-                {listing.currentBid > 0 ? 'Tawaran Tertinggi' : 'Tawaran Permulaan'}
+                {listing.currentBid > 0 ? 'Highest Bid' : 'Starting Bid'}
               </p>
               <p className="text-4xl font-bold font-mono" style={{ color: 'var(--teal)' }}>
                 RM {currentBidDisplay.toFixed(0)}
               </p>
               {listing.originalPrice > 0 && currentBidDisplay > 0 && (
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Harga asal: RM {listing.originalPrice.toFixed(0)} · Jimat {Math.round((1 - currentBidDisplay / listing.originalPrice) * 100)}%
+                  Original price: RM {listing.originalPrice.toFixed(0)} · Save {Math.round((1 - currentBidDisplay / listing.originalPrice) * 100)}%
                 </p>
               )}
             </div>
@@ -605,10 +605,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Last bidder */}
             {lastBidder && (
               <div className="mb-4 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Penawar tertinggi: </span>
-                <span className="font-medium">{lastBidder.name ?? 'Pengguna Tanpa Nama'}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Highest bidder: </span>
+                <span className="font-medium">{lastBidder.name ?? 'Anonymous User'}</span>
                 <span className="ml-2 px-1.5 py-0.5 rounded font-mono text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)' }}>
-                  Skor {lastBidder.rehomeScore}
+                  Score {lastBidder.rehomeScore}
                 </span>
               </div>
             )}
@@ -619,15 +619,15 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {offerSubmitted ? (
                   <div className="text-center py-4 px-4 rounded-xl" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#16a34a' }} />
-                    <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Tawaran dihantar!</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Tunggu respons pemilik. Anda akan diberitahu melalui notifikasi.</p>
+                    <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Offer submitted!</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Waiting for the owner's response. You will be notified.</p>
                     <button onClick={() => setOfferSubmitted(false)} className="mt-3 text-xs underline" style={{ color: 'var(--text-muted)' }}>
-                      Buat tawaran baru
+                      Make a new offer
                     </button>
                   </div>
                 ) : !currentUserId ? (
                   <Link href="/auth/login" className="block w-full text-center py-3 rounded-xl font-semibold text-white" style={{ backgroundColor: '#16a34a' }}>
-                    Log Masuk untuk Buat Tawaran
+                    Log In to Make an Offer
                   </Link>
                 ) : (
                   <button
@@ -636,7 +636,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     style={{ backgroundColor: '#16a34a' }}
                   >
                     <ArrowLeftRight className="w-4 h-4" />
-                    Buat Tawaran
+                    Make an Offer
                   </button>
                 )}
               </div>
@@ -646,7 +646,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
               <div className="space-y-2">
                 <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Ini listing anda. Tawaran dipaparkan di bawah.
+                  This is your listing. Offers are shown below.
                 </div>
                 {listing._count.bids === 0 && (
                   <button
@@ -656,7 +656,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     style={{ border: '1px solid rgba(239,68,68,0.4)', color: 'var(--red)' }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    {cancelling ? 'Menarik balik...' : 'Tarik Balik Listing'}
+                    {cancelling ? 'Withdrawing...' : 'Withdraw Listing'}
                   </button>
                 )}
               </div>
@@ -668,7 +668,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {/* Step 1: Delivery method */}
                 <div className="mb-4">
                   <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Langkah 1: Pilih kaedah penghantaran
+                    Step 1: Choose delivery method
                   </p>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <button
@@ -681,7 +681,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                         color: deliveryMethod === 'pickup' ? 'var(--teal)' : 'var(--text-secondary)',
                       }}
                     >
-                      Ambil Sendiri (Percuma)
+                      Self Pick-Up (Free)
                     </button>
                     <button
                       type="button"
@@ -693,7 +693,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                         color: deliveryMethod === 'delivery' ? 'var(--blue)' : 'var(--text-secondary)',
                       }}
                     >
-                      Penghantaran Courier
+                      Courier Delivery
                     </button>
                   </div>
                   {deliveryMethod === 'delivery' && (
@@ -703,7 +703,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                       className="w-full px-3 py-2 rounded-lg text-sm outline-none"
                       style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     >
-                      <option value="">Pilih negeri anda</option>
+                      <option value="">Select your state</option>
                       {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   )}
@@ -714,7 +714,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   <>
                     <div className="mb-3">
                       <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                        Langkah 2: Masukkan tawaran (RM, nombor bulat)
+                        Step 2: Enter bid amount (RM, whole number)
                       </p>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -741,26 +741,26 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     {deliveryMethod === 'delivery' && buyerState && (
                       <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                         {quoteLoading ? (
-                          <p className="text-center py-1" style={{ color: 'var(--text-muted)' }}>Mendapatkan kadar penghantaran...</p>
+                          <p className="text-center py-1" style={{ color: 'var(--text-muted)' }}>Getting delivery rate...</p>
                         ) : deliveryQuote ? (
                           <>
                             <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                              Anggaran kos jika menang {deliveryQuote.source === 'easyparcel' ? '(EasyParcel)' : '(kadar anggaran)'}:
+                              Estimated cost if you win {deliveryQuote.source === 'easyparcel' ? '(EasyParcel)' : '(estimated rate)'}:
                             </p>
                             <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>Tawaran anda</span>
+                              <span style={{ color: 'var(--text-muted)' }}>Your bid</span>
                               <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span style={{ color: 'var(--text-muted)' }}>
-                                Penghantaran {deliveryQuote.source === 'easyparcel' ? `(${deliveryQuote.couriers[0]?.courierName})` : ''}
+                                Delivery {deliveryQuote.source === 'easyparcel' ? `(${deliveryQuote.couriers[0]?.courierName})` : ''}
                               </span>
                               <span className="font-mono">RM {deliveryQuote.cheapest.toFixed(2)}</span>
                             </div>
                             {deliveryQuote.source === 'easyparcel' && deliveryQuote.couriers.length > 1 && (
                               <details className="mt-1">
                                 <summary className="cursor-pointer text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  Lihat semua kurier ({deliveryQuote.couriers.length})
+                                  View all couriers ({deliveryQuote.couriers.length})
                                 </summary>
                                 <div className="mt-1.5 space-y-1 pl-2">
                                   {deliveryQuote.couriers.slice(0, 5).map((c, i) => (
@@ -773,11 +773,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                               </details>
                             )}
                             <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>Fi platform (15%)</span>
+                              <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
                               <span className="font-mono">RM {platformFee.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-                              <span>Jumlah bayaran</span>
+                              <span>Total payment</span>
                               <span className="font-mono">RM {(bidAmount + deliveryQuote.cheapest + platformFee).toFixed(2)}</span>
                             </div>
                           </>
@@ -786,21 +786,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     )}
                     {deliveryMethod === 'pickup' && (
                       <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Anggaran kos jika menang:</p>
+                        <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated cost if you win:</p>
                         <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Tawaran anda</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Your bid</span>
                           <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Penghantaran</span>
-                          <span className="font-mono text-green-400">Percuma (ambil sendiri)</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Delivery</span>
+                          <span className="font-mono text-green-400">Free (self pick-up)</span>
                         </div>
                         <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Fi platform (15%)</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
                           <span className="font-mono">RM {platformFee.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-                          <span>Jumlah bayaran</span>
+                          <span>Total payment</span>
                           <span className="font-mono">RM {(bidAmount + platformFee).toFixed(2)}</span>
                         </div>
                       </div>
@@ -816,13 +816,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
                 {isLastBidder && (
                   <div className="flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: 'var(--yellow)', border: '1px solid rgba(251,191,36,0.3)' }}>
-                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> Anda penawar tertinggi sekarang!
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> You are currently the highest bidder!
                   </div>
                 )}
 
                 {!currentUserId ? (
                   <Link href="/auth/login" className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
-                    Log Masuk untuk Membida
+                    Log In to Bid
                   </Link>
                 ) : (
                   <button
@@ -830,7 +830,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     disabled={bidLoading || isLastBidder || !deliveryReady}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : quoteLoading ? 'Mendapatkan kadar...' : !deliveryReady ? 'Pilih penghantaran dahulu' : isFirstBid ? `Bid Pertama — Mungkin Menang Percuma!` : `Bida RM ${bidAmount}`}
+                    {bidLoading ? 'Placing bid...' : bidSuccess ? '✓ Bid Placed!' : quoteLoading ? 'Getting rate...' : !deliveryReady ? 'Choose delivery first' : isFirstBid ? `First Bid — You Might Win for Free!` : `Bid RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -838,10 +838,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
             {!isSwap && isEnded && (
               <div className="text-center py-4">
-                <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Lelongan Telah Tamat</p>
+                <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Auction Has Ended</p>
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
-                    <p className="text-sm mb-3" style={{ color: 'var(--green)' }}>Tahniah! Anda pemenang!</p>
+                    <p className="text-sm mb-3" style={{ color: 'var(--green)' }}>Congratulations! You are the winner!</p>
                     <CreditCheckoutButton listingId={listing.id} bidAmount={listing.currentBid} />
                   </div>
                 )}
@@ -851,7 +851,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {!isSwap && isOwnListing && (
               <div className="space-y-2">
                 <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Ini adalah listing anda sendiri.
+                  This is your own listing.
                 </div>
                 {listing.status === 'ACTIVE' && listing._count.bids === 0 && (
                   <button
@@ -861,7 +861,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     style={{ border: '1px solid rgba(239,68,68,0.4)', color: 'var(--red)' }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    {cancelling ? 'Menarik balik...' : 'Tarik Balik Listing'}
+                    {cancelling ? 'Withdrawing...' : 'Withdraw Listing'}
                   </button>
                 )}
               </div>
@@ -870,7 +870,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Trust badge */}
             <div className="flex items-center justify-center gap-2 mt-3 px-3 py-2 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.2)', color: 'var(--green)' }}>
               <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-              Escrow Selamat — Duit hanya lepas selepas barang diterima
+              Safe Escrow — Payment released only after item is received
             </div>
           </div>
 
@@ -888,13 +888,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm">{listing.seller.name ?? 'Penjual Tanpa Nama'}</p>
+                  <p className="font-medium text-sm">{listing.seller.name ?? 'Anonymous Seller'}</p>
                   {listing.seller.icVerified && <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                   <span className="flex items-center gap-1">
                     <Star className="w-3 h-3" style={{ color: 'var(--yellow)' }} />
-                    Skor {listing.seller.rehomeScore}
+                    Score {listing.seller.rehomeScore}
                   </span>
                   {listing.seller.state && (
                     <span className="flex items-center gap-1">
@@ -904,15 +904,15 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   )}
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Balas &lt; 24 jam
+                    Replies &lt; 24h
                   </span>
                   {listing.seller._count && listing.seller._count.listings > 1 && (
-                    <span style={{ color: 'var(--text-muted)' }}>{listing.seller._count.listings} listing aktif</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{listing.seller._count.listings} active listings</span>
                   )}
                 </div>
               </div>
               <Link href={`/profile/${listing.seller.id}`} className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-                Profil
+                Profile
               </Link>
             </div>
           </div>
@@ -943,19 +943,19 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Package className="w-5 h-5" style={{ color: 'var(--teal)' }} />
-            Status Transaksi
+            Transaction Status
           </h2>
 
           {justPaid && !flashTx.pickupMethod && isBuyer && (
             <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
-              Pembayaran berjaya! Sila pilih kaedah pengambilan barangan di bawah.
+              Payment successful! Please choose your collection method below.
             </div>
           )}
 
           {/* Pickup method selection — buyer only, before chosen */}
           {!flashTx.pickupMethod && isBuyer && (
             <div className="rounded-xl p-5 mb-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <p className="text-sm font-semibold mb-3">Pilih Kaedah Pengambilan Barangan</p>
+              <p className="text-sm font-semibold mb-3">Choose Collection Method</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => handleSetPickup('PICKUP')}
@@ -964,8 +964,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
                 >
                   <Home className="w-6 h-6" style={{ color: 'var(--teal)' }} />
-                  <span className="text-sm font-semibold">Ambil Sendiri</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Percuma · Atur terus dengan penjual</span>
+                  <span className="text-sm font-semibold">Self Pick-Up</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Free · Arrange directly with seller</span>
                 </button>
                 <button
                   onClick={() => handleSetPickup('DELIVERY')}
@@ -974,8 +974,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
                 >
                   <Truck className="w-6 h-6" style={{ color: 'var(--blue)' }} />
-                  <span className="text-sm font-semibold">Penghantaran Pos</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Penjual akan masukkan tracking</span>
+                  <span className="text-sm font-semibold">Postal Delivery</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Seller will enter tracking number</span>
                 </button>
               </div>
             </div>
@@ -986,28 +986,28 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
                 <Home className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-                <span className="text-sm font-semibold">Ambil Sendiri</span>
+                <span className="text-sm font-semibold">Self Pick-Up</span>
                 {flashTx.sellerPickupConfirmed ? (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Selesai</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Completed</span>
                 ) : (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: 'var(--yellow)' }}>Menunggu</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: 'var(--yellow)' }}>Waiting</span>
                 )}
               </div>
               {flashTx.sellerPickupConfirmed ? (
                 <div className="text-center py-4">
                   <CheckCircle className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--green)' }} />
-                  <p className="font-semibold" style={{ color: 'var(--green)' }}>Transaksi Selesai</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Penjual telah mengesahkan pengambilan. Bayaran dilepaskan.</p>
+                  <p className="font-semibold" style={{ color: 'var(--green)' }}>Transaction Completed</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Seller has confirmed pick-up. Payment released.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Hubungi penjual melalui chat untuk atur masa dan tempat pengambilan.
-                    {listing.seller.state && ` Lokasi penjual: ${listing.seller.state}.`}
+                    Contact the seller via chat to arrange time and place for pick-up.
+                    {listing.seller.state && ` Seller location: ${listing.seller.state}.`}
                   </p>
                   {isBuyer && (
                     <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(251,191,36,0.08)', color: 'var(--yellow)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                      Bayaran akan dilepaskan kepada penjual setelah beliau mengesahkan anda telah mengambil barangan.
+                      Payment will be released to the seller once they confirm you have collected the item.
                     </p>
                   )}
                   {isSeller && !flashTx.sellerPickupConfirmed && (
@@ -1016,7 +1016,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                       disabled={pickupConfirming}
                       className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50"
                     >
-                      {pickupConfirming ? 'Mengesahkan...' : 'Sahkan Pembeli Telah Ambil'}
+                      {pickupConfirming ? 'Confirming...' : 'Confirm Buyer Has Picked Up'}
                     </button>
                   )}
                 </div>
@@ -1029,15 +1029,15 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
                 <Truck className="w-4 h-4" style={{ color: 'var(--blue)' }} />
-                <span className="text-sm font-semibold">Penghantaran Pos</span>
+                <span className="text-sm font-semibold">Postal Delivery</span>
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{
                   backgroundColor: flashTx.status === 'RELEASED' ? 'rgba(0,217,165,0.1)' :
                     flashTx.shippingStatus === 'SHIPPED' ? 'rgba(79,140,255,0.1)' : 'rgba(251,191,36,0.1)',
                   color: flashTx.status === 'RELEASED' ? 'var(--green)' :
                     flashTx.shippingStatus === 'SHIPPED' ? 'var(--blue)' : 'var(--yellow)',
                 }}>
-                  {flashTx.status === 'RELEASED' ? 'Selesai' :
-                    flashTx.shippingStatus === 'SHIPPED' ? 'Sedang Dihantar' : 'Menunggu Penghantaran'}
+                  {flashTx.status === 'RELEASED' ? 'Completed' :
+                    flashTx.shippingStatus === 'SHIPPED' ? 'In Transit' : 'Awaiting Shipment'}
                 </span>
               </div>
 
@@ -1048,7 +1048,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     {flashTx.shippingStatus !== 'PENDING' ? '✓' : '1'}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Penjual Hantar Barang</p>
+                    <p className="text-sm font-medium">Seller Ships Item</p>
                     {flashTx.trackingNumber && (
                       <p className="text-xs mt-0.5 font-mono px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--teal)' }}>
                         No. Tracking: {flashTx.trackingNumber}
@@ -1059,7 +1059,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                         <input
                           value={trackingInput}
                           onChange={e => setTrackingInput(e.target.value)}
-                          placeholder="No. Tracking (pilihan)"
+                          placeholder="Tracking No. (optional)"
                           className="w-full px-3 py-2 rounded-lg text-sm outline-none"
                           style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                         />
@@ -1068,7 +1068,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                           disabled={shipConfirming}
                           className="w-full py-2.5 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 text-sm"
                         >
-                          {shipConfirming ? 'Mengesahkan...' : 'Sahkan Telah Hantar'}
+                          {shipConfirming ? 'Confirming...' : 'Confirm Shipped'}
                         </button>
                       </div>
                     )}
@@ -1080,18 +1080,18 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     {flashTx.deliveryConfirmed ? '✓' : '2'}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Pembeli Sahkan Penerimaan</p>
+                    <p className="text-sm font-medium">Buyer Confirms Receipt</p>
                     {isBuyer && flashTx.shippingStatus === 'SHIPPED' && !flashTx.deliveryConfirmed && (
                       <button
                         onClick={handleConfirmReceive}
                         disabled={receiveConfirming}
                         className="mt-2 w-full py-2.5 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 text-sm"
                       >
-                        {receiveConfirming ? 'Mengesahkan...' : 'Sahkan Barang Diterima'}
+                        {receiveConfirming ? 'Confirming...' : 'Confirm Item Received'}
                       </button>
                     )}
                     {flashTx.deliveryConfirmed && (
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--green)' }}>Diterima · Bayaran dilepaskan kepada penjual</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--green)' }}>Received · Payment released to seller</p>
                     )}
                   </div>
                 </div>
@@ -1103,7 +1103,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           {!flashTx.pickupMethod && isSeller && (
             <div className="rounded-xl p-5 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Clock className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Menunggu pembeli memilih kaedah pengambilan...</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Waiting for buyer to choose collection method...</p>
             </div>
           )}
         </div>
@@ -1112,11 +1112,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       {/* Bid History (Flash only) */}
       {!isSwap && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold mb-4">Sejarah Tawaran</h2>
+          <h2 className="text-xl font-bold mb-4">Bid History</h2>
           {bids.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p style={{ color: 'var(--text-secondary)' }}>Belum ada tawaran. Jadilah yang pertama!</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No bids yet. Be the first!</p>
             </div>
           ) : (
             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -1134,7 +1134,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                       {bid.bidder.name?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{bid.bidder.name ?? 'Pengguna Tanpa Nama'}</p>
+                      <p className="text-sm font-medium">{bid.bidder.name ?? 'Anonymous User'}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         {new Date(bid.createdAt).toLocaleString('ms-MY')}
                       </p>
@@ -1144,7 +1144,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     <p className="font-bold font-mono" style={{ color: i === 0 ? 'var(--teal)' : 'var(--text-secondary)' }}>
                       RM {bid.amount.toFixed(0)}
                     </p>
-                    {i === 0 && <p className="text-xs" style={{ color: 'var(--green)' }}>Tertinggi</p>}
+                    {i === 0 && <p className="text-xs" style={{ color: 'var(--green)' }}>Highest</p>}
                   </div>
                 </div>
               ))}

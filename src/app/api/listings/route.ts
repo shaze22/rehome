@@ -59,16 +59,16 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   }
   const { allowed } = await rateLimit('listing', user.id)
-  if (!allowed) return NextResponse.json({ error: 'Had listing dicapai. Cuba lagi sejam lagi.' }, { status: 429 })
+  if (!allowed) return NextResponse.json({ error: 'Listing limit reached. Please try again in an hour.' }, { status: 429 })
 
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   // Normalise: if mode not provided, default to FLASH

@@ -63,7 +63,7 @@ export function OrderCard({ order }: Props) {
     PENDING: 'var(--yellow)', SHIPPED: 'var(--blue)', DELIVERED: 'var(--green)'
   }
   const statusLabel: Record<string, string> = {
-    PENDING: 'Belum Dihantar', SHIPPED: 'Dalam Penghantaran', DELIVERED: 'Diterima'
+    PENDING: 'Not Shipped', SHIPPED: 'In Transit', DELIVERED: 'Received'
   }
 
   return (
@@ -86,7 +86,7 @@ export function OrderCard({ order }: Props) {
 
       {localOrder.trackingNumber && (
         <p className="text-xs mb-3 px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
-          No. Pengesanan: <span className="font-mono">{localOrder.trackingNumber}</span>
+          Tracking No.: <span className="font-mono">{localOrder.trackingNumber}</span>
         </p>
       )}
 
@@ -108,10 +108,10 @@ export function OrderCard({ order }: Props) {
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-white"
                 style={{ background: 'linear-gradient(135deg, var(--blue), var(--teal))' }}>
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                Tandakan Dihantar
+                Mark as Shipped
               </button>
               <button onClick={() => setShowTracking(false)} className="px-3 py-2 rounded-lg text-xs" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-                Batal
+                Cancel
               </button>
             </div>
           </div>
@@ -119,7 +119,7 @@ export function OrderCard({ order }: Props) {
           <button onClick={() => setShowTracking(true)}
             className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium"
             style={{ border: '1px solid var(--blue)', color: 'var(--blue)', backgroundColor: 'rgba(79,140,255,0.08)' }}>
-            <Truck className="w-3.5 h-3.5" /> Item Sudah Dihantar
+            <Truck className="w-3.5 h-3.5" /> Item Has Been Shipped
           </button>
         )
       )}
@@ -130,14 +130,14 @@ export function OrderCard({ order }: Props) {
           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-white"
           style={{ background: 'linear-gradient(135deg, var(--green), var(--teal))' }}>
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-          Sahkan Terima Item
+          Confirm Item Received
         </button>
       )}
 
       {/* Review */}
       {!localOrder.isSeller && localOrder.deliveryConfirmed && !reviewed && (
         <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Beri penilaian penjual:</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Rate this seller:</p>
           <div className="flex gap-1 mb-2">
             {[1,2,3,4,5].map(s => (
               <button key={s} onClick={() => setRating(s)} className="text-xl transition-transform hover:scale-110">
@@ -145,20 +145,20 @@ export function OrderCard({ order }: Props) {
               </button>
             ))}
           </div>
-          <input value={comment} onChange={e => setComment(e.target.value)} placeholder="Ulasan (optional)"
+          <input value={comment} onChange={e => setComment(e.target.value)} placeholder="Review (optional)"
             className="w-full px-3 py-2 rounded-lg text-xs outline-none mb-2"
             style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
           <button onClick={handleReview} disabled={!rating || loading}
             className="w-full py-2 rounded-lg text-xs font-medium text-white disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, var(--yellow), var(--orange))' }}>
-            <Star className="w-3.5 h-3.5 inline mr-1" /> Hantar Ulasan
+            <Star className="w-3.5 h-3.5 inline mr-1" /> Submit Review
           </button>
         </div>
       )}
 
       {reviewed && (
         <div className="mt-2 text-xs text-center" style={{ color: 'var(--green)' }}>
-          ✓ Ulasan diberikan. Terima kasih!
+          ✓ Review submitted. Thank you!
         </div>
       )}
     </div>

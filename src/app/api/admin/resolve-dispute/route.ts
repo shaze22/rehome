@@ -12,14 +12,14 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
-  if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+  if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = Schema.safeParse(body)
@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
   const { transactionId, resolution } = parsed.data
 
   const tx = await prisma.swapTransaction.findUnique({ where: { id: transactionId } })
-  if (!tx) return NextResponse.json({ error: 'Transaksi tidak dijumpai.' }, { status: 404 })
-  if (tx.escrowStatus !== 'DISPUTED') return NextResponse.json({ error: 'Transaksi ini tidak dalam pertikaian.' }, { status: 400 })
+  if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  if (tx.escrowStatus !== 'DISPUTED') return NextResponse.json({ error: 'This transaction is not under dispute.' }, { status: 400 })
 
   const updated = await prisma.swapTransaction.update({
     where: { id: transactionId },

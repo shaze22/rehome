@@ -5,8 +5,8 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
-  const title = searchParams.get('title') ?? 'Platform Lelongan & Tukar Barang Malaysia'
-  const subtitle = searchParams.get('subtitle') ?? 'Barangan terpakai · Escrow selamat · AI pricing'
+  const title = searchParams.get('title') ?? 'Buy, Sell & Swap in Malaysia'
+  const subtitle = searchParams.get('subtitle') ?? 'Pre-loved items · Secure escrow · AI pricing'
   const price = searchParams.get('price')
   const mode = searchParams.get('mode') ?? 'flash'
 
@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
 
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: accentColor }}>⚡ BALLOUT</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: accentColor }}>⚡ KASSIM</div>
           {mode === 'swap' && (
             <div style={{ fontSize: '14px', padding: '4px 12px', backgroundColor: 'rgba(22,163,74,0.2)', color: '#16a34a', borderRadius: '20px', border: '1px solid rgba(22,163,74,0.4)' }}>
-              Tukar Barang
+              Item Swap
             </div>
           )}
         </div>
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
 
         {/* Bottom bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '18px', color: '#475569' }}>rehome-eta.vercel.app</div>
-          <div style={{ fontSize: '18px', color: '#475569' }}>Ekonomi Pekeliling Malaysia 🌱</div>
+          <div style={{ fontSize: '18px', color: '#475569' }}>kassim.app</div>
+          <div style={{ fontSize: '18px', color: '#475569' }}>Malaysia's Circular Economy 🌱</div>
         </div>
       </div>
     ),

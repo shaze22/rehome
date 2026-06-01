@@ -13,7 +13,7 @@ export interface RecentItem {
   currentBid?: number
 }
 
-const KEY = 'ballout_recently_viewed'
+const KEY = 'kassim_recently_viewed'
 const MAX = 6
 
 export function trackRecentlyViewed(item: RecentItem) {
@@ -47,7 +47,7 @@ export function RecentlyViewed() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-2 mb-5">
           <Clock className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-          <h2 className="text-lg font-bold">Anda Baru Tengok</h2>
+          <h2 className="text-lg font-bold">Recently Viewed</h2>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
           {items.map(item => (

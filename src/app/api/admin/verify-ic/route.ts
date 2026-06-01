@@ -11,16 +11,16 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const admin = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
-  if (admin?.role !== 'ADMIN') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+  if (admin?.role !== 'ADMIN') return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
   let body: unknown
-  try { body = await request.json() } catch { return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 }) }
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }) }
 
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
 
   const { userId, approve } = parsed.data
 

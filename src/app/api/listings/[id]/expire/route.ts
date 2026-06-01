@@ -10,7 +10,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     select: { id: true, title: true, status: true, endsAt: true, currentBid: true, currentBidder: true },
   })
 
-  if (!listing) return NextResponse.json({ error: 'Tidak dijumpai.' }, { status: 404 })
+  if (!listing) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   if (listing.status !== 'ACTIVE') return NextResponse.json({ already: true, status: listing.status })
   if (!listing.endsAt || listing.endsAt > new Date()) return NextResponse.json({ active: true })
 

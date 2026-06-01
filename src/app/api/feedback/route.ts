@@ -13,14 +13,14 @@ const Schema = z.object({
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
   const { allowed } = await rateLimit('feedback', ip)
-  if (!allowed) return NextResponse.json({ error: 'Terlalu banyak maklum balas. Cuba lagi sejam lagi.' }, { status: 429 })
+  if (!allowed) return NextResponse.json({ error: 'Too many feedback submissions. Please try again in an hour.' }, { status: 429 })
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   const body = await request.json().catch(() => ({}))
   const parsed = Schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Data tidak sah.' }, { status: 400 })
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid data.' }, { status: 400 })
 
   const { type, message, page } = parsed.data
   const from = user?.email ?? 'Pengguna Tanpa Nama'
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({
-      from: 'BALLOUT <noreply@ballout.my>',
+      from: 'KASSIM <noreply@kassim.app>',
       to: process.env.ADMIN_EMAIL ?? 'syedshazni@todak.com',
       subject: `[Beta Feedback] ${type.toUpperCase()} — ${from}`,
       html: `

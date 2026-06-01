@@ -38,10 +38,10 @@ function useCountdown(endsAt: Date | string | null) {
   const [isUrgent, setIsUrgent] = useState(false)
 
   useEffect(() => {
-    if (!endsAt) { setTimeLeft('Tiada had masa'); return }
+    if (!endsAt) { setTimeLeft('No time limit'); return }
     function update() {
       const diff = new Date(endsAt as Date | string).getTime() - Date.now()
-      if (diff <= 0) { setTimeLeft('Tamat'); return }
+      if (diff <= 0) { setTimeLeft('Ended'); return }
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       setIsUrgent(diff < 3 * 3600000)
@@ -58,8 +58,8 @@ function useCountdown(endsAt: Date | string | null) {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  FURNITURE: 'Perabot', ELECTRONICS: 'Elektronik', FASHION: 'Fesyen',
-  BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
+  FURNITURE: 'Furniture', ELECTRONICS: 'Electronics', FASHION: 'Fashion',
+  BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
 export function SwapListingCard({ listing }: Props) {
@@ -68,9 +68,9 @@ export function SwapListingCard({ listing }: Props) {
   const isHot = (listing.viewCount ?? 0) >= 20 || offerCount >= 3
 
   const wantedLabel = listing.swapOpenOffers
-    ? 'Terbuka kepada semua tawaran'
+    ? 'Open to all offers'
     : [listing.swapWantedItem, listing.swapWantedCategory ? CATEGORY_LABELS[listing.swapWantedCategory] : null]
-        .filter(Boolean).join(' / ') || 'Lihat butiran'
+        .filter(Boolean).join(' / ') || 'View details'
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
@@ -98,7 +98,7 @@ export function SwapListingCard({ listing }: Props) {
           {/* HOT badge */}
           {isHot && (
             <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 Popular
+              🔥 Hot
             </div>
           )}
           {/* Condition badge */}
@@ -116,7 +116,7 @@ export function SwapListingCard({ listing }: Props) {
           {/* Value estimate */}
           {listing.swapValueEstimate && (
             <div className="mb-2">
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Nilai anggaran</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Est. value</p>
               <p className="text-base font-bold font-mono" style={{ color: '#16a34a' }}>
                 ~RM {listing.swapValueEstimate.toFixed(0)}
               </p>
@@ -125,10 +125,10 @@ export function SwapListingCard({ listing }: Props) {
 
           {/* Wanted */}
           <div className="mb-2 px-2 py-1.5 rounded-lg text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Dicari: </span>
+            <span style={{ color: 'var(--text-muted)' }}>Wants: </span>
             <span className="font-medium" style={{ color: '#16a34a' }}>{wantedLabel}</span>
             {listing.swapAcceptCash && (
-              <span className="ml-1" style={{ color: 'var(--text-muted)' }}>/ Wang ok</span>
+              <span className="ml-1" style={{ color: 'var(--text-muted)' }}>/ Cash ok</span>
             )}
           </div>
 

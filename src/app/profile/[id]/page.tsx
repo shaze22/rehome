@@ -10,11 +10,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const user = await prisma.user.findUnique({ where: { id }, select: { name: true, state: true, rehomeScore: true } })
   if (!user) return { title: 'Profil tidak dijumpai' }
-  const name = user.name ?? 'Pengguna BALLOUT'
+  const name = user.name ?? 'KASSIM User'
   return {
-    title: `Profil ${name}`,
-    description: `Profil penjual ${name} di BALLOUT. Skor: ${user.rehomeScore}${user.state ? ` · ${user.state}` : ''}.`,
-    openGraph: { title: `${name} | BALLOUT`, description: `Semak profil dan listing ${name} di BALLOUT.` },
+    title: `${name}'s Profile`,
+    description: `Seller profile for ${name} on KASSIM. Score: ${user.rehomeScore}${user.state ? ` · ${user.state}` : ''}.`,
+    openGraph: { title: `${name} | KASSIM`, description: `View ${name}'s profile and listings on KASSIM.` },
   }
 }
 

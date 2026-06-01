@@ -38,8 +38,8 @@ export function HowItWorks() {
     <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold mb-3">Cara BALLOUT Berfungsi</h2>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Lima langkah mudah dari listing ke delivery</p>
+          <h2 className="text-2xl font-bold mb-3">How KASSIM Works</h2>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Five simple steps from listing to delivery</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {STEPS.map((step, i) => (

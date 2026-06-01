@@ -88,7 +88,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {params.payment === 'success' && (
         <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
           <CheckCircle className="w-5 h-5" />
-          Pembayaran berjaya! Item akan dihantar tidak lama lagi.
+          Payment successful! Your item will be shipped shortly.
         </div>
       )}
 
@@ -97,14 +97,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div>
           <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Selamat datang, <span style={{ color: 'var(--teal)' }}>{dbUser?.name ?? user.email}</span>
+            Welcome, <span style={{ color: 'var(--teal)' }}>{dbUser?.name ?? user.email}</span>
           </p>
         </div>
         <Link
           href="/sell"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white gradient-teal"
         >
-          <Plus className="w-4 h-4" /> Jual Item
+          <Plus className="w-4 h-4" /> Sell Item
         </Link>
       </div>
 
@@ -136,7 +136,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Package className="w-5 h-5" style={{ color: 'var(--teal)' }} />
-              Listing Saya
+              My Listings
             </h2>
             <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
               {myListings.length}
@@ -145,9 +145,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {myListings.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Package className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Anda belum ada listing.</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have no listings yet.</p>
               <Link href="/sell" className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal">
-                Mula Jual
+                Start Selling
               </Link>
             </div>
           ) : (
@@ -157,7 +157,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               ))}
               {myListings.length > 5 && (
                 <p className="text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Dan {myListings.length - 5} listing lagi...
+                  And {myListings.length - 5} more listings...
                 </p>
               )}
             </div>
@@ -169,7 +169,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Gavel className="w-5 h-5" style={{ color: 'var(--orange)' }} />
-              Tawaran Saya
+              My Bids
             </h2>
             <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
               {myBids.length}
@@ -178,9 +178,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {myBids.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Anda belum membuat tawaran.</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have not placed any bids yet.</p>
               <Link href="/listings" className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal">
-                Semak Imbas Lelongan
+                Browse Listings
               </Link>
             </div>
           ) : (
@@ -191,16 +191,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium line-clamp-1">{bid.listing.title}</p>
                       {bid.listing.currentBidder === user.id ? (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Tertinggi</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Highest</span>
                       ) : (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>Ditawar</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>Outbid</span>
                       )}
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                       <span className="font-mono" style={{ color: 'var(--teal)' }}>RM {bid.amount.toFixed(0)}</span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {bid.listing.status === 'ACTIVE' ? 'Aktif' : 'Tamat'}
+                        {bid.listing.status === 'ACTIVE' ? 'Active' : 'Ended'}
                       </span>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="mt-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" style={{ color: 'var(--purple)' }} />
-            Pesanan
+            Orders
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {(sellerOrders as any[]).map(o => (

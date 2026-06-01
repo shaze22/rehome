@@ -84,13 +84,13 @@ export async function GET(request: NextRequest) {
       if (!tx.sellerItemShipped && tx.seller.email) {
         jobs.push(sendSwapItemShippedEmail(
           tx.seller.email, tx.seller.name ?? 'Penjual', tx.listing.title,
-          'Sistem BALLOUT', null, null, tx.listing.id,
+          'KASSIM System', null, null, tx.listing.id,
         ))
       }
       if (tx.buyerItemShipped === false && tx.buyer.email) {
         jobs.push(sendSwapItemShippedEmail(
           tx.buyer.email, tx.buyer.name ?? 'Pembeli', tx.listing.title,
-          'Sistem BALLOUT', null, null, tx.listing.id,
+          'KASSIM System', null, null, tx.listing.id,
         ))
       }
       if (jobs.length > 0) { await Promise.all(jobs); reminders++ }

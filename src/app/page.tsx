@@ -96,23 +96,23 @@ async function getStats() {
 }
 
 const CREDIBILITY_STATS = [
-  { icon: Lock, label: 'Escrow Dilindungi', desc: 'Bayar selepas terima', color: 'var(--teal)' },
-  { icon: Bot, label: 'AI Pricing', desc: 'Harga tepat dengan AI', color: 'var(--purple)' },
-  { icon: CheckCircle, label: 'IC Disahkan', desc: 'Penjual disahkan', color: 'var(--green)' },
-  { icon: Zap, label: '30 Min Lelongan', desc: 'Pantas & selamat', color: 'var(--yellow)' },
+  { icon: Lock, label: 'Secure Escrow', desc: 'Pay only after receiving', color: 'var(--teal)' },
+  { icon: Bot, label: 'AI Pricing', desc: 'Fair price with AI', color: 'var(--purple)' },
+  { icon: CheckCircle, label: 'IC Verified', desc: 'Verified sellers', color: 'var(--green)' },
+  { icon: Zap, label: '30-Min Auctions', desc: 'Fast & secure', color: 'var(--yellow)' },
 ]
 
 const TRUST_FEATURES = [
-  { emoji: '🔒', title: 'Escrow Dilindungi', desc: 'Duit pembeli disimpan selamat sehingga barang diterima. Tiada risiko penipuan.' },
-  { emoji: '🤖', title: 'AI Pricing', desc: 'Harga cadangan AI berdasarkan pasaran semasa. Jual pada harga yang adil dan tepat.' },
-  { emoji: '✅', title: 'IC Disahkan', desc: 'Penjual yang verify IC mendapat badge kepercayaan. Anda tahu siapa yang anda berurusan.' },
-  { emoji: '⚡', title: '30 Min Lelongan', desc: 'Lelongan pantas 30 minit. Bid, menang, bayar — selesai dalam satu hari.' },
+  { emoji: '🔒', title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
+  { emoji: '🤖', title: 'AI Pricing', desc: 'AI price suggestions based on current market. Sell at a fair and accurate price.' },
+  { emoji: '✅', title: 'IC Verified', desc: 'Sellers who verify their IC get a trust badge. You know who you\'re dealing with.' },
+  { emoji: '⚡', title: '30-Min Auctions', desc: 'Fast 30-minute auctions. Bid, win, pay — done in one day.' },
 ]
 
 const TESTIMONIALS = [
-  { quote: 'Jual laptop lama dapat RM650 dalam 22 minit. Lagi laju dari Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A' },
-  { quote: 'Tukar cermin mata lama dengan jam tangan. Jimat duit beli baru. Sangat mudah!', name: 'Siti R.', location: 'Selangor', initial: 'S' },
-  { quote: 'Escrow bagi aku tenang. Duit tak lepas kalau barang tak sampai. Selamat betul.', name: 'Razif M.', location: 'Pulau Pinang', initial: 'R' },
+  { quote: 'Sold my old laptop for RM650 in 22 minutes. Even faster than Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A' },
+  { quote: 'Swapped my old glasses for a watch. Saved money buying new. So easy!', name: 'Siti R.', location: 'Selangor', initial: 'S' },
+  { quote: 'Escrow gave me peace of mind. Money only releases when item arrives. Really safe.', name: 'Razif M.', location: 'Penang', initial: 'R' },
 ]
 
 export default async function HomePage() {
@@ -135,23 +135,23 @@ export default async function HomePage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
               <Leaf className="w-3.5 h-3.5" />
-              Platform Lelongan Barangan Terpakai #1 Malaysia
+              Malaysia&apos;s #1 Pre-Loved Auction Platform
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Jual Barang Lama.{' '}
+              Sell Old Stuff.{' '}
               <span style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Duit Masuk Hari Ini.
+                Get Paid Today.
               </span>
             </h1>
             <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Lelongan progresif 30 minit. Tukar barang tanpa wang. Escrow selamat.
+              Progressive 30-min auctions. Item swaps. Secure escrow. Every deal saves the planet.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/jual"
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white gradient-teal glow-teal transition-all hover:scale-105"
               >
-                Mula Jual Sekarang
+                Start Selling Now
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -159,7 +159,7 @@ export default async function HomePage() {
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold transition-colors"
                 style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
               >
-                Semak Barangan →
+                Browse Items →
               </Link>
             </div>
           </div>
@@ -169,10 +169,10 @@ export default async function HomePage() {
             {hasRealData ? (
               <>
                 {[
-                  { label: 'Item Dijual', value: `${totalTransactions.toLocaleString()}+`, icon: TrendingUp, color: 'var(--teal)' },
-                  { label: 'CO₂ Diselamatkan', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
-                  { label: 'Pertukaran Selesai', value: `${swapDone}+`, icon: ArrowLeftRight, color: 'var(--purple)' },
-                  { label: 'Masa Purata Jual', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
+                  { label: 'Items Sold', value: `${totalTransactions.toLocaleString()}+`, icon: TrendingUp, color: 'var(--teal)' },
+                  { label: 'CO₂ Saved', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
+                  { label: 'Swaps Completed', value: `${swapDone}+`, icon: ArrowLeftRight, color: 'var(--purple)' },
+                  { label: 'Avg. Sell Time', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
                 ].map(stat => (
                   <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                     <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
@@ -196,12 +196,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Kenapa BALLOUT Selamat? */}
+      {/* Why KASSIM is Safe? */}
       <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">Kenapa BALLOUT Selamat?</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Dibina untuk melindungi pembeli dan penjual Malaysia</p>
+            <h2 className="text-2xl font-bold mb-2">Why KASSIM is Safe?</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Built to protect buyers and sellers across Malaysia</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {TRUST_FEATURES.map(item => (
@@ -224,7 +224,7 @@ export default async function HomePage() {
       {/* Category Grid */}
       <CategoryGrid />
 
-      {/* Trending this week */}
+      {/* Trending This Week */}
       {trendingListings.length >= 2 && (
         <section className="py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
           <div className="max-w-7xl mx-auto">
@@ -232,9 +232,9 @@ export default async function HomePage() {
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-400" />
-                  Trending Minggu Ini
+                  Trending This Week 🔥
                 </h2>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Barang paling popular 7 hari lepas</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Most popular items in the last 7 days</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -248,7 +248,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Mega Lelong Jumaat */}
+      {/* Friday Mega Auction */}
       {megaListings.length > 0 && (
         <section className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
@@ -256,11 +256,11 @@ export default async function HomePage() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h2 className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    ⚡ Mega Lelong Jumaat
+                    ⚡ Friday Mega Auction
                   </h2>
                   <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>FEATURED</span>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Listing pilihan setiap Jumaat malam</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Curated listings every Friday night</p>
               </div>
               <MegaLelongCountdown />
             </div>
@@ -282,19 +282,19 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <Zap className="w-5 h-5" style={{ color: 'var(--orange)' }} />
-                Lelong Pantas
+                Flash Auctions ⚡
               </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bida sekarang, menang dalam 30 minit</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bid now, win in 30 minutes</p>
             </div>
             <Link href="/listings?mode=flash" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: 'var(--teal)' }}>
-              Lihat Semua <ArrowRight className="w-4 h-4" />
+              View All <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           {flashListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">Belum ada lelongan aktif</p>
-              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Mula Jual</Link>
+              <p className="font-medium mb-2">No active auctions yet</p>
+              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Start Selling</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -313,19 +313,19 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
-                Tukar Barang
+                Item Swaps 🔄
               </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Pertukaran barang terpakai tanpa wang</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Trade pre-loved items without cash</p>
             </div>
             <Link href="/listings?mode=swap" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: '#16a34a' }}>
-              Lihat Semua <ArrowRight className="w-4 h-4" />
+              View All <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           {swapListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
               <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">Belum ada tawaran tukar barang</p>
-              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>Tawar Barang</Link>
+              <p className="font-medium mb-2">No swap offers yet</p>
+              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>List Your Item</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -341,13 +341,13 @@ export default async function HomePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">Apa Kata Pengguna BALLOUT?</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Pengalaman sebenar dari komuniti kami</p>
+            <h2 className="text-2xl font-bold mb-2">What Our Users Say</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Real experiences from our community</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(t => (
               <div key={t.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-3xl font-serif mb-3" style={{ color: 'var(--teal)' }}>"</div>
+                <div className="text-3xl font-serif mb-3" style={{ color: 'var(--teal)' }}>&ldquo;</div>
                 <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{t.quote}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full gradient-teal flex items-center justify-center text-white text-sm font-bold flex-shrink-0">

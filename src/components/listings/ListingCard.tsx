@@ -37,13 +37,13 @@ function useCountdown(endsAt: Date | string | null) {
 
   useEffect(() => {
     if (!endsAt) {
-      setTimeLeft('Menunggu bidder pertama')
+      setTimeLeft('Waiting for first bid')
       setIsUrgent(false)
       return
     }
     function update() {
       const diff = new Date(endsAt as Date | string).getTime() - Date.now()
-      if (diff <= 0) { setTimeLeft('Tamat'); return }
+      if (diff <= 0) { setTimeLeft('Ended'); return }
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
@@ -61,8 +61,8 @@ function useCountdown(endsAt: Date | string | null) {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  FURNITURE: 'Perabot', ELECTRONICS: 'Elektronik', FASHION: 'Fesyen',
-  BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
+  FURNITURE: 'Furniture', ELECTRONICS: 'Electronics', FASHION: 'Fashion',
+  BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
 export function ListingCard({ listing }: Props) {
@@ -102,7 +102,7 @@ export function ListingCard({ listing }: Props) {
           {/* HOT badge */}
           {isHot && (
             <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 Popular
+              🔥 Hot
             </div>
           )}
           {/* Condition badge */}
@@ -120,16 +120,16 @@ export function ListingCard({ listing }: Props) {
           {/* Bid info */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Tawaran semasa</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Current bid</p>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--teal)' }}>
                 RM {bid.toFixed(0)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Masa tinggal</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Time left</p>
               {isWaitingLong ? (
                 <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Sudah {daysWaiting} hari
+                  Waiting {daysWaiting} days
                 </p>
               ) : (
                 <p className={`text-sm font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>

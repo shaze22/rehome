@@ -54,8 +54,8 @@ function ShipModal({
     if (photos.length + files.length > 5) return
     const MAX_SIZE = 10 * 1024 * 1024
     for (const file of files) {
-      if (file.size > MAX_SIZE) { setError('Saiz fail tidak boleh melebihi 10MB.'); return }
-      if (!file.type.startsWith('image/')) { setError('Hanya fail imej dibenarkan.'); return }
+      if (file.size > MAX_SIZE) { setError('File size cannot exceed 10MB.'); return }
+      if (!file.type.startsWith('image/')) { setError('Only image files are allowed.'); return }
     }
     setUploading(true)
     const supabase = createClient()
@@ -73,7 +73,7 @@ function ShipModal({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (photos.length === 0) { setError('Sila muat naik sekurang-kurangnya 1 foto.'); return }
+    if (photos.length === 0) { setError('Please upload at least 1 photo.'); return }
     setSubmitting(true)
     setError('')
     try {
@@ -95,17 +95,17 @@ function ShipModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
       <div className="w-full max-w-md rounded-2xl p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold flex items-center gap-2"><Truck className="w-4 h-4" /> Hantar Barang</h3>
+          <h3 className="font-semibold flex items-center gap-2"><Truck className="w-4 h-4" /> Ship Item</h3>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>Foto barang sebelum dihantar (maks 5) *</label>
+            <label className="block text-xs mb-1.5" style={{ color: 'var(--text-secondary)' }}>Photos of item before shipping (max 5) *</label>
             <label className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer" style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--bg-elevated)' }}>
               <input type="file" accept="image/*" multiple onChange={uploadPhoto} className="hidden" disabled={photos.length >= 5} />
               {uploading ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--teal)' }} /> : (
                 <><Upload className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Klik untuk muat naik ({photos.length}/5)</p></>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Click to upload ({photos.length}/5)</p></>
               )}
             </label>
             {photos.length > 0 && (
@@ -122,21 +122,21 @@ function ShipModal({
             )}
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Kurier</label>
+            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Courier</label>
             <select value={courier} onChange={e => setCourier(e.target.value)} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
-              <option value="">Pilih kurier (pilihan)</option>
-              {['J&T Express', 'Pos Laju', 'DHL Express', 'GDex', 'Ninja Van', 'Lalamove', 'Grab Express', 'Lain-lain'].map(c => (
+              <option value="">Select courier (optional)</option>
+              {['J&T Express', 'Pos Laju', 'DHL Express', 'GDex', 'Ninja Van', 'Lalamove', 'Grab Express', 'Others'].map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Nombor tracking (pilihan)</label>
-            <input type="text" value={tracking} onChange={e => setTracking(e.target.value)} placeholder="cth: JT1234567890" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Tracking number (optional)</label>
+            <input type="text" value={tracking} onChange={e => setTracking(e.target.value)} placeholder="e.g. JT1234567890" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
           {error && <p className="text-xs" style={{ color: 'var(--red)' }}>{error}</p>}
           <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60 gradient-teal">
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Sahkan Penghantaran'}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Confirm Shipment'}
           </button>
         </form>
       </div>
@@ -170,20 +170,20 @@ function DisputeModal({ txId, onClose, onDone }: { txId: string; onClose: () => 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
       <div className="w-full max-w-md rounded-2xl p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(239,68,68,0.3)' }}>
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold flex items-center gap-2 text-red-400"><AlertCircle className="w-4 h-4" /> Laporkan Masalah</h3>
+          <h3 className="font-semibold flex items-center gap-2 text-red-400"><AlertCircle className="w-4 h-4" /> Report an Issue</h3>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Terangkan masalah anda *</label>
+            <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Describe your issue *</label>
             <textarea required value={reason} onChange={e => setReason(e.target.value)} rows={4}
-              placeholder="cth: Barang tidak sampai selepas 7 hari, atau barang tidak seperti yang diterangkan..."
+              placeholder="e.g. Item did not arrive after 7 days, or item is not as described..."
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
               style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
           </div>
           {error && <p className="text-xs" style={{ color: 'var(--red)' }}>{error}</p>}
           <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-60" style={{ backgroundColor: 'var(--red)' }}>
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Hantar Laporan'}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Submit Report'}
           </button>
         </form>
       </div>
@@ -228,32 +228,32 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
 
   // Steps: accepted → shipped → received → done
   const steps = [
-    { label: 'Tawaran Diterima', done: true },
+    { label: 'Offer Accepted', done: true },
     {
-      label: isSeller ? 'Hantar Barang Anda' : 'Penjual Hantar Barang',
+      label: isSeller ? 'Ship Your Item' : 'Seller Ships Item',
       done: tx.sellerItemShipped,
       mine: isSeller && !tx.sellerItemShipped,
       tracking: isSeller ? null : tx.sellerTracking,
       courier: isSeller ? null : tx.sellerCourier,
     },
     ...(isSwapOrHybrid ? [{
-      label: isBuyer ? 'Hantar Barang Anda' : 'Pembeli Hantar Barang',
+      label: isBuyer ? 'Ship Your Item' : 'Buyer Ships Item',
       done: tx.buyerItemShipped === true,
       mine: isBuyer && !tx.buyerItemShipped,
       tracking: isBuyer ? null : tx.buyerTracking,
       courier: isBuyer ? null : tx.buyerCourier,
     }] : []),
     {
-      label: isBuyer ? 'Sahkan Terima Barang' : 'Tunggu Pembeli Sahkan',
+      label: isBuyer ? 'Confirm Receipt' : 'Waiting for Buyer',
       done: tx.buyerItemReceived,
       mine: isBuyer && tx.escrowStatus === 'BOTH_SHIPPED' && !tx.buyerItemReceived,
     },
     ...(isSwapOrHybrid ? [{
-      label: isSeller ? 'Sahkan Terima Barang' : 'Tunggu Penjual Sahkan',
+      label: isSeller ? 'Confirm Receipt' : 'Waiting for Seller',
       done: tx.sellerItemReceived,
       mine: isSeller && tx.escrowStatus === 'BOTH_SHIPPED' && !tx.sellerItemReceived,
     }] : []),
-    { label: 'Selesai', done: tx.escrowStatus === 'COMPLETED' },
+    { label: 'Completed', done: tx.escrowStatus === 'COMPLETED' },
   ]
 
   const canShip = (isSeller && !tx.sellerItemShipped) ||
@@ -280,10 +280,10 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
       <div className="rounded-xl p-5" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}>
         <div className="flex items-center gap-2 mb-2">
           <AlertCircle className="w-5 h-5" style={{ color: 'var(--red)' }} />
-          <h3 className="font-semibold" style={{ color: 'var(--red)' }}>Pertikaian Difailkan</h3>
+          <h3 className="font-semibold" style={{ color: 'var(--red)' }}>Dispute Filed</h3>
         </div>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Pasukan BALLOUT sedang menyemak kes ini. Sila tunggu makluman melalui emel.
+          The KASSIM team is reviewing this case. Please wait for an email notification.
         </p>
         {tx.disputeReason && (
           <p className="text-xs mt-2 italic px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
@@ -299,10 +299,10 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
       <div className="rounded-xl p-5" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.3)' }}>
         <div className="flex items-center gap-2 mb-2">
           <CheckCircle className="w-5 h-5" style={{ color: '#16a34a' }} />
-          <h3 className="font-semibold" style={{ color: '#16a34a' }}>Pertukaran Berjaya!</h3>
+          <h3 className="font-semibold" style={{ color: '#16a34a' }}>Swap Successful!</h3>
         </div>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Tahniah! Pertukaran "{listingTitle}" telah selesai dengan jayanya. Skor Swap anda telah dikemas kini.
+          Congratulations! The swap for "{listingTitle}" has been completed. Your Swap Score has been updated.
         </p>
       </div>
     )
@@ -315,11 +315,11 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4" style={{ color: '#16a34a' }} />
-            <h3 className="font-semibold text-sm">Status Pertukaran</h3>
+            <h3 className="font-semibold text-sm">Swap Status</h3>
           </div>
           <div className="flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
             {OFFER_TYPE_ICON[tx.offerType]}
-            {tx.offerType === 'CASH' ? 'Wang Tunai' : tx.offerType === 'SWAP' ? 'Tukar Barang' : 'Barang + Wang'}
+            {tx.offerType === 'CASH' ? 'Cash' : tx.offerType === 'SWAP' ? 'Swap' : 'Item + Cash'}
           </div>
         </div>
 
@@ -327,10 +327,10 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
         {tx.acceptedOffer && (
           <div className="px-5 py-3 flex gap-4 text-xs" style={{ backgroundColor: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
             {tx.acceptedOffer.offeredCashAmount != null && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Wang: </span><span className="font-mono font-bold" style={{ color: 'var(--yellow)' }}>RM {tx.acceptedOffer.offeredCashAmount}</span></div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Cash: </span><span className="font-mono font-bold" style={{ color: 'var(--yellow)' }}>RM {tx.acceptedOffer.offeredCashAmount}</span></div>
             )}
             {tx.acceptedOffer.offeredItemValue != null && (
-              <div><span style={{ color: 'var(--text-muted)' }}>Nilai barang: </span><span className="font-mono font-bold" style={{ color: '#16a34a' }}>~RM {tx.acceptedOffer.offeredItemValue}</span></div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Item value: </span><span className="font-mono font-bold" style={{ color: '#16a34a' }}>~RM {tx.acceptedOffer.offeredItemValue}</span></div>
             )}
             {tx.acceptedOffer.offeredItemPhotos.length > 0 && (
               <div className="flex gap-1">
@@ -360,7 +360,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
                 <div className="flex-1 min-w-0">
                   <p className="text-sm" style={{ color: step.done ? 'var(--text-primary)' : step.mine ? '#16a34a' : 'var(--text-muted)', fontWeight: step.mine ? 600 : 400 }}>
                     {step.label}
-                    {step.mine && ' ← Tindakan anda'}
+                    {step.mine && ' ← Your action'}
                   </p>
                   {'tracking' in step && step.tracking && (
                     <p className="text-xs mt-0.5 font-mono" style={{ color: 'var(--text-muted)' }}>
@@ -379,7 +379,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
                 style={{ backgroundColor: '#16a34a' }}>
                 <Truck className="w-4 h-4" />
-                Hantar Barang Saya
+                Ship My Item
               </button>
             )}
 
@@ -388,7 +388,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
                 style={{ backgroundColor: 'var(--teal)' }}>
                 {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Sahkan Terima Barang
+                Confirm Receipt
               </button>
             )}
 
@@ -397,7 +397,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
                 className="w-full py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
                 style={{ border: '1px solid rgba(239,68,68,0.3)', color: 'var(--red)' }}>
                 <AlertCircle className="w-3.5 h-3.5" />
-                Laporkan Masalah
+                Report an Issue
               </button>
             )}
           </div>
@@ -405,8 +405,8 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
 
         {/* Parties */}
         <div className="px-5 py-3 flex justify-between text-xs" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-elevated)' }}>
-          <div><span style={{ color: 'var(--text-muted)' }}>Penjual: </span><span className="font-medium">{tx.seller.name ?? 'Pengguna'}</span></div>
-          <div><span style={{ color: 'var(--text-muted)' }}>Pembeli: </span><span className="font-medium">{tx.buyer.name ?? 'Pengguna'}</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Seller: </span><span className="font-medium">{tx.seller.name ?? 'User'}</span></div>
+          <div><span style={{ color: 'var(--text-muted)' }}>Buyer: </span><span className="font-medium">{tx.buyer.name ?? 'User'}</span></div>
         </div>
       </div>
 

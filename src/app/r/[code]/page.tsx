@@ -4,13 +4,13 @@ import { prisma } from '@/lib/prisma'
 import { Gift, Shield, Zap, ArrowLeftRight, CheckCircle } from 'lucide-react'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Jemputan Khas | BALLOUT' }
+export const metadata: Metadata = { title: 'Special Invitation | KASSIM' }
 
 const FEATURES = [
-  { icon: Zap, label: 'Lelong Pantas 30 min', color: 'var(--teal)' },
-  { icon: ArrowLeftRight, label: 'Tukar Barang Percuma', color: '#16a34a' },
-  { icon: Shield, label: 'Escrow Selamat', color: 'var(--purple)' },
-  { icon: CheckCircle, label: 'Penjual IC Disahkan', color: 'var(--orange)' },
+  { icon: Zap, label: '30-min Flash Auctions', color: 'var(--teal)' },
+  { icon: ArrowLeftRight, label: 'Free Item Swaps', color: '#16a34a' },
+  { icon: Shield, label: 'Secure Escrow', color: 'var(--purple)' },
+  { icon: CheckCircle, label: 'IC-Verified Sellers', color: 'var(--orange)' },
 ]
 
 export default async function ReferralLandingPage({ params }: { params: Promise<{ code: string }> }) {
@@ -23,7 +23,7 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
 
   if (!referrer) notFound()
 
-  const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
+  const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
   const setCookieUrl = `${BASE}/api/referral/set-cookie?code=${code}`
 
   return (
@@ -37,7 +37,7 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
           <div className="p-8">
             {/* Logo */}
             <div className="text-center mb-6">
-              <span className="text-2xl font-bold" style={{ color: 'var(--teal)' }}>⚡ BALLOUT</span>
+              <span className="text-2xl font-bold" style={{ color: 'var(--teal)' }}>⚡ KASSIM</span>
             </div>
 
             {/* Invite message */}
@@ -46,19 +46,19 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
                 🎁
               </div>
               <h1 className="text-2xl font-bold mb-2">
-                <span style={{ color: 'var(--teal)' }}>{referrer.name ?? 'Kawan anda'}</span> ajak anda ke BALLOUT!
+                <span style={{ color: 'var(--teal)' }}>{referrer.name ?? 'Your friend'}</span> invited you to KASSIM!
               </h1>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Platform lelongan dan tukar barang #1 Malaysia
+                Malaysia's #1 flash auction and item swap platform
               </p>
             </div>
 
             {/* Credit reward */}
             <div className="rounded-xl p-5 mb-6 text-center" style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.1),rgba(22,163,74,0.1))', border: '1px solid rgba(20,184,166,0.3)' }}>
-              <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Hadiah selamat datang</p>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Welcome gift</p>
               <p className="text-4xl font-bold font-mono" style={{ color: 'var(--teal)' }}>RM5</p>
               <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Credit percuma bila daftar sekarang
+                Free credit when you sign up now
               </p>
             </div>
 
@@ -77,20 +77,20 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
               href={setCookieUrl}
               className="block w-full text-center px-6 py-4 rounded-xl font-bold text-white gradient-teal glow-teal text-lg transition-all hover:scale-105"
             >
-              Daftar & Dapat RM5 Credit
+              Sign Up & Get RM5 Credit
             </a>
 
             <p className="text-center text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
-              Sudah ada akaun?{' '}
+              Already have an account?{' '}
               <Link href="/auth/login" className="hover:underline" style={{ color: 'var(--teal)' }}>
-                Log masuk
+                Sign in
               </Link>
             </p>
           </div>
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
-          Credit RM5 akan dikreditkan selepas pendaftaran. Guna semasa bid lelongan Flash.
+          RM5 credit will be applied after registration. Use it when bidding on Flash auctions.
         </p>
       </div>
     </div>

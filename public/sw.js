@@ -1,4 +1,4 @@
-const CACHE = 'ballout-v1'
+const CACHE = 'kassim-v1'
 const OFFLINE_URL = '/offline'
 
 const PRECACHE = [
@@ -59,12 +59,12 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   const data = e.data?.json() ?? {}
   e.waitUntil(
-    self.registration.showNotification(data.title ?? 'BALLOUT', {
+    self.registration.showNotification(data.title ?? 'KASSIM', {
       body: data.body ?? '',
       icon: '/api/pwa-icon?size=192',
       badge: '/api/pwa-icon?size=192',
       data: { url: data.url ?? '/' },
-      tag: data.tag ?? 'ballout',
+      tag: data.tag ?? 'kassim',
       renotify: true,
     })
   )

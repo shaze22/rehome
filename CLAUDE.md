@@ -1,71 +1,74 @@
 @AGENTS.md
 
-# BALLOUT — Project Context
+# KASSIM — Project Context
 
-## Apa itu BALLOUT?
-Malaysian circular economy auction platform. Dua mod:
-- **Lelong Pantas** — lelongan 30 minit, wang tunai sahaja
-- **Tukar Barang** — tawar 3 hari, boleh tukar barang / wang / gabungan
+## What is KASSIM?
+Malaysian circular economy auction platform. Two modes:
+- **Flash Auction** — 30-min auction, cash only
+- **Item Swap** — 72-hour bidding, swap items / cash / hybrid
+
+> **Naming note:** Folder is `rehome/`, GitHub repo is `shaze22/rehome`, Vercel slug is `rehome` — all intentional, do NOT rename. Only the brand name in UI/code is KASSIM.
 
 ## Tech Stack
-- **Next.js 16.2.6** (App Router, Turbopack) — ada breaking changes dari v15
+- **Next.js 16.2.6** (App Router, Turbopack) — breaking changes from v15
 - TypeScript + Tailwind CSS v4
 - Supabase (Auth + PostgreSQL + Realtime) via `@supabase/ssr`
 - Prisma 7 — config: `prisma.config.ts`, generated client: `src/generated/`
 - Stripe (payments + escrow Flash)
 - Google Gemini `gemini-2.5-flash` via `src/lib/gemini.ts`
-- Resend (email notifications)
+- Resend (email notifications) — FROM: `KASSIM <noreply@kassim.app>`
+- next-intl 4.13.0 (i18n foundation)
 - Vercel (deployment)
 
-## Peraturan Wajib Next.js 16
-- `params` adalah `Promise<{...}>` — **mesti `await params`**
-- Tiada `middleware.ts` — guna `proxy.ts`
-- Baca `node_modules/next/dist/docs/` sebelum tulis code baru
+## Next.js 16 Rules
+- `params` is `Promise<{...}>` — **must `await params`**
+- No `middleware.ts` — use `proxy.ts`
+- Read `node_modules/next/dist/docs/` before writing new code
 
-## Peraturan Bidding Flash (KRITIKAL)
-1. **Bid mesti whole integer (RM)** — tiada decimal, tiada sen
-2. **Minimum increment: +RM1** dari bid semasa
-3. **RM0 bid sah** — first bidder boleh menang percuma
-4. **Timer bermula HANYA pada bid pertama** — `endsAt = null` sehingga ada bid
-5. **Tiada timer sebelum bid pertama** — listing aktif selama-lamanya
-6. **User tidak boleh bid pada listing sendiri**
-7. **Platform fee: 15%** dari nilai bid akhir (RM0 bid = RM0 fee)
+## Flash Bidding Rules (CRITICAL)
+1. **Bid must be whole integer (RM)** — no decimals, no cents
+2. **Minimum increment: +RM1** from current bid
+3. **RM0 bid valid** — first bidder can win for free
+4. **Timer starts ONLY on first bid** — `endsAt = null` until first bid
+5. **No timer before first bid** — listing stays active indefinitely
+6. **User cannot bid on own listing**
+7. **Platform fee: 15%** of final bid (RM0 bid = RM0 fee)
 
 ## Timer Logic (Flash)
 ```
-Bid pertama    → endsAt = now + 15 minit, firstBidAt = now
-Counter bid 1  → +5 minit (hard cap: firstBidAt + 30 minit)
-Counter bid 2+ → +2.5 minit setiap satu (same hard cap)
-Had mutlak     → auction tidak boleh melebihi 30 minit dari bid pertama
+First bid      → endsAt = now + 15 min, firstBidAt = now
+Counter bid 1  → +5 min (hard cap: firstBidAt + 30 min)
+Counter bid 2+ → +2.5 min each (same hard cap)
+Hard cap       → auction cannot exceed 30 min from first bid
 ```
 
-## Peraturan Swap Bid
-1. **Timer 72 jam dari masa listing dicipta** — `endsAt = now + 72h` (bukan null)
-2. **Offer types: CASH | SWAP | HYBRID** — pemilik boleh restrict jenis tawaran
-3. **Max 1 active offer per user per listing** — status PENDING atau COUNTERED
-4. **Counter-offer max 3 rounds** — selepas 3 round, pemilik mesti Accept atau Reject
-5. **Bila Accept** — semua offer lain auto-REJECTED + listing jadi SOLD + SwapTransaction dicipta
-6. **swapAcceptCash: false** — tolak CASH-only offer (tapi HYBRID masih ok)
-7. **swapOpenOffers: true** — terima semua jenis tawaran walaupun kategori berbeza
+## Swap Bid Rules
+1. **Timer 72h from listing creation** — `endsAt = now + 72h` (not null)
+2. **Offer types: CASH | SWAP | HYBRID** — owner can restrict offer types
+3. **Max 1 active offer per user per listing** — status PENDING or COUNTERED
+4. **Counter-offer max 3 rounds** — after 3 rounds, owner must Accept or Reject
+5. **On Accept** — all other offers auto-REJECTED + listing becomes SOLD + SwapTransaction created
+6. **swapAcceptCash: false** — rejects CASH-only offers (HYBRID still ok)
+7. **swapOpenOffers: true** — accepts all offer types regardless of category
 
 ## Swap Escrow Flow
 ```
 Offer ACCEPTED
   → listing.status = SOLD
-  → SwapTransaction dicipta (escrowStatus: PENDING)
-  → CASH: buyerItemShipped = null (tidak perlu)
+  → SwapTransaction created (escrowStatus: PENDING)
+  → CASH: buyerItemShipped = null (not required)
   → SWAP/HYBRID: buyerItemShipped = false
 
-Seller hantar → sellerItemShipped = true + sellerPhotos + sellerTracking
-Buyer hantar  → buyerItemShipped = true + buyerPhotos (SWAP/HYBRID sahaja)
-  → bila semua hantar → escrowStatus = BOTH_SHIPPED
+Seller ships → sellerItemShipped = true + sellerPhotos + sellerTracking
+Buyer ships  → buyerItemShipped = true + buyerPhotos (SWAP/HYBRID only)
+  → when all shipped → escrowStatus = BOTH_SHIPPED
 
-Buyer sahkan terima  → buyerItemReceived = true
-Seller sahkan terima → sellerItemReceived = true (SWAP/HYBRID sahaja)
-  → bila semua terima → escrowStatus = COMPLETED
-  → SwapScore dikira semula, successfulSwaps++, swapVerified check
+Buyer confirms receipt  → buyerItemReceived = true
+Seller confirms receipt → sellerItemReceived = true (SWAP/HYBRID only)
+  → when all received → escrowStatus = COMPLETED
+  → SwapScore recalculated, successfulSwaps++, swapVerified check
 
-Pertikaian → escrowStatus = DISPUTED → email admin → admin resolve/buka semula
+Dispute → escrowStatus = DISPUTED → email admin → admin resolve/reopen
 ```
 
 ## SwapScore Formula
@@ -84,8 +87,8 @@ swapOpenOffers     Boolean
 swapAcceptCash     Boolean
 swapMinCashTopup   Float?
 swapValueEstimate  Float?       // AI-generated fair value
-endsAt             DateTime?    // Flash: null sehingga bid | Swap: now+72h
-status             // ACTIVE → SOLD (bila offer diterima)
+endsAt             DateTime?    // Flash: null until first bid | Swap: now+72h
+status             // ACTIVE → SOLD (when offer accepted)
 ```
 
 ## Swap Bid Schema (Offer)
@@ -109,7 +112,7 @@ sellerId / buyerId String
 offerType          OfferType
 escrowStatus       EscrowStatus // PENDING | BOTH_SHIPPED | COMPLETED | DISPUTED
 sellerItemShipped  Boolean
-buyerItemShipped   Boolean?     // null = CASH (tidak perlu)
+buyerItemShipped   Boolean?     // null = CASH (not required)
 sellerItemReceived Boolean
 buyerItemReceived  Boolean
 sellerPhotos / buyerPhotos  String[]
@@ -138,38 +141,56 @@ enum EscrowStatus { PENDING  BOTH_SHIPPED  COMPLETED  DISPUTED }
 - `GET  /api/cron/expire-auctions` — cron job (CRON_SECRET=rehome-cron-2026)
 
 ### Swap Bid — Offers
-- `POST /api/offers` — hantar tawaran + email seller
-- `GET  /api/offers?listingId=xxx` — seller: semua; buyer: +`&myOffer=true`
+- `POST /api/offers` — submit offer + email seller
+- `GET  /api/offers?listingId=xxx` — seller: all; buyer: +`&myOffer=true`
 - `PUT  /api/offers/[id]` — `{ action: 'accept'|'reject'|'counter', ...fields }` + email
 
 ### Swap Bid — Escrow
-- `GET  /api/swap-transactions?listingId=xxx` — fetch tx (seller/buyer sahaja)
+- `GET  /api/swap-transactions?listingId=xxx` — fetch tx (seller/buyer only)
 - `POST /api/swap-transactions/[id]/ship` — `{ photos[], trackingNumber?, courier? }` + email
 - `POST /api/swap-transactions/[id]/receive` — `{ conditionOk }` → COMPLETED + SwapScore + email
 - `POST /api/swap-transactions/[id]/dispute` — `{ reason }` → DISPUTED + email admin
 
 ### Listings
-- `POST /api/listings` — cipta listing (Flash atau Swap)
-- `GET  /api/listings?mode=flash|swap` — fetch dengan filter
+- `POST /api/listings` — create listing (Flash or Swap)
+- `GET  /api/listings?mode=flash|swap` — fetch with filters
 
 ### Gemini AI
 - `POST /api/gemini/price` — AI pricing suggestion
-- `POST /api/gemini/analyze` — analyze foto → title, description, conditionScore
-- `POST /api/gemini/swap-suggest` — AI suggest swap items → suggestedItems[], suggestedCategories[], reasoning
+- `POST /api/gemini/analyze` — analyze photos → title, description, conditionScore (generates **English** content)
+- `POST /api/gemini/swap-suggest` — AI suggest swap items → suggestedItems[], suggestedCategories[], reasoning (generates **English** content)
 
 ### Admin
-- `POST /api/admin/verify-ic` — verify IC pengguna
+- `POST /api/admin/verify-ic` — verify user IC
 - `POST /api/admin/resolve-dispute` — `{ transactionId, resolution: 'complete'|'cancel' }`
 
 ## Notifications (Resend — `src/lib/resend.ts`)
-| Trigger | Fungsi | Penerima |
-|---------|--------|---------|
-| Offer masuk | `sendSwapOfferReceivedEmail` | Seller |
-| Offer di-counter | `sendSwapOfferCounteredEmail` | Pihak lain |
-| Offer diterima | `sendSwapOfferAcceptedEmail` | Buyer |
-| Barang dihantar | `sendSwapItemShippedEmail` | Penerima |
-| Swap selesai | `sendSwapCompletedEmail` | Seller + Buyer |
-| Pertikaian difailkan | `sendSwapDisputeEmail` | Admin |
+All emails are in **English**. FROM: `KASSIM <noreply@kassim.app>`
+
+| Trigger | Function | Recipient |
+|---------|----------|-----------|
+| Offer received | `sendSwapOfferReceivedEmail` | Seller |
+| Offer countered | `sendSwapOfferCounteredEmail` | Other party |
+| Offer accepted | `sendSwapOfferAcceptedEmail` | Buyer |
+| Item shipped | `sendSwapItemShippedEmail` | Recipient |
+| Swap completed | `sendSwapCompletedEmail` | Seller + Buyer |
+| Dispute filed | `sendSwapDisputeEmail` | Admin |
+| Outbid | `sendOutbidEmail` | Previous bidder |
+| Watchlist alert | `sendWatchlistAlertEmail` | Watchers |
+| Auction expired | `sendAuctionExpiredSellerEmail` | Seller |
+| Welcome | `sendWelcomeEmail` | New user |
+| Referral reward | `sendReferralRewardEmail` | Referrer |
+
+## Push Notifications (English)
+| Event | Route | Message |
+|-------|-------|---------|
+| Outbid | `/api/bid` | ⚡ You've been outbid! |
+| Offer received | `/api/offers` POST | 🔄 New offer received! |
+| Offer accepted | `/api/offers/[id]` accept | 🎉 Your offer was accepted! |
+| Counter offer | `/api/offers/[id]` counter | 💬 New counter offer! |
+| Item shipped | `/api/swap-transactions/[id]/ship` | 📦 Item on its way! |
+| Swap completed | `/api/swap-transactions/[id]/receive` | ✅ Swap completed! (both parties) |
+| Dispute filed | `/api/swap-transactions/[id]/dispute` | ⚠️ Dispute filed |
 
 ## Gemini AI (`src/lib/gemini.ts`)
 ```typescript
@@ -178,19 +199,21 @@ getAIPriceSuggestion({ category, condition, originalPrice, state })
 
 analyzeItemPhotos(photoUrls, category)
 → { conditionScore, title, description, isPhotoValid, invalidReason }
+// Prompts are in English — generates English titles/descriptions
 
 getSwapSuggestions({ title, category, condition, estimatedValue })
 → { suggestedItems[], suggestedCategories[], valueSuggestion, reasoning, confidence }
+// confidence: 'high' | 'medium' | 'low'  (was 'tinggi'|'sederhana'|'rendah')
 ```
 
 ## Courier Rates (Hardcoded + 30% Markup)
-| Zon           | Base  | Dengan Markup |
-|---------------|-------|---------------|
-| Same state    | RM8   | RM10.40       |
-| Peninsular    | RM12  | RM15.60       |
-| East Malaysia | RM20  | RM26.00       |
+| Zone          | Base  | With Markup |
+|---------------|-------|-------------|
+| Same state    | RM8   | RM10.40     |
+| Peninsular    | RM12  | RM15.60     |
+| East Malaysia | RM20  | RM26.00     |
 
-## Struktur Projek
+## Project Structure
 ```
 src/
   app/
@@ -207,33 +230,57 @@ src/
     listings/[id]/                — Listing detail (Flash + Swap + Escrow)
     sell/                         — Create listing (mode toggle + AI swap suggest)
     dashboard/                    — Seller/buyer dashboard
-    profile/[id]/                 — Profil + swap history + SwapScore + badges
+    profile/[id]/                 — Profile + swap history + SwapScore + badges
     admin/                        — IC verify + disputed swaps
+    jual/                         — Seller acquisition landing page
+    r/[code]/                     — Referral landing page
+    offline/                      — PWA offline fallback
+  i18n/
+    routing.ts   — locales config: ['en','ms','id','zh','ar'], defaultLocale='en'
+    request.ts   — reads locale from cookie 'kassim_locale', falls back to 'en'
   lib/
     gemini.ts   — getAIPriceSuggestion(), analyzeItemPhotos(), getSwapSuggestions()
-    resend.ts   — Flash + Swap email notifications (6 swap functions)
+    resend.ts   — Flash + Swap email notifications (all English)
     delivery.ts — Courier rate calculator
     co2.ts      — Carbon savings calculator
     badges.ts   — Impact badge logic
     prisma.ts   — Prisma client
     stripe.ts   — Stripe helpers
+    push.ts     — sendPushToUser() web push
     supabase/   — Server + client Supabase
   components/
+    layout/
+      Navbar.tsx          — includes LanguageSwitcher
+      Footer.tsx
+      LanguageSwitcher.tsx — 5-language dropdown, sets 'kassim_locale' cookie
     sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest
     listings/ListingCard.tsx       — Flash card
-    listings/SwapListingCard.tsx   — Swap card (hijau, nilai, dicari, offer count)
+    listings/SwapListingCard.tsx   — Swap card (green, value, wants, offer count)
     listings/ListingDetailClient.tsx — Detail (Flash + Swap + Escrow)
     listings/OfferModal.tsx        — 3-tab offer form
     listings/OwnerOffersPanel.tsx  — Accept/reject/counter + Match% score
     listings/SwapEscrowPanel.tsx   — Escrow progress + ship/receive/dispute
-proxy.ts              — Auth middleware (bukan middleware.ts!)
+messages/
+  en.json   — English master (full — nav, home, listing, errors, sell, dashboard, etc.)
+  ms.json   — Bahasa Melayu (full translation)
+  id.json   — Indonesian (empty — ready for translation)
+  zh.json   — Chinese (empty — ready for translation)
+  ar.json   — Arabic (empty — ready for translation)
+proxy.ts              — Auth middleware (NOT middleware.ts!)
+next.config.ts        — withNextIntl() wrapper + image patterns
 ```
 
 ## Migrations
 - `20260601032951_add_swap_bid_feature` — Offer model, swap fields, ListingMode/OfferType/OfferStatus
 - `20260601041150_add_swap_transaction_escrow` — SwapTransaction, EscrowStatus
 - `20260601044752_add_pickup_method` — Transaction.pickupMethod + sellerPickupConfirmed
-- `20260601052748_add_listing_weight` — Listing.weightKg (default 1kg, untuk EasyParcel quote)
+- `20260601052748_add_listing_weight` — Listing.weightKg (default 1kg, for EasyParcel quote)
+- `20260601120000_fix_review_unique_constraint`
+- `20260601120001_add_performance_indexes`
+- `20260601120002_add_listing_view_count`
+- `20260601130000_add_featured_listing`
+- `20260601140000_add_referral_system`
+- `20260601150000_add_push_subscriptions`
 
 ## Environment Variables
 ```
@@ -244,283 +291,170 @@ STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 NEXT_PUBLIC_STRIPE_PUBLIC_KEY
 RESEND_API_KEY
 GEMINI_API_KEY
-NEXT_PUBLIC_APP_URL
+NEXT_PUBLIC_APP_URL=https://kassim.app   ← set in Vercel Production
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
-EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dari portal.easyparcel.com
-LALAMOVE_API_KEY=            ← dari developers.lalamove.com
+EASYPARCEL_API_KEY=          ← empty = hardcoded fallback; get from portal.easyparcel.com
+LALAMOVE_API_KEY=            ← from developers.lalamove.com
 LALAMOVE_API_SECRET=
-LALAMOVE_SANDBOX=false       ← sudah set di Vercel
-UPSTASH_REDIS_REST_URL=      ← ✅ sudah set di Vercel (ballout-ratelimit, Singapore)
-UPSTASH_REDIS_REST_TOKEN=    ← ✅ sudah set di Vercel
+LALAMOVE_SANDBOX=false       ← already set in Vercel
+UPSTASH_REDIS_REST_URL=      ← ✅ set in Vercel (Singapore)
+UPSTASH_REDIS_REST_TOKEN=    ← ✅ set in Vercel
+NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL  ← ✅ set in Vercel
 ```
 
 ## Deployment
 ```bash
-vercel deploy --prod --force --scope syedshazni-7682s-projects
+vercel --prod --scope syedshazni-7682s-projects
 ```
-Live: https://rehome-eta.vercel.app
+Live: https://rehome-eta.vercel.app → target domain: https://kassim.app
 
-## Phase 5 — Selesai Separa (commit 1add65b, 2026-06-01)
+## i18n Setup (next-intl 4.13.0)
 
-### Flash: Self-Pickup Flow (BARU)
-Selepas Stripe payment berjaya, pembeli redirect ke listing page (`?payment=success`).
+### Architecture
+- **Cookie-based locale selection** — no URL prefix restructuring required
+- Locale stored in cookie `kassim_locale` (1 year expiry)
+- Default: `en` — falls back to English if cookie missing or invalid
+- `layout.tsx` wraps everything in `<NextIntlClientProvider>`
+- RTL support: `dir={locale === 'ar' ? 'rtl' : 'ltr'}` on `<html>`
 
-**API baru:**
-- `GET  /api/transactions/[listingId]` — fetch flash tx (buyer/seller sahaja)
-- `POST /api/transactions/[listingId]/set-pickup` — `{ method: 'DELIVERY'|'PICKUP' }` — buyer pilih kaedah
-- `POST /api/transactions/[listingId]/pickup-confirm` — seller sahkan ambil sendiri → status RELEASED
+### Adding translations to a component
+```tsx
+// Server component
+import { getTranslations } from 'next-intl/server'
+const t = await getTranslations('nav')
 
-**Flow PICKUP:**
+// Client component
+import { useTranslations } from 'next-intl'
+const t = useTranslations('nav')
+
+// Usage
+t('browse')  // → "Browse" (en) or "Semak Imbas" (ms)
 ```
-Buyer bayar → redirect ke listing?payment=success
-→ buyer klik "Ambil Sendiri"
-→ atur melalui chat → seller klik "Sahkan Pembeli Telah Ambil"
+
+### Translation key structure (messages/en.json)
+Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `referral`, `offline`, `notFound`, `auth`, `pwa`, `impact`, `footer`, `categories`
+
+### Adding a new locale
+1. Create `messages/{locale}.json` with translations
+2. Add locale to `src/i18n/routing.ts` locales array
+3. Add label to `LOCALE_LABELS` in `LanguageSwitcher.tsx`
+
+### Language Switcher
+`src/components/layout/LanguageSwitcher.tsx` — dropdown in Navbar
+- 🇬🇧 English · 🇲🇾 Melayu · 🇮🇩 Indonesia · 🇨🇳 中文 · 🇸🇦 العربية
+- Sets `kassim_locale` cookie → `window.location.reload()`
+
+## Key Cookie & Storage Names
+| Key | Location | Purpose |
+|-----|----------|---------|
+| `kassim_ref` | httpOnly cookie | Referral code (1 day) |
+| `kassim_locale` | cookie | Language preference (1 year) |
+| `kassim_recently_viewed` | localStorage | Recent items (max 6) |
+| `kassim_install_dismissed` | localStorage | PWA install banner dismissed |
+| `kassim_push_asked` | localStorage | Push notification asked |
+| `kassim-v1` | Service Worker cache | SW cache name |
+
+## PWA
+- `src/app/manifest.ts` — name: KASSIM, theme: #14b8a6, standalone
+- Shortcuts: "Flash Auctions" → `/listings?mode=flash`, "Sell Now" → `/sell`
+- `public/sw.js` — cache: `kassim-v1`, notification tag: `kassim`
+- `PWASetup.tsx` — SW registration + install banner (30s delay)
+- `PushPermission.tsx` — push permission prompt (5s delay, logged-in only)
+
+## Flash: Self-Pickup Flow
+After Stripe payment, buyer redirects to listing page (`?payment=success`).
+
+**APIs:**
+- `GET  /api/transactions/[listingId]` — fetch flash tx (buyer/seller only)
+- `POST /api/transactions/[listingId]/set-pickup` — `{ method: 'DELIVERY'|'PICKUP' }`
+- `POST /api/transactions/[listingId]/pickup-confirm` — seller confirms pickup → RELEASED
+
+**PICKUP flow:**
+```
+Buyer pays → redirect to listing?payment=success
+→ buyer clicks "Self Pickup"
+→ arrange via chat → seller clicks "Confirm Buyer Has Picked Up"
 → Transaction.sellerPickupConfirmed=true, status=RELEASED, rehomeScore+5
 ```
 
-**Flow DELIVERY:**
+**DELIVERY flow:**
 ```
-Buyer pilih "Penghantaran Pos"
-→ seller masuk tracking → POST /api/transactions/[id]/ship
-→ buyer klik "Sahkan Terima" → POST /api/transactions/[id]/confirm
+Buyer selects "Delivery"
+→ seller enters tracking → POST /api/transactions/[id]/ship
+→ buyer clicks "Confirm Received" → POST /api/transactions/[id]/confirm
 → status=RELEASED
 ```
 
-### Listings Pagination
-- 12 item/halaman, navigasi Sebelum/Seterusnya
-- `?page=N` query param
+## EasyParcel Integration
+- `src/lib/easyparcel.ts` — state → postcode mapping, POST EasyParcel API, hardcoded fallback
+- 5s timeout, returns `couriers[]` + `cheapest`
+- **Activate**: set `EASYPARCEL_API_KEY` in Vercel (portal.easyparcel.com)
+- Without key → hardcoded fallback (still works)
 
-### Home Page
-- Dual section: Lelong Pantas ⚡ + Tukar Barang 🔄
-- Stats live: sold, swapDone, CO₂
-
-## EasyParcel Integration (commit 3f2602b, 2026-06-01)
-- `src/lib/easyparcel.ts` — state → postcode mapping, POST EasyParcel API, fallback hardcoded
-- Delivery-quote API guna EasyParcel (5s timeout), return `couriers[]` + `cheapest`
-- ListingDetailClient: fetch API (400ms debounce), expandable courier list
-- SellForm: weight slider 0.1–30kg
-- **Aktifkan EasyParcel**: set `EASYPARCEL_API_KEY` di Vercel (portal.easyparcel.com)
-- Tanpa key → fallback hardcoded (masih berfungsi)
-
-## Lalamove Integration (commit f6a8cdd → 76c7b02, 2026-06-01)
-- `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→koordinat, serviceType by weight
+## Lalamove Integration
+- `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→coordinates, serviceType by weight
   - < 3kg → MOTORCYCLE · < 25kg → CAR · ≥ 25kg → VAN
-- EasyParcel + Lalamove run **serentak** (Promise.all), hasil digabung sort cheapest first
-- `DeliveryQuoteResult.source` kini boleh jadi `'easyparcel' | 'lalamove' | 'fallback'`
-- **Aktifkan**: `LALAMOVE_API_KEY=pk_prod_xxx` + `LALAMOVE_API_SECRET=sk_prod_xxx` + `LALAMOVE_SANDBOX=false`
-- Keys sudah set di Vercel (2026-06-01)
-
-### Lalamove Webhook (commit 76c7b02)
-- `POST /api/lalamove/webhook` — terima delivery status update dari Lalamove
-- `GET /api/lalamove/webhook` — return 200 untuk verification ping semasa register
-- Verify `X-Lalamove-Signature` (HMAC-SHA256); POST tanpa signature → 200 (verification ping)
+- EasyParcel + Lalamove run **in parallel** (Promise.all), combined + sorted cheapest first
+- **Webhook URL**: `https://kassim.app/api/lalamove/webhook`
 - `PICKED_UP` → `shippingStatus=SHIPPED`
 - `COMPLETED` → `shippingStatus=DELIVERED` + escrow released + `rehomeScore+5`
-- Match order via `Transaction.trackingNumber` (simpan Lalamove orderId di sini)
-- **Webhook URL**: `https://rehome-eta.vercel.app/api/lalamove/webhook`
-- Register di: developers.lalamove.com → Webhooks → tambah URL → event `ORDER_STATUS_CHANGED`
 
-## SEO Meta/OG Tags (commit 9bd1647, 2026-06-01)
-- `layout.tsx` — metadata template `'%s | BALLOUT'`, OG default, Twitter card
-- `listings/[id]` — `generateMetadata`: title=listing title+price, OG image=foto listing
-- `listings/page.tsx`, `sell/page.tsx`, `profile/[id]` — page-specific metadata
-- `GET /api/og` — Edge ImageResponse 1200×630, branded, params: `title`, `subtitle`, `price`, `mode`
-  - mode=flash → teal · mode=swap → hijau
+## SEO
+- `layout.tsx` — metadata template `'%s | KASSIM'`, OG default, Twitter card
+- `listings/[id]` — `generateMetadata`: title=listing title+price, OG image=listing photo
+- `GET /api/og` — Edge ImageResponse 1200×630, branded ⚡ KASSIM
 - `/robots.txt` — allow public, disallow dashboard/api/admin/auth
-- `/sitemap.xml` — homepage + listings feed + sehingga 500 active listings
+- `/sitemap.xml` — homepage + listings feed + up to 500 active listings
+- `sitemap.ts` + `robots.ts` — BASE URL: `process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'`
 
-## Beta Testing Prep (commit 4f86bbc, 2026-06-01)
-
-### Rate Limiting (`src/lib/rate-limit.ts`)
-- In-memory Map, auto-cleanup setiap 5 minit
-- Bid: 30/5min · Offer: 10/jam · Listing: 5/jam · Feedback: 5/jam per IP
-
-### Welcome Email
-- `sendWelcomeEmail()` dalam resend.ts
-- Dihantar bila user daftar buat kali pertama (dalam `/api/user/sync`)
-
-### Feedback Widget (`src/components/feedback/FeedbackWidget.tsx`)
-- Floating button bottom-right pada semua pages
-- 3 jenis: Bug 🐛 / Cadangan 💡 / Lain-lain 💬
-- `POST /api/feedback` → email ke ADMIN_EMAIL
-
-### Vercel Analytics
-- `<Analytics />` dari `@vercel/analytics/next` dalam layout.tsx
-
-### Error Pages
-- `src/app/error.tsx` — 500 page dengan Sentry.captureException + error.digest
-- `src/app/global-error.tsx` — root layout crash handler
-
-### Sentry (`sentry.client/server/edge.config.ts`)
-- Setup siap, perlukan `NEXT_PUBLIC_SENTRY_DSN` dari sentry.io
-- tracesSampleRate: 0.1
-
-### Admin: Beta Users Table
-- `/admin` kini ada table semua users — email, role, skor, listing count, IC, tarikh daftar
-
-## Security Fixes (2026-06-01)
-- ✅ Admin routes sudah ada auth check (role === 'ADMIN')
-- ✅ Stripe webhook: validate metadata vs DB + idempotency check
-- ✅ Upload foto: had saiz 10MB + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
-- ✅ Rate limit: Upstash Redis sliding window (ganti in-memory yang tidak efektif di Vercel)
-- ⚠️  Supabase RLS: perlu verify manual di Supabase dashboard untuk semua tables
+## Rate Limiting (`src/lib/rate-limit.ts`)
+- Upstash Redis sliding window
+- Bid: 30/5min · Offer: 10/hr · Listing: 5/hr · Feedback: 5/hr per IP
 
 ## Cron Schedule (vercel.json)
-| Route | Schedule | Fungsi |
-|-------|----------|--------|
+| Route | Schedule | Function |
+|-------|----------|---------|
 | `/api/cron/expire-auctions` | 0 0 * * * (daily) | Expire Flash auctions |
 | `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
 
-## Beta Bug Fixes Round 1 (commit c5800bf, 2026-06-01)
+## Referral Program
+- `User.referralCode String? @unique`, `User.creditBalance Float @default(0)`, model `Referral`
+- `/api/user/sync`: auto-generate 8-char referralCode (nanoid) on first register; process `kassim_ref` cookie → RM5 credit both parties + create Referral record
+- `/api/referral/set-cookie`: validate code, set httpOnly cookie `kassim_ref` (1 day), redirect to /auth/register
+- `/r/[code]`: referral landing page — inviter name, RM5 reward, feature list, CTA "Sign Up & Get RM5 Credit"
+- `CreditCheckoutButton`: shows discount preview before checkout
 
-| Bug | Fix |
-|-----|-----|
-| Flash feed search overwrite Flash time filter | `listings/page.tsx`: guna `AND` combine endsAt OR + search OR |
-| Profile tunjuk SWAP listings sebagai Flash card (RM 0) | `profile/[id]/page.tsx`: render `SwapListingCard` untuk SWAP, `ListingCard` untuk FLASH |
-| Profile not-found tiada navigasi | `profile/[id]/page.tsx`: inline not-found UI + "Balik ke Laman Utama" |
-| `SellerListingCard` crash bila Flash `endsAt=null` | `SellerListingCard.tsx`: `endsAt: null` → tunjuk "Menunggu bidder" |
-
-## Beta Bug Fixes Round 2 (commit 703ea8e, 2026-06-01)
-
-Missing page metadata — semua pages kini ada `<title>` yang betul:
-
-| Page | Title sebelum | Title sekarang |
-|------|--------------|----------------|
-| `/impact` | BALLOUT (default) | Impak Alam \| BALLOUT |
-| `/auth/login` | BALLOUT (default) | Log Masuk \| BALLOUT |
-| `/auth/register` | BALLOUT (default) | Daftar Akaun \| BALLOUT |
-
-- `impact/page.tsx`: tambah `export const metadata`
-- `auth/login/layout.tsx`: layout baru (client component tak boleh export metadata terus)
-- `auth/register/layout.tsx`: layout baru
-
-## Beta Test Full Report (2026-06-01)
-
-| Page | Status |
-|------|--------|
-| Home, Flash feed, Swap feed | ✅ |
-| Flash/Swap search + filters | ✅ |
-| Flash/Swap listing detail | ✅ |
-| Profile (valid + invalid) | ✅ |
-| Impact, Login, Register | ✅ |
-| Protected routes redirect | ✅ |
-| Mobile 390px | ✅ |
-| robots.txt, sitemap.xml | ✅ |
-| Pagination | ✅ |
-| Console errors | ✅ 0 errors |
-
-## Marketing Overhaul (commit 255b306, 2026-06-01)
-
-### PROMPT 1 — Homepage
-- Hero headline: "Jual Barang Lama. Duit Masuk Hari Ini."
-- CTA primary: "Mula Jual Sekarang" → `/jual` | secondary: "Semak Barangan" → `/listings`
-- Stats: tunjuk credibility stats (Escrow/AI/IC/30min) bila `sold=0`; real stats bila ada data
-- New section: "Kenapa BALLOUT Selamat?" — 4 trust cards
-- `WasteCounter`: tersembunyi sampai `totalTransactions > 0`
-- Testimonials section (3 static quotes) sebelum HowItWorks
-
-### PROMPT 2 — Listing Detail
-- `ListingDetailClient.tsx`: tambah `viewCount`, `relatedListingsSlot` props
-- 👁 View count + offer/bid interest indicator bawah tajuk listing
-- Escrow trust badge hijau prominent (ganti teks kecil lama)
-- Seller card: "Balas < 24 jam" + bilangan listing aktif dari `seller._count.listings`
-- Flash first bid button: "Bid Pertama — Mungkin Menang Percuma!"
-- WhatsApp share: viral copy berbeza untuk Flash vs Swap
-- `listings/[id]/page.tsx`: fetch relatedListings — awalnya sama seller, kini same category+mode (PROMPT 5 update)
-- "Mungkin Anda Suka Juga" horizontal scroll di bawah bid history
-
-### PROMPT 3 — Seller Landing Page + Navbar
-- New route `/jual` (`src/app/jual/page.tsx`) — seller acquisition page
-- New component `src/components/sell/FeeCalculator.tsx` — client component, slider real-time
-- Page sections: Hero → Fee Calculator → Success Stories → How To Sell → FAQ → Final CTA
-- FAQ guna native `<details>/<summary>` (no JS needed)
-- Navbar: "Jual Barangan" → `/jual` (desktop + mobile)
-
-## Marketing Overhaul — PROMPT 4–8 (commit 68e4553, 2026-06-01)
-
-### PROMPT 4 — Email Notifications
-- `sendOutbidEmail`: subject "⚡ Tawaran anda dikalahkan", body dengan countdown + tawaran semasa, CTA "Bid Semula Sekarang"
-- `sendWatchlistAlertEmail`: notify semua watcher listing bila ada bid baru (exclude new bidder + outbid user)
-- `sendAuctionExpiredSellerEmail`: seller dapat email bila lelongan tamat dengan harga menang
-- `sendReferralRewardEmail`: notify referrer bila kawan berjaya daftar
-- `/api/bid`: hantar watchlist alerts kepada semua watcher selepas setiap bid
-- `/api/cron/expire-auctions`: hantar seller email serentak dengan winner email
-
-### PROMPT 5 — Related Listings + Recently Viewed
-- Related listings: tukar dari "same seller" → **same category + same mode**, order by viewCount desc, take 4
-- Section title: "Mungkin Anda Suka Juga"
-- `RecentlyViewed.tsx`: client component, localStorage max 6 items, horizontal scroll
-- `trackRecentlyViewed()`: dipanggil dalam `ListingDetailClient` via `useEffect` on mount
-- Home page: "Anda Baru Tengok" section (bila ada data), "🔥 Trending Minggu Ini" (viewCount desc, 7 hari)
-
-### PROMPT 6 — FOMO Triggers
-- `ListingCard` + `SwapListingCard`: "🔥 Popular" HOT badge bila viewCount≥20 ATAU bid/offer≥3
-- `ListingCard`: Flash listing >7 hari tanpa bid tunjuk "Sudah X hari" ganti timer
-- `isFeatured Boolean @default(false)` ditambah pada Listing model
-- `MegaLelongCountdown.tsx`: countdown ke Jumaat 9pm MYT, tunjuk Isnin-Khamis sahaja
-- Home page: "⚡ Mega Lelong Jumaat" section (tunjuk bila ada featured listings)
-- `/api/admin/feature-listing`: toggle isFeatured (admin only)
-- `AdminPanel`: `FeaturedListingRow` dengan ⚡ Feature / Unfeature button per listing
-- WhatsApp share text lebih viral: "Aku jumpa [ITEM]... Kau nak bid tak?"
-- `ListingDetailClient`: auto-track via `trackRecentlyViewed` useEffect
-
-### PROMPT 7 — Referral Program
-- Schema: `User.referralCode String? @unique`, `User.creditBalance Float @default(0)`, model `Referral`
-- `/api/user/sync`: auto-generate 8-char referralCode (nanoid) pada first register; process `ballout_ref` cookie → credit RM5 dua-dua pihak + create Referral record
-- `/api/referral/set-cookie`: validate code, set httpOnly cookie 1 hari, redirect ke /auth/register
-- `/api/referral`: GET stats (code, creditBalance, referralCount, totalRewards)
-- `/r/[code]`: landing page — nama pengaju, reward RM5, feature list, CTA "Daftar & Dapat RM5 Credit"
-- `ReferralSection.tsx`: dashboard widget — credit balance, stats, copy link, WhatsApp share
-- `/api/payment/checkout`: kurang credit dari harga (max bidAmount-1 untuk Stripe min RM1), simpan `creditUsed` dalam metadata
-- `/api/payment/webhook`: deduct `creditUsed` dari `creditBalance` selepas payment berjaya
-- `CreditCheckoutButton`: tunjuk preview diskaun dalam listing detail sebelum checkout
-
-### PROMPT 8 — PWA (selesai sepenuhnya commit 301bd14)
-- `src/app/manifest.ts`: name BALLOUT, theme #14b8a6, standalone, shortcuts (Flash/Jual)
-- `/api/pwa-icon?size=N`: edge route generate ⚡ branded PNG icon via ImageResponse (192, 512)
-- `public/sw.js`: cache-first navigation, skip API/Supabase/Stripe, push event handler, notificationclick handler
-- `/offline`: fallback page bila tiada internet (anchor tag, bukan onClick)
-- `PWASetup.tsx`: register SW on mount, capture beforeinstallprompt, banner selepas 30s, dismiss ke localStorage
-- `PushPermission.tsx`: prompt permission 5s selepas load (logged-in users), sekali sahaja
-- Schema: model `PushSubscription` (endpoint unique, cascade delete)
-- `/api/push/subscribe`: POST upsert, DELETE remove subscription
-- `src/lib/push.ts`: `sendPushToUser()` — hantar ke semua device, auto-cleanup expired (410/404)
-- VAPID keys set di Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
-- `layout.tsx`: async, fetch user server-side, render `<PushPermission userId>` conditionally
-- Push triggers (semua fire-and-forget):
-
-| Event | Route | Push |
-|-------|-------|------|
-| Outbid | `/api/bid` | ⚡ Tawaran anda dikalahkan! |
-| Offer received | `/api/offers` POST | 🔄 Tawaran baru diterima! |
-| Offer accepted | `/api/offers/[id]` accept | 🎉 Tawaran anda diterima! |
-| Counter offer | `/api/offers/[id]` counter | 💬 Counter tawaran baru! |
-| Item shipped | `/api/swap-transactions/[id]/ship` | 📦 Barang sedang dalam perjalanan! |
-| Swap completed | `/api/swap-transactions/[id]/receive` | ✅ Swap selesai! (kedua-dua) |
-| Dispute filed | `/api/swap-transactions/[id]/dispute` | ⚠️ Pertikaian difailkan |
-
-## Last Deployed
-2026-06-01, commit `301bd14` (PROMPT 8 PWA selesai sepenuhnya)
-Live: https://rehome-eta.vercel.app
+## Security
+- ✅ Admin routes have auth check (role === 'ADMIN')
+- ✅ Stripe webhook: validate metadata vs DB + idempotency check
+- ✅ Photo upload: 10MB size limit + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
+- ✅ Rate limit: Upstash Redis sliding window
+- ⚠️  Supabase RLS: needs manual verification in Supabase dashboard
 
 ## All Routes
 | Route | Purpose |
 |-------|---------|
-| `/jual` | Seller acquisition landing page + fee calculator |
-| `/r/[code]` | Referral landing page |
+| `/jual` | Seller acquisition landing page + fee calculator (English) |
+| `/r/[code]` | Referral landing page (English) |
 | `/offline` | PWA offline fallback |
 | `/api/referral` | GET referral stats |
-| `/api/referral/set-cookie` | Set referral cookie + redirect |
+| `/api/referral/set-cookie` | Set kassim_ref cookie + redirect |
 | `/api/push/subscribe` | POST/DELETE push subscription |
 | `/api/pwa-icon` | Edge: generate PWA icon PNG |
 | `/api/admin/feature-listing` | Toggle isFeatured (admin) |
 
-## Pending (Tindakan Manual — Bukan Kod)
-- Set `EASYPARCEL_API_KEY` di Vercel → portal.easyparcel.com
-- Lalamove API key perlu diaktifkan oleh Lalamove (502 error)
-- Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel → sentry.io free tier
-- Enable Vercel Analytics di dashboard Vercel
-- Verify Supabase RLS policies untuk semua tables
-- Mark listing sebagai featured via `/admin` untuk aktifkan "Mega Lelong Jumaat"
+## Last Deployed
+2026-06-01 — Rebrand KASSIM + English UI + next-intl i18n foundation
+Live: https://rehome-eta.vercel.app (target: https://kassim.app — add domain in Vercel dashboard)
+
+## Pending (Manual Actions — Not Code)
+- Add domain `kassim.app` in Vercel Dashboard → Project → Settings → Domains, then add DNS records
+- Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com
+- Lalamove API key needs activation by Lalamove (502 error)
+- Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel → sentry.io free tier
+- Enable Vercel Analytics in Vercel dashboard
+- Verify Supabase RLS policies for all tables
+- Mark listings as featured via `/admin` to activate "Friday Mega Auction"
+- Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
 - Beta testing 100 users → LAUNCH 🚀

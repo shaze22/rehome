@@ -34,13 +34,13 @@ export async function PUT(
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Tidak dibenarkan.' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const { id } = await params
 
   let body: unknown
   try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'JSON tidak sah.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 })
   }
 
   const parsed = Schema.safeParse(body)
@@ -56,16 +56,16 @@ export async function PUT(
     },
   })
 
-  if (!offer) return NextResponse.json({ error: 'Tawaran tidak dijumpai.' }, { status: 404 })
+  if (!offer) return NextResponse.json({ error: 'Offer not found.' }, { status: 404 })
   if (offer.status !== 'PENDING' && offer.status !== 'COUNTERED') {
-    return NextResponse.json({ error: 'Tawaran ini sudah tidak aktif.' }, { status: 400 })
+    return NextResponse.json({ error: 'This offer is no longer active.' }, { status: 400 })
   }
 
   const isSeller = offer.listing.sellerId === user.id
   const isBidder = offer.bidder.id === user.id
 
   if (data.action === 'accept') {
-    if (!isSeller) return NextResponse.json({ error: 'Hanya pemilik boleh terima tawaran.' }, { status: 403 })
+    if (!isSeller) return NextResponse.json({ error: 'Only the listing owner can accept offers.' }, { status: 403 })
 
     // Reject all other pending offers for this listing
     await prisma.offer.updateMany({
@@ -95,8 +95,8 @@ export async function PUT(
       if (buyer?.email) sendSwapOfferAcceptedEmail(buyer.email, buyer.name ?? 'Penawar', offer.listingId, offer.listingId).catch(() => {})
     })
     sendPushToUser(offer.bidder.id, {
-      title: '🎉 Tawaran anda diterima!',
-      body: 'Proses pertukaran kini bermula. Sedia hantar barang anda.',
+      title: '🎉 Your offer was accepted!',
+      body: 'The swap process has begun. Prepare to ship your item.',
       url: `/listings/${offer.listingId}`,
       tag: `accepted-${offer.listingId}`,
     }).catch(() => {})
@@ -105,7 +105,7 @@ export async function PUT(
   }
 
   if (data.action === 'reject') {
-    if (!isSeller && !isBidder) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+    if (!isSeller && !isBidder) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
     const updated = await prisma.offer.update({
       where: { id },
       data: { status: 'REJECTED' },
@@ -115,11 +115,11 @@ export async function PUT(
 
   if (data.action === 'counter') {
     // Bidder or seller can counter
-    if (!isSeller && !isBidder) return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 })
+    if (!isSeller && !isBidder) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
 
     // Check round limit: find root offer and count chain
     const rootOffer = await getRootOffer(id)
-    if (!rootOffer) return NextResponse.json({ error: 'Tawaran tidak dijumpai.' }, { status: 404 })
+    if (!rootOffer) return NextResponse.json({ error: 'Offer not found.' }, { status: 404 })
 
     const chainLength = await prisma.offer.count({
       where: {
@@ -131,7 +131,7 @@ export async function PUT(
     })
 
     if (chainLength >= 3) {
-      return NextResponse.json({ error: 'Had maksimum 3 pusingan rundingan telah dicapai. Pemilik mesti terima atau tolak.' }, { status: 400 })
+      return NextResponse.json({ error: 'Maximum 3 negotiation rounds reached. Owner must accept or reject.' }, { status: 400 })
     }
 
     // Mark current offer as countered
@@ -163,8 +163,8 @@ export async function PUT(
       if (recipient?.email) sendSwapOfferCounteredEmail(recipient.email, recipient.name ?? 'Pengguna', offer.listingId, offer.listingId, isSeller).catch(() => {})
     })
     sendPushToUser(recipientId, {
-      title: '💬 Counter tawaran baru!',
-      body: 'Semak syarat baru dan beri respons anda.',
+      title: '💬 New counter offer!',
+      body: 'Review the new terms and respond.',
       url: `/listings/${offer.listingId}`,
       tag: `counter-${offer.listingId}`,
     }).catch(() => {})
@@ -172,5 +172,5 @@ export async function PUT(
     return NextResponse.json({ offer: counterOffer }, { status: 201 })
   }
 
-  return NextResponse.json({ error: 'Tindakan tidak sah.' }, { status: 400 })
+  return NextResponse.json({ error: 'Invalid action.' }, { status: 400 })
 }
