@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapCompletedEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { z } from 'zod'
 
 const ReceiveSchema = z.object({
@@ -95,10 +96,12 @@ export async function POST(
       }),
     ])
 
-    // Emails — fire-and-forget
+    // Emails + push — fire-and-forget
     const listingTitle = await prisma.listing.findUnique({ where: { id: tx.listingId }, select: { title: true } }).then(l => l?.title ?? 'Listing')
     if (seller?.email) sendSwapCompletedEmail(seller.email, seller.name ?? 'Penjual', listingTitle).catch(() => {})
     if (buyer?.email) sendSwapCompletedEmail(buyer.email, buyer.name ?? 'Pembeli', listingTitle).catch(() => {})
+    sendPushToUser(tx.sellerId, { title: '✅ Swap selesai!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
+    sendPushToUser(tx.buyerId, { title: '✅ Swap selesai!', body: listingTitle, url: `/listings/${tx.listingId}`, tag: `complete-${tx.id}` }).catch(() => {})
   }
 
   return NextResponse.json({ transaction: updated, completed: !!allReceived })

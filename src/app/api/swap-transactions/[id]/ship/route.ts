@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapItemShippedEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { z } from 'zod'
 
 const ShipSchema = z.object({
@@ -77,7 +78,7 @@ export async function POST(
     include: { listing: { select: { title: true } } },
   })
 
-  // Email the recipient — fire-and-forget
+  // Email + push the recipient — fire-and-forget
   const recipientId = isSeller ? tx.buyerId : tx.sellerId
   const senderId = isSeller ? tx.sellerId : tx.buyerId
   Promise.all([
@@ -93,6 +94,12 @@ export async function POST(
         tx.listingId
       ).catch(() => {})
     }
+    sendPushToUser(recipientId, {
+      title: '📦 Barang sedang dalam perjalanan!',
+      body: updated.listing.title,
+      url: `/listings/${tx.listingId}`,
+      tag: `ship-${tx.id}`,
+    }).catch(() => {})
   })
 
   return NextResponse.json({ transaction: updated })

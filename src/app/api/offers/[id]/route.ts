@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapOfferAcceptedEmail, sendSwapOfferCounteredEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { z } from 'zod'
 
 const CounterSchema = z.object({
@@ -89,10 +90,16 @@ export async function PUT(
       }),
     ])
 
-    // Email buyer — fire-and-forget
+    // Email + push buyer — fire-and-forget
     prisma.user.findUnique({ where: { id: offer.bidder.id }, select: { email: true, name: true } }).then(buyer => {
       if (buyer?.email) sendSwapOfferAcceptedEmail(buyer.email, buyer.name ?? 'Penawar', offer.listingId, offer.listingId).catch(() => {})
     })
+    sendPushToUser(offer.bidder.id, {
+      title: '🎉 Tawaran anda diterima!',
+      body: 'Proses pertukaran kini bermula. Sedia hantar barang anda.',
+      url: `/listings/${offer.listingId}`,
+      tag: `accepted-${offer.listingId}`,
+    }).catch(() => {})
 
     return NextResponse.json({ offer: updated })
   }
@@ -150,11 +157,17 @@ export async function PUT(
       },
     })
 
-    // Email the other party — fire-and-forget
+    // Email + push the other party — fire-and-forget
     const recipientId = isSeller ? offer.bidder.id : offer.listing.sellerId
     prisma.user.findUnique({ where: { id: recipientId }, select: { email: true, name: true } }).then(recipient => {
       if (recipient?.email) sendSwapOfferCounteredEmail(recipient.email, recipient.name ?? 'Pengguna', offer.listingId, offer.listingId, isSeller).catch(() => {})
     })
+    sendPushToUser(recipientId, {
+      title: '💬 Counter tawaran baru!',
+      body: 'Semak syarat baru dan beri respons anda.',
+      url: `/listings/${offer.listingId}`,
+      tag: `counter-${offer.listingId}`,
+    }).catch(() => {})
 
     return NextResponse.json({ offer: counterOffer }, { status: 201 })
   }

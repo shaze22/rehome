@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapDisputeEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { z } from 'zod'
 
 const DisputeSchema = z.object({
@@ -52,6 +53,15 @@ export async function POST(
   ])
   const adminEmail = process.env.ADMIN_EMAIL ?? 'syedshazni@todak.com'
   sendSwapDisputeEmail(adminEmail, listing?.title ?? 'Listing', disputer?.name ?? 'Pengguna', parsed.data.reason, tx.listingId).catch(() => {})
+
+  // Push the other party
+  const otherPartyId = isSeller ? tx.buyerId : tx.sellerId
+  sendPushToUser(otherPartyId, {
+    title: '⚠️ Pertikaian difailkan',
+    body: `${listing?.title ?? 'Listing'} — admin akan selesaikan pertikaian ini.`,
+    url: `/listings/${tx.listingId}`,
+    tag: `dispute-${tx.id}`,
+  }).catch(() => {})
 
   return NextResponse.json({ transaction: updated })
 }
