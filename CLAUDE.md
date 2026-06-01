@@ -476,22 +476,32 @@ Missing page metadata — semua pages kini ada `<title>` yang betul:
 - `/api/payment/webhook`: deduct `creditUsed` dari `creditBalance` selepas payment berjaya
 - `CreditCheckoutButton`: tunjuk preview diskaun dalam listing detail sebelum checkout
 
-### PROMPT 8 — PWA
+### PROMPT 8 — PWA (selesai sepenuhnya commit 301bd14)
 - `src/app/manifest.ts`: name BALLOUT, theme #14b8a6, standalone, shortcuts (Flash/Jual)
 - `/api/pwa-icon?size=N`: edge route generate ⚡ branded PNG icon via ImageResponse (192, 512)
 - `public/sw.js`: cache-first navigation, skip API/Supabase/Stripe, push event handler, notificationclick handler
-- `/offline`: fallback page bila tiada internet
+- `/offline`: fallback page bila tiada internet (anchor tag, bukan onClick)
 - `PWASetup.tsx`: register SW on mount, capture beforeinstallprompt, banner selepas 30s, dismiss ke localStorage
 - `PushPermission.tsx`: prompt permission 5s selepas load (logged-in users), sekali sahaja
 - Schema: model `PushSubscription` (endpoint unique, cascade delete)
 - `/api/push/subscribe`: POST upsert, DELETE remove subscription
 - `src/lib/push.ts`: `sendPushToUser()` — hantar ke semua device, auto-cleanup expired (410/404)
 - VAPID keys set di Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
-- Push trigger: outbid (`/api/bid`), offer received (`/api/offers`)
 - `layout.tsx`: async, fetch user server-side, render `<PushPermission userId>` conditionally
+- Push triggers (semua fire-and-forget):
+
+| Event | Route | Push |
+|-------|-------|------|
+| Outbid | `/api/bid` | ⚡ Tawaran anda dikalahkan! |
+| Offer received | `/api/offers` POST | 🔄 Tawaran baru diterima! |
+| Offer accepted | `/api/offers/[id]` accept | 🎉 Tawaran anda diterima! |
+| Counter offer | `/api/offers/[id]` counter | 💬 Counter tawaran baru! |
+| Item shipped | `/api/swap-transactions/[id]/ship` | 📦 Barang sedang dalam perjalanan! |
+| Swap completed | `/api/swap-transactions/[id]/receive` | ✅ Swap selesai! (kedua-dua) |
+| Dispute filed | `/api/swap-transactions/[id]/dispute` | ⚠️ Pertikaian difailkan |
 
 ## Last Deployed
-2026-06-01, commit `68e4553` (offline page bug fix)
+2026-06-01, commit `301bd14` (PROMPT 8 PWA selesai sepenuhnya)
 Live: https://rehome-eta.vercel.app
 
 ## All Routes
