@@ -113,7 +113,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             : { color: 'var(--text-secondary)' }}
         >
           <Zap className="w-4 h-4" />
-          Lelong Pantas
+          Flash Auction
         </Link>
         <Link
           href="/listings?mode=swap"
@@ -123,16 +123,16 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             : { color: 'var(--text-secondary)' }}
         >
           <ArrowLeftRight className="w-4 h-4" />
-          Tukar Barang
+          Item Swap
         </Link>
       </div>
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1">
-          {activeMode === 'flash' ? 'Lelongan Aktif' : 'Tukar Barang'}
+          {activeMode === 'flash' ? 'Active Auctions' : 'Item Swap'}
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {total} item {activeMode === 'flash' ? 'dalam lelongan' : 'ditawarkan untuk tukar'} sekarang
+          {total} {activeMode === 'flash' ? 'items in auction' : 'items available to swap'} now
         </p>
       </div>
 
@@ -145,9 +145,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           {listings.length === 0 ? (
             <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Search className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-lg font-medium mb-2">Tiada item dijumpai</p>
+              <p className="text-lg font-medium mb-2">No items found</p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {activeMode === 'swap' ? 'Tiada listing Tukar Barang aktif buat masa ini.' : 'Cuba ubah tapisan atau carian anda'}
+                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'Try adjusting your filters or search'}
               </p>
             </div>
           ) : (

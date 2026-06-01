@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!listing) return { title: 'Listing tidak dijumpai' }
 
   const category = CATEGORY_MS[listing.category] ?? listing.category
-  const modeLabel = listing.mode === 'SWAP' ? 'Tukar Barang' : 'Lelong Pantas'
-  const priceText = listing.mode === 'SWAP' ? 'Tukar Barang' : `RM ${listing.currentBid.toFixed(0)}`
+  const modeLabel = listing.mode === 'SWAP' ? 'Item Swap' : 'Flash Auction'
+  const priceText = listing.mode === 'SWAP' ? 'Item Swap' : `RM ${listing.currentBid.toFixed(0)}`
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
   const title = `${listing.title} — ${priceText}`
   const description = `${modeLabel} · ${category} · ${listing.state} · ${listing.description.slice(0, 120)}...`

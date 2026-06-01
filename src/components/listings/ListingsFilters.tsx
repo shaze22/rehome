@@ -6,21 +6,21 @@ import { Filter, Search, X } from 'lucide-react'
 import { MALAYSIAN_STATES } from '@/lib/delivery'
 
 const CATEGORIES = [
-  { value: '', label: 'Semua Kategori' },
-  { value: 'FURNITURE', label: 'Perabot' },
-  { value: 'ELECTRONICS', label: 'Elektronik' },
-  { value: 'FASHION', label: 'Fesyen' },
-  { value: 'BOOKS', label: 'Buku' },
-  { value: 'SPORTS', label: 'Sukan' },
-  { value: 'KITCHEN', label: 'Dapur' },
-  { value: 'OTHERS', label: 'Lain-lain' },
+  { value: '', label: 'All Categories' },
+  { value: 'FURNITURE', label: 'Furniture' },
+  { value: 'ELECTRONICS', label: 'Electronics' },
+  { value: 'FASHION', label: 'Fashion' },
+  { value: 'BOOKS', label: 'Books' },
+  { value: 'SPORTS', label: 'Sports' },
+  { value: 'KITCHEN', label: 'Kitchen' },
+  { value: 'OTHERS', label: 'Others' },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'createdAt', label: 'Terbaru' },
-  { value: 'ending', label: 'Tamat Segera' },
-  { value: 'price_asc', label: 'Harga: Rendah→Tinggi' },
-  { value: 'price_desc', label: 'Harga: Tinggi→Rendah' },
+  { value: 'createdAt', label: 'Latest' },
+  { value: 'ending', label: 'Ending Soon' },
+  { value: 'price_asc', label: 'Price: Low→High' },
+  { value: 'price_desc', label: 'Price: High→Low' },
 ]
 
 interface Props {
@@ -59,11 +59,11 @@ export function ListingsFilters({ currentParams }: Props) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Filter className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-            Tapisan
+            Filters
           </div>
           {hasFilters && (
             <button onClick={clearFilters} className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-              <X className="w-3 h-3" /> Padam semua
+              <X className="w-3 h-3" /> Clear all
             </button>
           )}
         </div>
@@ -74,7 +74,7 @@ export function ListingsFilters({ currentParams }: Props) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Cari item..."
+              placeholder="Search items..."
               value={q}
               onChange={e => setQ(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none focus:ring-1"
@@ -85,7 +85,7 @@ export function ListingsFilters({ currentParams }: Props) {
 
         {/* Category */}
         <div className="mb-4">
-          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Kategori</label>
+          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Category</label>
           <select
             value={currentParams.category ?? ''}
             onChange={e => updateParam('category', e.target.value)}
@@ -100,14 +100,14 @@ export function ListingsFilters({ currentParams }: Props) {
 
         {/* State */}
         <div className="mb-4">
-          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Negeri</label>
+          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>State</label>
           <select
             value={currentParams.state ?? ''}
             onChange={e => updateParam('state', e.target.value)}
             className="w-full px-3 py-2 rounded-lg text-sm outline-none"
             style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
           >
-            <option value="">Semua Negeri</option>
+            <option value="">All States</option>
             {MALAYSIAN_STATES.map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -116,7 +116,7 @@ export function ListingsFilters({ currentParams }: Props) {
 
         {/* Sort */}
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Susun Mengikut</label>
+          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Sort By</label>
           <select
             value={currentParams.sort ?? 'createdAt'}
             onChange={e => updateParam('sort', e.target.value)}
