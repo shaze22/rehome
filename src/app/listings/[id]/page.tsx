@@ -71,6 +71,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const listing = await getListing(id)
   if (!listing) notFound()
 
+  // Non-blocking view count increment
+  prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

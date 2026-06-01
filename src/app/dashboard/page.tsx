@@ -15,7 +15,7 @@ async function getDashboardData(userId: string) {
       where: { sellerId: userId },
       include: {
         seller: { select: { name: true, rehomeScore: true, icVerified: true } },
-        _count: { select: { bids: true } },
+        _count: { select: { bids: true, offers: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),

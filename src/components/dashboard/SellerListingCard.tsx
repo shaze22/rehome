@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Clock, Gavel, CheckCircle, XCircle } from 'lucide-react'
+import { Clock, Gavel, Eye, XCircle } from 'lucide-react'
 
 interface Listing {
   id: string
@@ -8,6 +8,7 @@ interface Listing {
   startingBid: number
   status: string
   endsAt: string | Date
+  viewCount?: number
   _count: { bids: number }
 }
 
@@ -47,6 +48,12 @@ export function SellerListingCard({ listing }: Props) {
                 <Gavel className="w-3 h-3" />
                 {listing._count.bids} tawaran
               </span>
+              {listing.viewCount !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3 h-3" />
+                  {listing.viewCount} tontonan
+                </span>
+              )}
               {isActive && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />

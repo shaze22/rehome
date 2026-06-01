@@ -68,6 +68,7 @@ model Listing {
   aiSuggestedMin     Float?
   aiSuggestedMax     Float?
   aiReasoning        String?
+  viewCount          Int           @default(0)
   co2Saved           Float         @default(0)
   hasScratch         Boolean       @default(false)
   isFunctional       Boolean       @default(true)
