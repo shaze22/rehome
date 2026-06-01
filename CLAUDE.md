@@ -301,16 +301,27 @@ Buyer pilih "Penghantaran Pos"
 - **Aktifkan EasyParcel**: set `EASYPARCEL_API_KEY` di Vercel (portal.easyparcel.com)
 - Tanpa key → fallback hardcoded (masih berfungsi)
 
-## Lalamove Integration (commit f6a8cdd, 2026-06-01)
+## Lalamove Integration (commit f6a8cdd → 76c7b02, 2026-06-01)
 - `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→koordinat, serviceType by weight
   - < 3kg → MOTORCYCLE · < 25kg → CAR · ≥ 25kg → VAN
 - EasyParcel + Lalamove run **serentak** (Promise.all), hasil digabung sort cheapest first
 - `DeliveryQuoteResult.source` kini boleh jadi `'easyparcel' | 'lalamove' | 'fallback'`
-- **Aktifkan**: set `LALAMOVE_API_KEY` + `LALAMOVE_API_SECRET` di Vercel (developers.lalamove.com)
-- `LALAMOVE_SANDBOX=true` untuk test (default), tukar ke `false` untuk production
+- **Aktifkan**: `LALAMOVE_API_KEY=pk_prod_xxx` + `LALAMOVE_API_SECRET=sk_prod_xxx` + `LALAMOVE_SANDBOX=false`
+- Keys sudah set di Vercel (2026-06-01)
+
+### Lalamove Webhook (commit 76c7b02)
+- `POST /api/lalamove/webhook` — terima delivery status update dari Lalamove
+- `GET /api/lalamove/webhook` — return 200 untuk verification ping semasa register
+- Verify `X-Lalamove-Signature` (HMAC-SHA256); POST tanpa signature → 200 (verification ping)
+- `PICKED_UP` → `shippingStatus=SHIPPED`
+- `COMPLETED` → `shippingStatus=DELIVERED` + escrow released + `rehomeScore+5`
+- Match order via `Transaction.trackingNumber` (simpan Lalamove orderId di sini)
+- **Webhook URL**: `https://rehome-eta.vercel.app/api/lalamove/webhook`
+- Register di: developers.lalamove.com → Webhooks → tambah URL → event `ORDER_STATUS_CHANGED`
 
 ## Pending (Belum Selesai)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
+- Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
 - SEO meta/OG tags
 - Beta testing 100 users
 - Full public launch
