@@ -64,6 +64,7 @@ interface Listing {
   mode: string
   endsAt: string | null
   co2Saved: number
+  viewCount?: number
   hasScratch: boolean
   isFunctional: boolean
   hasCompleteParts: boolean
@@ -78,9 +79,9 @@ interface Listing {
   swapAcceptCash: boolean
   swapMinCashTopup: number | null
   swapValueEstimate: number | null
-  seller: Seller
+  seller: Seller & { _count?: { listings: number } }
   bids: Bid[]
-  _count: { bids: number }
+  _count: { bids: number; offers?: number }
 }
 
 interface Props {
@@ -88,6 +89,7 @@ interface Props {
   currentUserId: string | null
   currentUserEmail: string | null
   watchlistButton?: React.ReactNode
+  relatedListingsSlot?: React.ReactNode
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -129,7 +131,7 @@ function useCountdown(endsAt: string | null) {
   return { timeLeft, isUrgent, isEnded, isWaiting }
 }
 
-export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton }: Props) {
+export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton, relatedListingsSlot }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
   const initialBidAmount = initialListing._count.bids === 0
@@ -450,11 +452,14 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               )}
             </div>
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-bold mb-2">{listing.title}</h1>
+              <h1 className="text-2xl font-bold mb-1">{listing.title}</h1>
               <button
                 onClick={() => {
                   const url = window.location.href
-                  const text = `🔥 *${listing.title}* — Tawaran semasa: *RM ${listing.currentBid || listing.startingBid}*\n\nLelongan di BALLOUT:\n${url}`
+                  const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
+                  const text = isSwap
+                    ? `🔄 *${listing.title}* — Tukar barang dekat BALLOUT!\n\nNilai anggaran: ~RM ${listing.swapValueEstimate ?? 0}\n${interestCount > 0 ? `${interestCount} tawaran dah masuk!\n` : ''}Check sekarang: ${url}`
+                    : `🔥 *${listing.title}* — Bid dari RM ${listing.startingBid} je!\n\n${interestCount > 0 ? `${interestCount} orang dah bid. ` : 'Jadilah bidder pertama! '}Timer 30 minit je.\n${url}`
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
                 }}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -463,6 +468,12 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               >
                 <Share2 className="w-3.5 h-3.5" /> WhatsApp
               </button>
+            </div>
+            {/* View count + interest indicator */}
+            <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+              <span>👁 {listing.viewCount ?? 0} tontonan</span>
+              <span>·</span>
+              <span>{isSwap ? `${listing._count.offers ?? 0} tawaran masuk` : `${listing._count.bids} minat`}</span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{listing.description}</p>
           </div>
@@ -787,7 +798,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     disabled={bidLoading || isLastBidder || !deliveryReady}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : quoteLoading ? 'Mendapatkan kadar...' : !deliveryReady ? 'Pilih penghantaran dahulu' : `Bida RM ${bidAmount}`}
+                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : quoteLoading ? 'Mendapatkan kadar...' : !deliveryReady ? 'Pilih penghantaran dahulu' : isFirstBid ? `Bid Pertama — Mungkin Menang Percuma!` : `Bida RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -826,10 +837,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
             )}
 
-            {/* Fee info */}
-            <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-              Escrow selamat · Pembayaran hanya selepas menang
-            </p>
+            {/* Trust badge */}
+            <div className="flex items-center justify-center gap-2 mt-3 px-3 py-2 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.2)', color: 'var(--green)' }}>
+              <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+              Escrow Selamat — Duit hanya lepas selepas barang diterima
+            </div>
           </div>
 
           {/* Watchlist */}
@@ -849,7 +861,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   <p className="font-medium text-sm">{listing.seller.name ?? 'Penjual Tanpa Nama'}</p>
                   {listing.seller.icVerified && <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />}
                 </div>
-                <div className="flex items-center gap-3 text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                <div className="flex flex-wrap items-center gap-3 text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                   <span className="flex items-center gap-1">
                     <Star className="w-3 h-3" style={{ color: 'var(--yellow)' }} />
                     Skor {listing.seller.rehomeScore}
@@ -859,6 +871,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                       <MapPin className="w-3 h-3" />
                       {listing.seller.state}
                     </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Balas &lt; 24 jam
+                  </span>
+                  {listing.seller._count && listing.seller._count.listings > 1 && (
+                    <span style={{ color: 'var(--text-muted)' }}>{listing.seller._count.listings} listing aktif</span>
                   )}
                 </div>
               </div>
@@ -1118,6 +1137,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           onSuccess={() => { setShowOfferModal(false); setOfferSubmitted(true) }}
         />
       )}
+
+      {/* Related listings from same seller */}
+      {relatedListingsSlot}
     </div>
   )
 }

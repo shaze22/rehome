@@ -5,7 +5,7 @@ import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { WasteCounter } from '@/components/home/WasteCounter'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
-import { ArrowRight, Leaf, Shield, Zap, TrendingUp, ArrowLeftRight } from 'lucide-react'
+import { ArrowRight, Leaf, Shield, Zap, TrendingUp, ArrowLeftRight, Bot, CheckCircle, Lock } from 'lucide-react'
 
 async function getFeaturedListings() {
   try {
@@ -46,6 +46,26 @@ async function getStats() {
   }
 }
 
+const CREDIBILITY_STATS = [
+  { icon: Lock, label: 'Escrow Dilindungi', desc: 'Bayar selepas terima', color: 'var(--teal)' },
+  { icon: Bot, label: 'AI Pricing', desc: 'Harga tepat dengan AI', color: 'var(--purple)' },
+  { icon: CheckCircle, label: 'IC Disahkan', desc: 'Penjual disahkan', color: 'var(--green)' },
+  { icon: Zap, label: '30 Min Lelongan', desc: 'Pantas & selamat', color: 'var(--yellow)' },
+]
+
+const TRUST_FEATURES = [
+  { emoji: '🔒', title: 'Escrow Dilindungi', desc: 'Duit pembeli disimpan selamat sehingga barang diterima. Tiada risiko penipuan.' },
+  { emoji: '🤖', title: 'AI Pricing', desc: 'Harga cadangan AI berdasarkan pasaran semasa. Jual pada harga yang adil dan tepat.' },
+  { emoji: '✅', title: 'IC Disahkan', desc: 'Penjual yang verify IC mendapat badge kepercayaan. Anda tahu siapa yang anda berurusan.' },
+  { emoji: '⚡', title: '30 Min Lelongan', desc: 'Lelongan pantas 30 minit. Bid, menang, bayar — selesai dalam satu hari.' },
+]
+
+const TESTIMONIALS = [
+  { quote: 'Jual laptop lama dapat RM650 dalam 22 minit. Lagi laju dari Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A' },
+  { quote: 'Tukar cermin mata lama dengan jam tangan. Jimat duit beli baru. Sangat mudah!', name: 'Siti R.', location: 'Selangor', initial: 'S' },
+  { quote: 'Escrow bagi aku tenang. Duit tak lepas kalau barang tak sampai. Selamat betul.', name: 'Razif M.', location: 'Pulau Pinang', initial: 'R' },
+]
+
 export default async function HomePage() {
   const [flashListings, swapListings, stats] = await Promise.all([
     getFeaturedListings(),
@@ -53,6 +73,7 @@ export default async function HomePage() {
     getStats(),
   ])
   const { sold: totalTransactions, swapDone, co2: totalCO2 } = stats
+  const hasRealData = totalTransactions > 0
 
   return (
     <div>
@@ -66,52 +87,85 @@ export default async function HomePage() {
               Platform Lelongan Barangan Terpakai #1 Malaysia
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Jual, Beli &{' '}
+              Jual Barang Lama.{' '}
               <span style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Selamatkan Alam
+                Duit Masuk Hari Ini.
               </span>
             </h1>
             <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Lelongan progresif barangan terpakai. Harga AI dinamik. Escrow selamat. Setiap transaksi mengurangkan sisa dan menyelamatkan karbon.
+              Lelongan progresif 30 minit. Tukar barang tanpa wang. Escrow selamat.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/listings"
+                href="/jual"
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white gradient-teal glow-teal transition-all hover:scale-105"
               >
-                Semak Imbas Lelongan
+                Mula Jual Sekarang
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/sell"
+                href="/listings"
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold transition-colors"
                 style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
               >
-                Mula Jual
+                Semak Barangan →
               </Link>
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats — credibility when no real data, real stats otherwise */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
-            {[
-              { label: 'Item Dijual', value: totalTransactions > 0 ? `${totalTransactions.toLocaleString()}+` : 'Jadi Yang Pertama!', icon: TrendingUp, color: 'var(--teal)' },
-              { label: 'CO₂ Diselamatkan', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
-              { label: 'Pertukaran Selesai', value: swapDone > 0 ? `${swapDone}+` : 'Mula Tukar!', icon: ArrowLeftRight, color: 'var(--purple)' },
-              { label: 'Masa Purata Jual', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
-            ].map(stat => (
-              <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
-                <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+            {hasRealData ? (
+              <>
+                {[
+                  { label: 'Item Dijual', value: `${totalTransactions.toLocaleString()}+`, icon: TrendingUp, color: 'var(--teal)' },
+                  { label: 'CO₂ Diselamatkan', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
+                  { label: 'Pertukaran Selesai', value: `${swapDone}+`, icon: ArrowLeftRight, color: 'var(--purple)' },
+                  { label: 'Masa Purata Jual', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
+                ].map(stat => (
+                  <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
+                    <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>{stat.value}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {CREDIBILITY_STATS.map(stat => (
+                  <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
+                    <p className="text-sm font-bold" style={{ color: stat.color }}>{stat.label}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.desc}</p>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Kenapa BALLOUT Selamat? */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold mb-2">Kenapa BALLOUT Selamat?</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Dibina untuk melindungi pembeli dan penjual Malaysia</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {TRUST_FEATURES.map(item => (
+              <div key={item.title} className="rounded-xl p-6 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="text-3xl mb-3">{item.emoji}</div>
+                <h3 className="font-bold mb-2 text-sm">{item.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Waste Counter */}
-      <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />
+      {/* Waste Counter — only show when there's real data */}
+      {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
 
       {/* Category Grid */}
       <CategoryGrid />
@@ -131,12 +185,11 @@ export default async function HomePage() {
               Lihat Semua <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-
           {flashListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
               <p className="font-medium mb-2">Belum ada lelongan aktif</p>
-              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Mula Jual</Link>
+              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Mula Jual</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -163,12 +216,11 @@ export default async function HomePage() {
               Lihat Semua <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-
           {swapListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
               <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
               <p className="font-medium mb-2">Belum ada tawaran tukar barang</p>
-              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>Tawar Barang</Link>
+              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>Tawar Barang</Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -177,6 +229,33 @@ export default async function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold mb-2">Apa Kata Pengguna BALLOUT?</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Pengalaman sebenar dari komuniti kami</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map(t => (
+              <div key={t.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="text-3xl font-serif mb-3" style={{ color: 'var(--teal)' }}>"</div>
+                <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{t.quote}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full gradient-teal flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {t.initial}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{t.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

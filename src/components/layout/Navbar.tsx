@@ -42,7 +42,7 @@ export function Navbar() {
             <Link href="/listings" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
               Semak Imbas
             </Link>
-            <Link href="/sell" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
+            <Link href="/jual" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
               Jual Barangan
             </Link>
             <Link href="/impact" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
@@ -105,7 +105,7 @@ export function Navbar() {
             <Link href="/listings" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
               Semak Imbas
             </Link>
-            <Link href="/sell" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
+            <Link href="/jual" className="block px-3 py-2 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
               Jual Barangan
             </Link>
             {user ? (
