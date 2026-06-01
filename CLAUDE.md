@@ -445,11 +445,11 @@ Buyer selects "Delivery"
 | `/api/admin/feature-listing` | Toggle isFeatured (admin) |
 
 ## Last Deployed
-2026-06-01 — Rebrand KASSIM + English UI + next-intl i18n foundation
-Live: https://rehome-eta.vercel.app (target: https://kassim.app — add domain in Vercel dashboard)
+2026-06-01, commit `71b2e30` — Rebrand KASSIM + English UI + next-intl i18n foundation
+Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Pending (Manual Actions — Not Code)
-- Add domain `kassim.app` in Vercel Dashboard → Project → Settings → Domains, then add DNS records
+- ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com
 - Lalamove API key needs activation by Lalamove (502 error)
 - Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel → sentry.io free tier
