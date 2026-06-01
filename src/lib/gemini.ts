@@ -56,6 +56,44 @@ Panduan skor: 9-10=hampir baru, 7-8=baik, 5-6=sederhana, 3-4=lusuh, 1-2=rosak te
   return JSON.parse(match[0]) as PhotoAnalysis
 }
 
+export interface SwapSuggestion {
+  suggestedItems: string[]
+  suggestedCategories: string[]
+  valueSuggestion: string
+  reasoning: string
+  confidence: 'tinggi' | 'sederhana' | 'rendah'
+}
+
+export async function getSwapSuggestions(params: {
+  title: string
+  category: string
+  condition: number
+  estimatedValue: number
+}): Promise<SwapSuggestion> {
+  const prompt = `Kau adalah pakar barter/tukar-barang di Malaysia. Seorang pengguna nak tukar barang berikut:
+
+Item: ${params.title}
+Kategori: ${params.category}
+Keadaan: ${params.condition}/10
+Nilai anggaran: RM ${params.estimatedValue}
+
+Cadangkan barang apa yang sesuai untuk ditukar berdasarkan pasaran Malaysia (Mudah.my, Carousell, Facebook Marketplace). Pertimbangkan nilai setara dan permintaan semasa.
+
+Balas JSON sahaja:
+{
+  "suggestedItems": ["<item spesifik 1>", "<item spesifik 2>", "<item spesifik 3>"],
+  "suggestedCategories": ["<kategori 1>", "<kategori 2>"],
+  "valueSuggestion": "<cadangan nilai setara dalam BM, 1 ayat>",
+  "reasoning": "<sebab cadangan ini masuk akal, 2 ayat dalam BM>",
+  "confidence": "<'tinggi' | 'sederhana' | 'rendah'>"
+}`
+
+  const text = await geminiGenerate(prompt)
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('Invalid AI response')
+  return JSON.parse(match[0]) as SwapSuggestion
+}
+
 export interface AIPriceSuggestion {
   low: number
   fair: number

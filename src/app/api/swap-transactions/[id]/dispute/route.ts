@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendSwapDisputeEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const DisputeSchema = z.object({
@@ -43,6 +44,14 @@ export async function POST(
       disputeEvidence: parsed.data.evidence,
     },
   })
+
+  // Email admin + other party — fire-and-forget
+  const [listing, disputer] = await Promise.all([
+    prisma.listing.findUnique({ where: { id: tx.listingId }, select: { title: true } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { name: true } }),
+  ])
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'syedshazni@todak.com'
+  sendSwapDisputeEmail(adminEmail, listing?.title ?? 'Listing', disputer?.name ?? 'Pengguna', parsed.data.reason, tx.listingId).catch(() => {})
 
   return NextResponse.json({ transaction: updated })
 }

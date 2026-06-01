@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendSwapItemShippedEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const ShipSchema = z.object({
@@ -70,7 +71,29 @@ export async function POST(
 
   if (allShipped) update.escrowStatus = 'BOTH_SHIPPED'
 
-  const updated = await prisma.swapTransaction.update({ where: { id }, data: update })
+  const updated = await prisma.swapTransaction.update({
+    where: { id },
+    data: update,
+    include: { listing: { select: { title: true } } },
+  })
+
+  // Email the recipient — fire-and-forget
+  const recipientId = isSeller ? tx.buyerId : tx.sellerId
+  const senderId = isSeller ? tx.sellerId : tx.buyerId
+  Promise.all([
+    prisma.user.findUnique({ where: { id: recipientId }, select: { email: true, name: true } }),
+    prisma.user.findUnique({ where: { id: senderId }, select: { name: true } }),
+  ]).then(([recipient, sender]) => {
+    if (recipient?.email) {
+      sendSwapItemShippedEmail(
+        recipient.email, recipient.name ?? 'Pengguna',
+        updated.listing.title, sender?.name ?? 'Pengguna',
+        isSeller ? (update.sellerCourier as string ?? null) : (update.buyerCourier as string ?? null),
+        isSeller ? (update.sellerTracking as string ?? null) : (update.buyerTracking as string ?? null),
+        tx.listingId
+      ).catch(() => {})
+    }
+  })
 
   return NextResponse.json({ transaction: updated })
 }

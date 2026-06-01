@@ -30,6 +30,7 @@ interface Offer {
 interface Props {
   listingId: string
   listingTitle: string
+  swapValueEstimate?: number | null
 }
 
 const OFFER_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -105,11 +106,22 @@ function CounterModal({
   )
 }
 
-function OfferCard({ offer, onAction }: { offer: Offer; onAction: () => void }) {
+function calcOfferScore(offer: Offer, listingValue: number | null): number | null {
+  if (!listingValue || listingValue === 0) return null
+  const offerVal = offer.totalOfferValue ?? offer.offeredCashAmount ?? offer.offeredItemValue ?? 0
+  if (offerVal === 0) return null
+  const ratio = offerVal / listingValue
+  const reputationBonus = Math.min((offer.bidder.successfulSwaps ?? 0) * 2, 10)
+  const score = Math.min(Math.round(ratio * 80) + reputationBonus, 100)
+  return Math.max(score, 5)
+}
+
+function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: () => void; listingValue?: number | null }) {
   const [expanded, setExpanded] = useState(false)
   const [acting, setActing] = useState(false)
   const [showCounter, setShowCounter] = useState(false)
   const info = OFFER_TYPE_LABELS[offer.offerType]
+  const score = calcOfferScore(offer, listingValue ?? null)
 
   async function act(action: 'accept' | 'reject') {
     setActing(true)
@@ -146,9 +158,20 @@ function OfferCard({ offer, onAction }: { offer: Offer; onAction: () => void }) 
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium flex-shrink-0" style={{ backgroundColor: 'var(--bg-card)', color: info.color }}>
-            {info.icon}
-            {info.label}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {score !== null && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: score >= 80 ? 'rgba(22,163,74,0.15)' : score >= 60 ? 'rgba(251,191,36,0.15)' : 'rgba(100,100,100,0.15)',
+                  color: score >= 80 ? '#16a34a' : score >= 60 ? 'var(--yellow)' : 'var(--text-muted)',
+                }}>
+                Match {score}%
+              </span>
+            )}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium" style={{ backgroundColor: 'var(--bg-card)', color: info.color }}>
+              {info.icon}
+              {info.label}
+            </div>
           </div>
         </div>
 
@@ -264,7 +287,7 @@ function OfferCard({ offer, onAction }: { offer: Offer; onAction: () => void }) 
   )
 }
 
-export function OwnerOffersPanel({ listingId, listingTitle }: Props) {
+export function OwnerOffersPanel({ listingId, listingTitle, swapValueEstimate }: Props) {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -311,14 +334,14 @@ export function OwnerOffersPanel({ listingId, listingTitle }: Props) {
       {cashOffers.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tawaran Wang ({cashOffers.length})</p>
-          {cashOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} />)}
+          {cashOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} listingValue={swapValueEstimate} />)}
         </div>
       )}
 
       {swapOffers.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tawaran Tukar ({swapOffers.length})</p>
-          {swapOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} />)}
+          {swapOffers.map(o => <OfferCard key={o.id} offer={o} onAction={loadOffers} listingValue={swapValueEstimate} />)}
         </div>
       )}
     </div>

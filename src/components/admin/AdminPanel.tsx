@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Shield, Users, Package, TrendingUp, CheckCircle, XCircle, Eye,
-  MessageCircle, Star, Gavel, DollarSign
+  MessageCircle, Star, Gavel, DollarSign, ArrowLeftRight, AlertCircle, Loader2
 } from 'lucide-react'
 
 interface PendingIC {
@@ -27,16 +27,41 @@ interface Stats {
   totalVolume: number; totalRevenue: number; totalBids: number; totalMessages: number; avgRating: number
 }
 
+interface DisputedSwap {
+  id: string
+  listingId: string
+  disputeReason: string | null
+  createdAt: string
+  updatedAt: string
+  listing: { id: string; title: string }
+  seller: { id: string; name: string | null; email: string }
+  buyer: { id: string; name: string | null; email: string }
+}
+
 interface Props {
   pendingICs: PendingIC[]
   recentListings: Listing[]
   recentUsers: RecentUser[]
+  disputedSwaps: DisputedSwap[]
   stats: Stats
 }
 
-export function AdminPanel({ pendingICs, recentListings, recentUsers, stats }: Props) {
+export function AdminPanel({ pendingICs, recentListings, recentUsers, disputedSwaps, stats }: Props) {
   const [verifying, setVerifying] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(pendingICs)
+  const [localDisputes, setLocalDisputes] = useState(disputedSwaps)
+  const [resolving, setResolving] = useState<string | null>(null)
+
+  async function handleResolveDispute(txId: string, resolution: 'complete' | 'cancel') {
+    setResolving(txId)
+    try {
+      const res = await fetch('/api/admin/resolve-dispute', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: txId, resolution }),
+      })
+      if (res.ok) setLocalDisputes(d => d.filter(t => t.id !== txId))
+    } finally { setResolving(null) }
+  }
 
   async function handleVerify(userId: string, approve: boolean) {
     setVerifying(userId)
@@ -182,6 +207,73 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, stats }: P
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Disputed Swap Transactions */}
+      <div className="mt-8 rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(239,68,68,0.3)' }}>
+        <div className="flex items-center gap-2 mb-5">
+          <AlertCircle className="w-5 h-5" style={{ color: 'var(--red)' }} />
+          <h2 className="text-lg font-semibold">Pertikaian Swap Aktif ({localDisputes.length})</h2>
+        </div>
+        {localDisputes.length === 0 ? (
+          <div className="text-center py-8 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+            <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--green)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Tiada pertikaian aktif</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {localDisputes.map(tx => (
+              <div key={tx.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <ArrowLeftRight className="w-4 h-4" style={{ color: '#16a34a' }} />
+                      <a href={`/listings/${tx.listing.id}`} className="font-medium text-sm hover:underline">{tx.listing.title}</a>
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <span>Penjual: <strong>{tx.seller.name ?? tx.seller.email}</strong></span>
+                      <span>Pembeli: <strong>{tx.buyer.name ?? tx.buyer.email}</strong></span>
+                      <span>{new Date(tx.updatedAt).toLocaleDateString('ms-MY')}</span>
+                    </div>
+                  </div>
+                </div>
+                {tx.disputeReason && (
+                  <p className="text-xs px-3 py-2 rounded-lg mb-3 italic" style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: 'var(--text-secondary)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                    "{tx.disputeReason}"
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleResolveDispute(tx.id, 'complete')}
+                    disabled={resolving === tx.id}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white disabled:opacity-60"
+                    style={{ backgroundColor: '#16a34a' }}
+                  >
+                    {resolving === tx.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                    Selesai (Lulus)
+                  </button>
+                  <button
+                    onClick={() => handleResolveDispute(tx.id, 'cancel')}
+                    disabled={resolving === tx.id}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium disabled:opacity-60"
+                    style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    <XCircle className="w-3 h-3" />
+                    Buka Semula
+                  </button>
+                  <a
+                    href={`/listings/${tx.listing.id}`}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
+                    style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+                  >
+                    <Eye className="w-3 h-3" />
+                    Lihat
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

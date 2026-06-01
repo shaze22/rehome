@@ -2,11 +2,11 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { getUserBadges } from '@/lib/badges'
-import { CheckCircle, Star, Package, MapPin, Calendar, Award } from 'lucide-react'
+import { CheckCircle, Star, Package, MapPin, Calendar, Award, ArrowLeftRight } from 'lucide-react'
 
 async function getProfile(id: string) {
   try {
-    const [profile, soldCount, boughtCount, co2Result] = await Promise.all([
+    const [profile, soldCount, boughtCount, co2Result, swapHistory] = await Promise.all([
       prisma.user.findUnique({
         where: { id },
         include: {
@@ -26,8 +26,18 @@ async function getProfile(id: string) {
       prisma.bid.findMany({ where: { bidderId: id }, select: { listingId: true } })
         .then(bids => new Set(bids.map(b => b.listingId)).size),
       prisma.listing.aggregate({ where: { sellerId: id, status: 'SOLD' }, _sum: { co2Saved: true } }),
+      prisma.swapTransaction.findMany({
+        where: { OR: [{ sellerId: id }, { buyerId: id }], escrowStatus: 'COMPLETED' },
+        include: {
+          listing: { select: { id: true, title: true, category: true, photos: true } },
+          seller: { select: { id: true, name: true } },
+          buyer: { select: { id: true, name: true } },
+        },
+        orderBy: { resolvedAt: 'desc' },
+        take: 6,
+      }),
     ])
-    return profile ? { ...profile, soldCount, boughtCount, totalCO2: co2Result._sum.co2Saved ?? 0 } : null
+    return profile ? { ...profile, soldCount, boughtCount, totalCO2: co2Result._sum.co2Saved ?? 0, swapHistory } : null
   } catch {
     return null
   }
@@ -89,6 +99,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 <Star className="w-3 h-3" style={{ color: 'var(--yellow)' }} /> Ballout Score
               </p>
             </div>
+            {profile.swapScore != null && (
+              <div className="text-center">
+                <p className="text-2xl font-bold font-mono" style={{ color: '#16a34a' }}>{profile.swapScore.toFixed(1)}</p>
+                <p className="text-xs mt-0.5 flex items-center gap-1 justify-center" style={{ color: 'var(--text-secondary)' }}>
+                  <ArrowLeftRight className="w-3 h-3" /> Swap Score
+                </p>
+              </div>
+            )}
             <div className="text-center">
               <p className="text-2xl font-bold font-mono" style={{ color: 'var(--teal)' }}>{profile._count.listings}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Listing</p>
@@ -128,6 +146,61 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Swap Badges */}
+      {(profile.swapVerified || profile.successfulSwaps > 0) && (
+        <div className="mb-8 flex flex-wrap gap-3">
+          {profile.swapVerified && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.3)' }}>
+              <ArrowLeftRight className="w-4 h-4" style={{ color: '#16a34a' }} />
+              <div>
+                <p className="text-xs font-semibold" style={{ color: '#16a34a' }}>Verified Swapper</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{profile.successfulSwaps} swap berjaya</p>
+              </div>
+            </div>
+          )}
+          {!profile.swapVerified && profile.successfulSwaps > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
+              <ArrowLeftRight className="w-4 h-4" style={{ color: 'var(--teal)' }} />
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{profile.successfulSwaps} swap berjaya · {5 - profile.successfulSwaps} lagi untuk Verified</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Swap History */}
+      {profile.swapHistory.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
+            Sejarah Pertukaran ({profile.swapHistory.length})
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {profile.swapHistory.map(tx => {
+              const isSeller = tx.seller.id === profile.id
+              const partner = isSeller ? tx.buyer : tx.seller
+              return (
+                <a key={tx.id} href={`/listings/${tx.listing.id}`} className="block rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                  <div className="aspect-video relative bg-[var(--bg-elevated)]">
+                    {tx.listing.photos[0] && (
+                      <img src={tx.listing.photos[0]} alt={tx.listing.title} className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: 'rgba(22,163,74,0.9)', color: 'white' }}>
+                      ✓ Selesai
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-1">{tx.listing.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {isSeller ? 'Ditukar kepada' : 'Ditukar dari'} {partner.name ?? 'Pengguna'}
+                    </p>
+                  </div>
+                </a>
+              )
+            })}
           </div>
         </div>
       )}

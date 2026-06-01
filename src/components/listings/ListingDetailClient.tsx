@@ -682,7 +682,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       {/* Swap: Owner Offers Panel — only when still ACTIVE */}
       {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
         <div className="mt-10">
-          <OwnerOffersPanel listingId={listing.id} listingTitle={listing.title} />
+          <OwnerOffersPanel listingId={listing.id} listingTitle={listing.title} swapValueEstimate={listing.swapValueEstimate} />
         </div>
       )}
 

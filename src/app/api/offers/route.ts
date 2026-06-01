@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendSwapOfferReceivedEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const OfferSchema = z.object({
@@ -86,6 +87,13 @@ export async function POST(request: NextRequest) {
       expiresAt: listing.endsAt,
     },
     include: { bidder: { select: { name: true, rehomeScore: true, swapScore: true, successfulSwaps: true } } },
+  })
+
+  // Email seller — fire-and-forget
+  prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true, name: true } }).then(seller => {
+    if (seller?.email) {
+      sendSwapOfferReceivedEmail(seller.email, seller.name ?? 'Pemilik', listing.id ?? data.listingId, data.offerType, data.listingId).catch(() => {})
+    }
   })
 
   return NextResponse.json({ offer }, { status: 201 })

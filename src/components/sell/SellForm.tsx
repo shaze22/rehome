@@ -58,6 +58,8 @@ export function SellForm({ userId }: Props) {
   const [swapOpenOffers, setSwapOpenOffers] = useState(false)
   const [swapAcceptCash, setSwapAcceptCash] = useState(true)
   const [swapMinCashTopup, setSwapMinCashTopup] = useState('')
+  const [swapAiLoading, setSwapAiLoading] = useState(false)
+  const [swapAiSuggestion, setSwapAiSuggestion] = useState<{ suggestedItems: string[]; suggestedCategories: string[]; valueSuggestion: string; reasoning: string; confidence: string } | null>(null)
 
   const [aiSuggestion, setAiSuggestion] = useState<AISuggestion | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -89,6 +91,28 @@ export function SellForm({ userId }: Props) {
       setPhotoAnalysisError('Gagal menghubungi AI. Sila cuba lagi.')
     } finally {
       setPhotoAnalysing(false)
+    }
+  }
+
+  async function getSwapAISuggestion() {
+    if (!title || !category || !aiSuggestion) {
+      setSwapAiSuggestion(null)
+      return
+    }
+    setSwapAiLoading(true)
+    try {
+      const res = await fetch('/api/gemini/swap-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, category, condition, estimatedValue: aiSuggestion.fair }),
+      })
+      const data = await res.json()
+      if (!res.ok) return
+      setSwapAiSuggestion(data)
+      if (data.suggestedItems?.[0] && !swapWantedItem) setSwapWantedItem(data.suggestedItems[0])
+      if (data.suggestedCategories?.[0] && !swapWantedCategory) setSwapWantedCategory(data.suggestedCategories[0])
+    } finally {
+      setSwapAiLoading(false)
     }
   }
 
@@ -296,6 +320,34 @@ export function SellForm({ userId }: Props) {
           </div>
 
           <div className="space-y-4">
+            {/* AI Swap Suggestion */}
+            <button
+              type="button"
+              onClick={getSwapAISuggestion}
+              disabled={swapAiLoading || !title}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 disabled:opacity-50"
+              style={{ border: '1px solid rgba(22,163,74,0.5)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}
+            >
+              {swapAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
+              {swapAiLoading ? 'AI sedang cari cadangan...' : '✨ AI Cadangkan Barang Swap'}
+            </button>
+
+            {swapAiSuggestion && (
+              <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                <p className="text-xs font-medium" style={{ color: '#16a34a' }}>Cadangan AI ({swapAiSuggestion.confidence} keyakinan):</p>
+                <div className="flex flex-wrap gap-2">
+                  {swapAiSuggestion.suggestedItems.map((item, i) => (
+                    <button key={i} type="button" onClick={() => setSwapWantedItem(item)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                      style={{ backgroundColor: swapWantedItem === item ? '#16a34a' : 'var(--bg-elevated)', color: swapWantedItem === item ? 'white' : 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>{swapAiSuggestion.reasoning}</p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Apa yang anda mahukan? (pilihan)</label>
               <input

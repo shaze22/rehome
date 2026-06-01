@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendSwapOfferAcceptedEmail, sendSwapOfferCounteredEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const CounterSchema = z.object({
@@ -88,6 +89,11 @@ export async function PUT(
       }),
     ])
 
+    // Email buyer — fire-and-forget
+    prisma.user.findUnique({ where: { id: offer.bidder.id }, select: { email: true, name: true } }).then(buyer => {
+      if (buyer?.email) sendSwapOfferAcceptedEmail(buyer.email, buyer.name ?? 'Penawar', offer.listingId, offer.listingId).catch(() => {})
+    })
+
     return NextResponse.json({ offer: updated })
   }
 
@@ -142,6 +148,12 @@ export async function PUT(
         parentOfferId: id,
         expiresAt: offer.listing.endsAt,
       },
+    })
+
+    // Email the other party — fire-and-forget
+    const recipientId = isSeller ? offer.bidder.id : offer.listing.sellerId
+    prisma.user.findUnique({ where: { id: recipientId }, select: { email: true, name: true } }).then(recipient => {
+      if (recipient?.email) sendSwapOfferCounteredEmail(recipient.email, recipient.name ?? 'Pengguna', offer.listingId, offer.listingId, isSeller).catch(() => {})
     })
 
     return NextResponse.json({ offer: counterOffer }, { status: 201 })
