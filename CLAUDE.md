@@ -427,8 +427,8 @@ Missing page metadata — semua pages kini ada `<title>` yang betul:
 - Seller card: "Balas < 24 jam" + bilangan listing aktif dari `seller._count.listings`
 - Flash first bid button: "Bid Pertama — Mungkin Menang Percuma!"
 - WhatsApp share: viral copy berbeza untuk Flash vs Swap
-- `listings/[id]/page.tsx`: fetch 3 relatedListings dari seller yang sama, pass sebagai server-rendered slot
-- "Listing Lain dari Penjual Ini" horizontal scroll di bawah bid history
+- `listings/[id]/page.tsx`: fetch relatedListings — awalnya sama seller, kini same category+mode (PROMPT 5 update)
+- "Mungkin Anda Suka Juga" horizontal scroll di bawah bid history
 
 ### PROMPT 3 — Seller Landing Page + Navbar
 - New route `/jual` (`src/app/jual/page.tsx`) — seller acquisition page
@@ -437,24 +437,80 @@ Missing page metadata — semua pages kini ada `<title>` yang betul:
 - FAQ guna native `<details>/<summary>` (no JS needed)
 - Navbar: "Jual Barangan" → `/jual` (desktop + mobile)
 
+## Marketing Overhaul — PROMPT 4–8 (commit 68e4553, 2026-06-01)
+
+### PROMPT 4 — Email Notifications
+- `sendOutbidEmail`: subject "⚡ Tawaran anda dikalahkan", body dengan countdown + tawaran semasa, CTA "Bid Semula Sekarang"
+- `sendWatchlistAlertEmail`: notify semua watcher listing bila ada bid baru (exclude new bidder + outbid user)
+- `sendAuctionExpiredSellerEmail`: seller dapat email bila lelongan tamat dengan harga menang
+- `sendReferralRewardEmail`: notify referrer bila kawan berjaya daftar
+- `/api/bid`: hantar watchlist alerts kepada semua watcher selepas setiap bid
+- `/api/cron/expire-auctions`: hantar seller email serentak dengan winner email
+
+### PROMPT 5 — Related Listings + Recently Viewed
+- Related listings: tukar dari "same seller" → **same category + same mode**, order by viewCount desc, take 4
+- Section title: "Mungkin Anda Suka Juga"
+- `RecentlyViewed.tsx`: client component, localStorage max 6 items, horizontal scroll
+- `trackRecentlyViewed()`: dipanggil dalam `ListingDetailClient` via `useEffect` on mount
+- Home page: "Anda Baru Tengok" section (bila ada data), "🔥 Trending Minggu Ini" (viewCount desc, 7 hari)
+
+### PROMPT 6 — FOMO Triggers
+- `ListingCard` + `SwapListingCard`: "🔥 Popular" HOT badge bila viewCount≥20 ATAU bid/offer≥3
+- `ListingCard`: Flash listing >7 hari tanpa bid tunjuk "Sudah X hari" ganti timer
+- `isFeatured Boolean @default(false)` ditambah pada Listing model
+- `MegaLelongCountdown.tsx`: countdown ke Jumaat 9pm MYT, tunjuk Isnin-Khamis sahaja
+- Home page: "⚡ Mega Lelong Jumaat" section (tunjuk bila ada featured listings)
+- `/api/admin/feature-listing`: toggle isFeatured (admin only)
+- `AdminPanel`: `FeaturedListingRow` dengan ⚡ Feature / Unfeature button per listing
+- WhatsApp share text lebih viral: "Aku jumpa [ITEM]... Kau nak bid tak?"
+- `ListingDetailClient`: auto-track via `trackRecentlyViewed` useEffect
+
+### PROMPT 7 — Referral Program
+- Schema: `User.referralCode String? @unique`, `User.creditBalance Float @default(0)`, model `Referral`
+- `/api/user/sync`: auto-generate 8-char referralCode (nanoid) pada first register; process `ballout_ref` cookie → credit RM5 dua-dua pihak + create Referral record
+- `/api/referral/set-cookie`: validate code, set httpOnly cookie 1 hari, redirect ke /auth/register
+- `/api/referral`: GET stats (code, creditBalance, referralCount, totalRewards)
+- `/r/[code]`: landing page — nama pengaju, reward RM5, feature list, CTA "Daftar & Dapat RM5 Credit"
+- `ReferralSection.tsx`: dashboard widget — credit balance, stats, copy link, WhatsApp share
+- `/api/payment/checkout`: kurang credit dari harga (max bidAmount-1 untuk Stripe min RM1), simpan `creditUsed` dalam metadata
+- `/api/payment/webhook`: deduct `creditUsed` dari `creditBalance` selepas payment berjaya
+- `CreditCheckoutButton`: tunjuk preview diskaun dalam listing detail sebelum checkout
+
+### PROMPT 8 — PWA
+- `src/app/manifest.ts`: name BALLOUT, theme #14b8a6, standalone, shortcuts (Flash/Jual)
+- `/api/pwa-icon?size=N`: edge route generate ⚡ branded PNG icon via ImageResponse (192, 512)
+- `public/sw.js`: cache-first navigation, skip API/Supabase/Stripe, push event handler, notificationclick handler
+- `/offline`: fallback page bila tiada internet
+- `PWASetup.tsx`: register SW on mount, capture beforeinstallprompt, banner selepas 30s, dismiss ke localStorage
+- `PushPermission.tsx`: prompt permission 5s selepas load (logged-in users), sekali sahaja
+- Schema: model `PushSubscription` (endpoint unique, cascade delete)
+- `/api/push/subscribe`: POST upsert, DELETE remove subscription
+- `src/lib/push.ts`: `sendPushToUser()` — hantar ke semua device, auto-cleanup expired (410/404)
+- VAPID keys set di Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
+- Push trigger: outbid (`/api/bid`), offer received (`/api/offers`)
+- `layout.tsx`: async, fetch user server-side, render `<PushPermission userId>` conditionally
+
 ## Last Deployed
-2026-06-01, commit `255b306` → marketing overhaul (homepage, listing detail, /jual page)
+2026-06-01, commit `68e4553` (offline page bug fix)
 Live: https://rehome-eta.vercel.app
 
-## New Routes
+## All Routes
 | Route | Purpose |
 |-------|---------|
 | `/jual` | Seller acquisition landing page + fee calculator |
+| `/r/[code]` | Referral landing page |
+| `/offline` | PWA offline fallback |
+| `/api/referral` | GET referral stats |
+| `/api/referral/set-cookie` | Set referral cookie + redirect |
+| `/api/push/subscribe` | POST/DELETE push subscription |
+| `/api/pwa-icon` | Edge: generate PWA icon PNG |
+| `/api/admin/feature-listing` | Toggle isFeatured (admin) |
 
-## Pending (Belum Selesai)
-- Set `EASYPARCEL_API_KEY` di Vercel untuk kadar courier live (portal.easyparcel.com)
-- Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
-- Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel (daftar di sentry.io — free tier)
+## Pending (Tindakan Manual — Bukan Kod)
+- Set `EASYPARCEL_API_KEY` di Vercel → portal.easyparcel.com
+- Lalamove API key perlu diaktifkan oleh Lalamove (502 error)
+- Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel → sentry.io free tier
 - Enable Vercel Analytics di dashboard Vercel
-- Verify Supabase RLS policies untuk semua tables di Supabase dashboard
-- PROMPT 4: Email notifications (outbid + watchlist alert)
-- PROMPT 5: Related listings + Recently Viewed
-- PROMPT 6: FOMO triggers (Hot badge, Mega Lelong Jumaat, viral share)
-- PROMPT 7: Referral program
-- PROMPT 8: PWA (add-to-homescreen + push notif)
+- Verify Supabase RLS policies untuk semua tables
+- Mark listing sebagai featured via `/admin` untuk aktifkan "Mega Lelong Jumaat"
 - Beta testing 100 users → LAUNCH 🚀
