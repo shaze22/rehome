@@ -4,6 +4,47 @@ import { createClient } from '@/lib/supabase/server'
 import { ListingDetailClient } from '@/components/listings/ListingDetailClient'
 import { ListingChat } from '@/components/listings/ListingChat'
 import { WatchlistButton } from '@/components/listings/WatchlistButton'
+import type { Metadata } from 'next'
+
+const CATEGORY_MS: Record<string, string> = {
+  FURNITURE: 'Perabot', ELECTRONICS: 'Elektronik', FASHION: 'Fesyen',
+  BOOKS: 'Buku', SPORTS: 'Sukan', KITCHEN: 'Dapur', OTHERS: 'Lain-lain',
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    select: { title: true, description: true, photos: true, currentBid: true, state: true, category: true, mode: true },
+  })
+  if (!listing) return { title: 'Listing tidak dijumpai' }
+
+  const category = CATEGORY_MS[listing.category] ?? listing.category
+  const modeLabel = listing.mode === 'SWAP' ? 'Tukar Barang' : 'Lelong Pantas'
+  const priceText = listing.mode === 'SWAP' ? 'Tukar Barang' : `RM ${listing.currentBid.toFixed(0)}`
+  const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
+  const title = `${listing.title} — ${priceText}`
+  const description = `${modeLabel} · ${category} · ${listing.state} · ${listing.description.slice(0, 120)}...`
+  const photo = listing.photos[0]
+  const ogImage = photo ?? `${BASE}/api/og?title=${encodeURIComponent(listing.title)}&subtitle=${encodeURIComponent(`${modeLabel} · ${category} · ${listing.state}`)}&price=${encodeURIComponent(priceText)}&mode=${listing.mode === 'SWAP' ? 'swap' : 'flash'}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: [{ url: ogImage, width: photo ? 800 : 1200, height: photo ? 800 : 630, alt: listing.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+  }
+}
 
 async function getListing(id: string) {
   try {

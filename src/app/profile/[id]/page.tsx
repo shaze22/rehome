@@ -3,6 +3,19 @@ import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { getUserBadges } from '@/lib/badges'
 import { CheckCircle, Star, Package, MapPin, Calendar, Award, ArrowLeftRight } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const user = await prisma.user.findUnique({ where: { id }, select: { name: true, state: true, rehomeScore: true } })
+  if (!user) return { title: 'Profil tidak dijumpai' }
+  const name = user.name ?? 'Pengguna BALLOUT'
+  return {
+    title: `Profil ${name}`,
+    description: `Profil penjual ${name} di BALLOUT. Skor: ${user.rehomeScore}${user.state ? ` · ${user.state}` : ''}.`,
+    openGraph: { title: `${name} | BALLOUT`, description: `Semak profil dan listing ${name} di BALLOUT.` },
+  }
+}
 
 async function getProfile(id: string) {
   try {

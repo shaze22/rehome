@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { SellForm } from '@/components/sell/SellForm'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Jual Barangan',
+  description: 'Letak barangan terpakai anda untuk lelongan atau tukar barang. AI akan cadangkan harga permulaan yang adil.',
+  robots: { index: false, follow: false },
+}
 
 export default async function SellPage() {
   const supabase = await createClient()
