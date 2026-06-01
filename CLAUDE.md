@@ -469,7 +469,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 - `sentry.server.config.ts` — server init
 - `sentry.edge.config.ts` — edge runtime init
 - `src/instrumentation.ts` — Next.js App Router hook: loads server/edge Sentry on `register()`
-- **Requires:** `NEXT_PUBLIC_SENTRY_DSN` env var in Vercel (get from sentry.io → New Project → Next.js)
+- **`NEXT_PUBLIC_SENTRY_DSN`** set in Vercel ✅ (2026-06-01)
 
 ## Last Deployed
 2026-06-01, commit `71b2e30` — Rebrand KASSIM + English UI + next-intl i18n foundation
@@ -479,8 +479,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
 - ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
-- ✅ Sentry: `instrumentation.ts` added; awaiting DSN from sentry.io
-- Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel → sentry.io → New Project → Next.js → DSN
+- ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
 - Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com (optional, fallback works)
 - Lalamove API key needs activation by Lalamove (502 error)
 - Enable Vercel Analytics in Vercel dashboard
