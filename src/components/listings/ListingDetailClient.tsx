@@ -11,6 +11,7 @@ import {
 import { calculateDeliveryQuote, calculateDeliveryMarkup, calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
+import { SwapEscrowPanel } from './SwapEscrowPanel'
 
 interface Bid {
   id: string
@@ -340,6 +341,15 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           {/* Bid Box / Swap Box */}
           <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: isSwap ? '1px solid rgba(22,163,74,0.3)' : '1px solid var(--border)' }}>
 
+            {/* Swap: sold notice */}
+            {isSwap && listing.status === 'SOLD' && (
+              <div className="text-center py-3 px-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                <CheckCircle className="w-6 h-6 mx-auto mb-1" style={{ color: '#16a34a' }} />
+                <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Tawaran telah diterima</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Proses pertukaran sedang berjalan</p>
+              </div>
+            )}
+
             {/* Swap mode header */}
             {isSwap && (
               <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -415,8 +425,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
             )}
 
-            {/* Swap: Offer button (for non-owners, non-ended) */}
-            {isSwap && !isEnded && !isOwnListing && (
+            {/* Swap: Offer button (for non-owners, still active) */}
+            {isSwap && listing.status === 'ACTIVE' && !isOwnListing && (
               <div className="space-y-3">
                 {offerSubmitted ? (
                   <div className="text-center py-4 px-4 rounded-xl" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
@@ -444,8 +454,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
               </div>
             )}
 
-            {/* Swap: Owner sees offers panel here */}
-            {isSwap && isOwnListing && !isEnded && (
+            {/* Swap: Owner sees offers panel here (when active) */}
+            {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
               <div className="text-center py-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                 Ini listing anda. Tawaran dipaparkan di bawah.
               </div>
@@ -657,8 +667,20 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
         </div>
       </div>
 
-      {/* Swap: Owner Offers Panel */}
-      {isSwap && isOwnListing && (
+      {/* Swap Escrow Panel — shown to both seller & buyer once offer accepted (listing SOLD) */}
+      {isSwap && currentUserId && listing.status === 'SOLD' && (
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-4">Status Escrow</h2>
+          <SwapEscrowPanel
+            listingId={listing.id}
+            currentUserId={currentUserId}
+            listingTitle={listing.title}
+          />
+        </div>
+      )}
+
+      {/* Swap: Owner Offers Panel — only when still ACTIVE */}
+      {isSwap && isOwnListing && listing.status === 'ACTIVE' && (
         <div className="mt-10">
           <OwnerOffersPanel listingId={listing.id} listingTitle={listing.title} />
         </div>

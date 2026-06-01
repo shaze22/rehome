@@ -49,7 +49,7 @@ export async function PUT(
   const offer = await prisma.offer.findUnique({
     where: { id },
     include: {
-      listing: { select: { sellerId: true, endsAt: true, status: true } },
+      listing: { select: { id: true, sellerId: true, endsAt: true, status: true } },
       bidder: { select: { id: true } },
     },
   })
@@ -71,10 +71,23 @@ export async function PUT(
       data: { status: 'REJECTED' },
     })
 
-    const updated = await prisma.offer.update({
-      where: { id },
-      data: { status: 'ACCEPTED' },
-    })
+    // Accept offer + create SwapTransaction + mark listing as SOLD (no more offers)
+    const [updated] = await prisma.$transaction([
+      prisma.offer.update({ where: { id }, data: { status: 'ACCEPTED' } }),
+      prisma.listing.update({ where: { id: offer.listing.id }, data: { status: 'SOLD' } }),
+      prisma.swapTransaction.create({
+        data: {
+          listingId: offer.listingId,
+          acceptedOfferId: id,
+          sellerId: offer.listing.sellerId,
+          buyerId: offer.bidder.id,
+          offerType: offer.offerType,
+          // CASH offers: buyer doesn't ship anything (null = not applicable)
+          buyerItemShipped: offer.offerType === 'CASH' ? null : false,
+        },
+      }),
+    ])
+
     return NextResponse.json({ offer: updated })
   }
 

@@ -27,9 +27,11 @@ model User {
   reviews         Review[]    @relation("ReviewAuthor")
   receivedReviews Review[]    @relation("ReviewSeller")
   watchlist       Watchlist[]
-  offers          Offer[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  offers                  Offer[]
+  swapTransactionsSeller  SwapTransaction[] @relation("SwapSeller")
+  swapTransactionsBuyer   SwapTransaction[] @relation("SwapBuyer")
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
 }
 
 model Listing {
@@ -61,6 +63,7 @@ model Listing {
   review             Review?
   watchlist          Watchlist[]
   offers             Offer[]
+  swapTransaction    SwapTransaction?
   aiSuggestedMin     Float?
   aiSuggestedMax     Float?
   aiReasoning        String?
@@ -164,8 +167,9 @@ model Offer {
   status            OfferStatus @default(PENDING)
   counterRounds     Int         @default(0)
   parentOfferId     String?
-  parentOffer       Offer?      @relation("OfferCounter", fields: [parentOfferId], references: [id])
-  counterOffers     Offer[]     @relation("OfferCounter")
+  parentOffer       Offer?          @relation("OfferCounter", fields: [parentOfferId], references: [id])
+  counterOffers     Offer[]         @relation("OfferCounter")
+  swapTransaction   SwapTransaction?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   expiresAt         DateTime?
@@ -215,6 +219,45 @@ enum ShippingStatus {
   PENDING
   SHIPPED
   DELIVERED
+}
+
+model SwapTransaction {
+  id                 String       @id @default(cuid())
+  listingId          String       @unique
+  listing            Listing      @relation(fields: [listingId], references: [id])
+  acceptedOfferId    String       @unique
+  acceptedOffer      Offer        @relation(fields: [acceptedOfferId], references: [id])
+  sellerId           String
+  seller             User         @relation("SwapSeller", fields: [sellerId], references: [id])
+  buyerId            String
+  buyer              User         @relation("SwapBuyer", fields: [buyerId], references: [id])
+  offerType          OfferType
+  escrowStatus       EscrowStatus @default(PENDING)
+  sellerItemShipped  Boolean      @default(false)
+  buyerItemShipped   Boolean?
+  sellerItemReceived Boolean      @default(false)
+  buyerItemReceived  Boolean      @default(false)
+  sellerPhotos       String[]
+  buyerPhotos        String[]
+  sellerTracking     String?
+  buyerTracking      String?
+  sellerCourier      String?
+  buyerCourier       String?
+  disputeReason      String?
+  disputeEvidence    String[]
+  resolvedAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([sellerId])
+  @@index([buyerId])
+}
+
+enum EscrowStatus {
+  PENDING
+  BOTH_SHIPPED
+  COMPLETED
+  DISPUTED
 }
 
 enum ListingMode {
