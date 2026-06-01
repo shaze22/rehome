@@ -328,8 +328,38 @@ Buyer pilih "Penghantaran Pos"
 - `/robots.txt` — allow public, disallow dashboard/api/admin/auth
 - `/sitemap.xml` — homepage + listings feed + sehingga 500 active listings
 
+## Beta Testing Prep (commit 4f86bbc, 2026-06-01)
+
+### Rate Limiting (`src/lib/rate-limit.ts`)
+- In-memory Map, auto-cleanup setiap 5 minit
+- Bid: 30/5min · Offer: 10/jam · Listing: 5/jam · Feedback: 5/jam per IP
+
+### Welcome Email
+- `sendWelcomeEmail()` dalam resend.ts
+- Dihantar bila user daftar buat kali pertama (dalam `/api/user/sync`)
+
+### Feedback Widget (`src/components/feedback/FeedbackWidget.tsx`)
+- Floating button bottom-right pada semua pages
+- 3 jenis: Bug 🐛 / Cadangan 💡 / Lain-lain 💬
+- `POST /api/feedback` → email ke ADMIN_EMAIL
+
+### Vercel Analytics
+- `<Analytics />` dari `@vercel/analytics/next` dalam layout.tsx
+
+### Error Pages
+- `src/app/error.tsx` — 500 page dengan Sentry.captureException + error.digest
+- `src/app/global-error.tsx` — root layout crash handler
+
+### Sentry (`sentry.client/server/edge.config.ts`)
+- Setup siap, perlukan `NEXT_PUBLIC_SENTRY_DSN` dari sentry.io
+- tracesSampleRate: 0.1
+
+### Admin: Beta Users Table
+- `/admin` kini ada table semua users — email, role, skor, listing count, IC, tarikh daftar
+
 ## Pending (Belum Selesai)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
 - Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
-- Beta testing 100 users
-- Full public launch ✅ SEO dah siap
+- Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel (daftar di sentry.io — free tier)
+- Enable Vercel Analytics di dashboard Vercel
+- Beta testing 100 users → LAUNCH 🚀
