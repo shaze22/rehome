@@ -49,6 +49,9 @@ export function SellForm({ userId }: Props) {
   const [hasOriginalBox, setHasOriginalBox] = useState(false)
   const [hasWarranty, setHasWarranty] = useState(false)
 
+  // Common
+  const [weightKg, setWeightKg] = useState('1')
+
   // Flash-only fields
   const [startingBid, setStartingBid] = useState('0')
 
@@ -173,6 +176,7 @@ export function SellForm({ userId }: Props) {
         mode,
         title, description, category, condition,
         originalPrice: Number(originalPrice),
+        weightKg: Number(weightKg) || 1,
         photos, state,
         hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty,
       }
@@ -291,6 +295,26 @@ export function SellForm({ userId }: Props) {
                 {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Anggaran Berat (kg) — untuk sebut harga penghantaran
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range" min={0.1} max={30} step={0.1}
+                value={weightKg}
+                onChange={e => setWeightKg(e.target.value)}
+                className="flex-1 accent-teal-400"
+              />
+              <span className="text-sm font-mono font-bold w-14 text-right" style={{ color: 'var(--teal)' }}>
+                {Number(weightKg).toFixed(1)} kg
+              </span>
+            </div>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              Lebih tepat → sebut harga penghantaran lebih jitu. Min 0.1kg, Maks 30kg.
+            </p>
           </div>
 
           <div>

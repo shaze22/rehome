@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Listing" ADD COLUMN     "weightKg" DOUBLE PRECISION NOT NULL DEFAULT 1;

@@ -10,7 +10,7 @@ import {
   AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
   Package, Home, Truck
 } from 'lucide-react'
-import { calculateDeliveryQuote, calculateDeliveryMarkup, calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
+import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
@@ -156,6 +156,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [receiveConfirming, setReceiveConfirming] = useState(false)
   const [trackingInput, setTrackingInput] = useState('')
 
+  interface QuoteResult { cheapest: number; couriers: { courierName: string; serviceName: string; price: number }[]; source: string }
+  const [deliveryQuote, setDeliveryQuote] = useState<QuoteResult | null>(null)
+  const [quoteLoading, setQuoteLoading] = useState(false)
+
   const isSwap = listing.mode === 'SWAP'
   const isSeller = currentUserId === listing.seller.id
   const isBuyer = !!(flashTx && currentUserId === flashTx.buyerId)
@@ -166,6 +170,20 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       fetch(`/api/listings/${listing.id}/expire`, { method: 'POST' }).catch(() => {})
     }
   }, [isEnded, listing.id, listing.status])
+
+  // Fetch EasyParcel delivery quote when buyer selects a state
+  useEffect(() => {
+    if (deliveryMethod !== 'delivery' || !buyerState) { setDeliveryQuote(null); return }
+    setQuoteLoading(true)
+    const timer = setTimeout(() => {
+      fetch(`/api/listings/${listing.id}/delivery-quote?buyerState=${encodeURIComponent(buyerState)}`)
+        .then(r => r.json())
+        .then(data => setDeliveryQuote(data))
+        .catch(() => setDeliveryQuote(null))
+        .finally(() => setQuoteLoading(false))
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [deliveryMethod, buyerState, listing.id])
 
   // Fetch Flash transaction when listing ENDED/SOLD and user is involved
   useEffect(() => {
@@ -256,15 +274,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   }
 
   const isFirstBid = listing._count.bids === 0
-  const deliveryQuote = deliveryMethod === 'delivery' && buyerState
-    ? calculateDeliveryQuote(listing.state, buyerState)
-    : deliveryMethod === 'pickup' ? 0 : null
-  const deliveryMarkup = deliveryMethod === 'delivery' && buyerState
-    ? calculateDeliveryMarkup(listing.state, buyerState)
-    : 0
+  const deliveryPrice = deliveryMethod === 'pickup' ? 0 : (deliveryQuote?.cheapest ?? null)
   const platformFee = calculatePlatformFee(bidAmount)
-  const totalIfWin = deliveryQuote !== null ? bidAmount + deliveryQuote + platformFee : null
-  const deliveryReady = deliveryMethod === 'pickup' || (deliveryMethod === 'delivery' && buyerState !== '')
+  const totalIfWin = deliveryPrice !== null ? bidAmount + deliveryPrice + platformFee : null
+  const deliveryReady = deliveryMethod === 'pickup' || (deliveryMethod === 'delivery' && buyerState !== '' && !quoteLoading && deliveryQuote !== null)
 
   async function handleBid(e: React.FormEvent) {
     e.preventDefault()
@@ -635,38 +648,70 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     </div>
 
                     {/* Cost breakdown */}
-                    {totalIfWin !== null && (
+                    {deliveryMethod === 'delivery' && buyerState && (
+                      <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        {quoteLoading ? (
+                          <p className="text-center py-1" style={{ color: 'var(--text-muted)' }}>Mendapatkan kadar penghantaran...</p>
+                        ) : deliveryQuote ? (
+                          <>
+                            <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                              Anggaran kos jika menang {deliveryQuote.source === 'easyparcel' ? '(EasyParcel)' : '(kadar anggaran)'}:
+                            </p>
+                            <div className="flex justify-between">
+                              <span style={{ color: 'var(--text-muted)' }}>Tawaran anda</span>
+                              <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span style={{ color: 'var(--text-muted)' }}>
+                                Penghantaran {deliveryQuote.source === 'easyparcel' ? `(${deliveryQuote.couriers[0]?.courierName})` : ''}
+                              </span>
+                              <span className="font-mono">RM {deliveryQuote.cheapest.toFixed(2)}</span>
+                            </div>
+                            {deliveryQuote.source === 'easyparcel' && deliveryQuote.couriers.length > 1 && (
+                              <details className="mt-1">
+                                <summary className="cursor-pointer text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  Lihat semua kurier ({deliveryQuote.couriers.length})
+                                </summary>
+                                <div className="mt-1.5 space-y-1 pl-2">
+                                  {deliveryQuote.couriers.slice(0, 5).map((c, i) => (
+                                    <div key={i} className="flex justify-between" style={{ color: 'var(--text-muted)' }}>
+                                      <span>{c.courierName} · {c.serviceName}</span>
+                                      <span className="font-mono">RM {c.price.toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            )}
+                            <div className="flex justify-between">
+                              <span style={{ color: 'var(--text-muted)' }}>Fi platform (15%)</span>
+                              <span className="font-mono">RM {platformFee.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
+                              <span>Jumlah bayaran</span>
+                              <span className="font-mono">RM {(bidAmount + deliveryQuote.cheapest + platformFee).toFixed(2)}</span>
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
+                    {deliveryMethod === 'pickup' && (
                       <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                         <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Anggaran kos jika menang:</p>
                         <div className="flex justify-between">
                           <span style={{ color: 'var(--text-muted)' }}>Tawaran anda</span>
                           <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
                         </div>
-                        {deliveryMethod === 'delivery' && buyerState && (
-                          <>
-                            <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>Kos penghantaran</span>
-                              <span className="font-mono">RM {deliveryQuote!.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
-                              <span className="pl-2">· Kadar asas + markup 30%</span>
-                              <span className="font-mono">+RM {deliveryMarkup.toFixed(2)}</span>
-                            </div>
-                          </>
-                        )}
-                        {deliveryMethod === 'pickup' && (
-                          <div className="flex justify-between">
-                            <span style={{ color: 'var(--text-muted)' }}>Penghantaran</span>
-                            <span className="font-mono text-green-400">Percuma (ambil sendiri)</span>
-                          </div>
-                        )}
+                        <div className="flex justify-between">
+                          <span style={{ color: 'var(--text-muted)' }}>Penghantaran</span>
+                          <span className="font-mono text-green-400">Percuma (ambil sendiri)</span>
+                        </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'var(--text-muted)' }}>Fi platform (15%)</span>
                           <span className="font-mono">RM {platformFee.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
                           <span>Jumlah bayaran</span>
-                          <span className="font-mono">RM {totalIfWin.toFixed(2)}</span>
+                          <span className="font-mono">RM {(bidAmount + platformFee).toFixed(2)}</span>
                         </div>
                       </div>
                     )}
@@ -695,7 +740,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                     disabled={bidLoading || isLastBidder || !deliveryReady}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : !deliveryReady ? 'Pilih penghantaran dahulu' : `Bida RM ${bidAmount}`}
+                    {bidLoading ? 'Menghantar...' : bidSuccess ? '✓ Tawaran Dihantar!' : quoteLoading ? 'Mendapatkan kadar...' : !deliveryReady ? 'Pilih penghantaran dahulu' : `Bida RM ${bidAmount}`}
                   </button>
                 )}
               </form>

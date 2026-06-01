@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { calculateDeliveryQuote } from '@/lib/delivery'
+import { getDeliveryQuote } from '@/lib/easyparcel'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,13 +12,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { state: true },
+    select: { state: true, weightKg: true },
   })
 
   if (!listing) {
     return NextResponse.json({ error: 'Listing tidak dijumpai.' }, { status: 404 })
   }
 
-  const quote = calculateDeliveryQuote(listing.state, buyerState)
-  return NextResponse.json({ quote, sellerState: listing.state, buyerState })
+  const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg)
+  return NextResponse.json({ ...result, sellerState: listing.state, buyerState })
 }

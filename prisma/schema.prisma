@@ -64,6 +64,7 @@ model Listing {
   watchlist          Watchlist[]
   offers             Offer[]
   swapTransaction    SwapTransaction?
+  weightKg           Float         @default(1)
   aiSuggestedMin     Float?
   aiSuggestedMax     Float?
   aiReasoning        String?
