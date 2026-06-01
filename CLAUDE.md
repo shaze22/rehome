@@ -410,9 +410,41 @@ Missing page metadata — semua pages kini ada `<title>` yang betul:
 | Pagination | ✅ |
 | Console errors | ✅ 0 errors |
 
+## Marketing Overhaul (commit 255b306, 2026-06-01)
+
+### PROMPT 1 — Homepage
+- Hero headline: "Jual Barang Lama. Duit Masuk Hari Ini."
+- CTA primary: "Mula Jual Sekarang" → `/jual` | secondary: "Semak Barangan" → `/listings`
+- Stats: tunjuk credibility stats (Escrow/AI/IC/30min) bila `sold=0`; real stats bila ada data
+- New section: "Kenapa BALLOUT Selamat?" — 4 trust cards
+- `WasteCounter`: tersembunyi sampai `totalTransactions > 0`
+- Testimonials section (3 static quotes) sebelum HowItWorks
+
+### PROMPT 2 — Listing Detail
+- `ListingDetailClient.tsx`: tambah `viewCount`, `relatedListingsSlot` props
+- 👁 View count + offer/bid interest indicator bawah tajuk listing
+- Escrow trust badge hijau prominent (ganti teks kecil lama)
+- Seller card: "Balas < 24 jam" + bilangan listing aktif dari `seller._count.listings`
+- Flash first bid button: "Bid Pertama — Mungkin Menang Percuma!"
+- WhatsApp share: viral copy berbeza untuk Flash vs Swap
+- `listings/[id]/page.tsx`: fetch 3 relatedListings dari seller yang sama, pass sebagai server-rendered slot
+- "Listing Lain dari Penjual Ini" horizontal scroll di bawah bid history
+
+### PROMPT 3 — Seller Landing Page + Navbar
+- New route `/jual` (`src/app/jual/page.tsx`) — seller acquisition page
+- New component `src/components/sell/FeeCalculator.tsx` — client component, slider real-time
+- Page sections: Hero → Fee Calculator → Success Stories → How To Sell → FAQ → Final CTA
+- FAQ guna native `<details>/<summary>` (no JS needed)
+- Navbar: "Jual Barangan" → `/jual` (desktop + mobile)
+
 ## Last Deployed
-2026-06-01, commit `703ea8e` → metadata fixes (impact, login, register)
+2026-06-01, commit `255b306` → marketing overhaul (homepage, listing detail, /jual page)
 Live: https://rehome-eta.vercel.app
+
+## New Routes
+| Route | Purpose |
+|-------|---------|
+| `/jual` | Seller acquisition landing page + fee calculator |
 
 ## Pending (Belum Selesai)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar courier live (portal.easyparcel.com)
@@ -420,4 +452,9 @@ Live: https://rehome-eta.vercel.app
 - Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel (daftar di sentry.io — free tier)
 - Enable Vercel Analytics di dashboard Vercel
 - Verify Supabase RLS policies untuk semua tables di Supabase dashboard
+- PROMPT 4: Email notifications (outbid + watchlist alert)
+- PROMPT 5: Related listings + Recently Viewed
+- PROMPT 6: FOMO triggers (Hot badge, Mega Lelong Jumaat, viral share)
+- PROMPT 7: Referral program
+- PROMPT 8: PWA (add-to-homescreen + push notif)
 - Beta testing 100 users → LAUNCH 🚀
