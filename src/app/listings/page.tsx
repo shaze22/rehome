@@ -48,10 +48,17 @@ async function getListings(params: SearchParams) {
   if (params.category) where.category = params.category
   if (params.state) where.state = params.state
   if (params.q) {
-    where.OR = [
+    const searchOr = [
       { title: { contains: params.q, mode: 'insensitive' } },
       { description: { contains: params.q, mode: 'insensitive' } },
     ]
+    if (mode === 'FLASH' && where.OR) {
+      // Preserve the Flash endsAt OR filter; combine with search using AND
+      where.AND = [{ OR: where.OR as object[] }, { OR: searchOr }]
+      delete where.OR
+    } else {
+      where.OR = searchOr
+    }
   }
 
   if (mode === 'FLASH' && (params.minPrice || params.maxPrice)) {

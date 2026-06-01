@@ -1,8 +1,9 @@
-import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
+import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { getUserBadges } from '@/lib/badges'
-import { CheckCircle, Star, Package, MapPin, Calendar, Award, ArrowLeftRight } from 'lucide-react'
+import { CheckCircle, Star, Package, MapPin, Calendar, Award, ArrowLeftRight, UserX } from 'lucide-react'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -26,8 +27,8 @@ async function getProfile(id: string) {
           listings: {
             where: { status: 'ACTIVE' },
             include: {
-              seller: { select: { name: true, rehomeScore: true, icVerified: true } },
-              _count: { select: { bids: true } },
+              seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+              _count: { select: { bids: true, offers: true } },
             },
             orderBy: { createdAt: 'desc' },
             take: 12,
@@ -59,7 +60,18 @@ async function getProfile(id: string) {
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const profile = await getProfile(id)
-  if (!profile) notFound()
+  if (!profile) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-24 text-center">
+        <UserX className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+        <h1 className="text-2xl font-bold mb-2">Profil Tidak Dijumpai</h1>
+        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Pengguna ini tidak wujud atau telah dihapuskan.</p>
+        <Link href="/" className="inline-block px-5 py-2.5 rounded-xl font-medium text-white gradient-teal">
+          Balik ke Laman Utama
+        </Link>
+      </div>
+    )
+  }
 
   const scoreColor = profile.rehomeScore >= 70 ? 'var(--green)' : profile.rehomeScore >= 40 ? 'var(--yellow)' : 'var(--red)'
   const earnedBadges = getUserBadges({
@@ -231,9 +243,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {profile.listings.map(listing => (
-            <ListingCard key={listing.id} listing={listing as any} />
-          ))}
+          {profile.listings.map(listing =>
+            listing.mode === 'SWAP'
+              ? <SwapListingCard key={listing.id} listing={listing as any} />
+              : <ListingCard key={listing.id} listing={listing as any} />
+          )}
         </div>
       )}
     </div>

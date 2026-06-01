@@ -7,7 +7,8 @@ interface Listing {
   currentBid: number
   startingBid: number
   status: string
-  endsAt: string | Date
+  mode?: string
+  endsAt: string | Date | null
   viewCount?: number
   _count: { bids: number }
 }
@@ -31,8 +32,9 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export function SellerListingCard({ listing }: Props) {
-  const endDate = new Date(listing.endsAt)
-  const isActive = listing.status === 'ACTIVE' && endDate > new Date()
+  const isWaiting = listing.endsAt === null
+  const endDate = listing.endsAt ? new Date(listing.endsAt) : null
+  const isActive = listing.status === 'ACTIVE' && (isWaiting || (endDate !== null && endDate > new Date()))
 
   return (
     <Link href={`/listings/${listing.id}`}>
@@ -54,7 +56,12 @@ export function SellerListingCard({ listing }: Props) {
                   {listing.viewCount} tontonan
                 </span>
               )}
-              {isActive && (
+              {isWaiting ? (
+                <span className="flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                  <Clock className="w-3 h-3" />
+                  Menunggu bidder
+                </span>
+              ) : isActive && endDate && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {endDate.toLocaleDateString('ms-MY')}
