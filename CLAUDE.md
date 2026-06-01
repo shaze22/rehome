@@ -319,9 +319,17 @@ Buyer pilih "Penghantaran Pos"
 - **Webhook URL**: `https://rehome-eta.vercel.app/api/lalamove/webhook`
 - Register di: developers.lalamove.com → Webhooks → tambah URL → event `ORDER_STATUS_CHANGED`
 
+## SEO Meta/OG Tags (commit 9bd1647, 2026-06-01)
+- `layout.tsx` — metadata template `'%s | BALLOUT'`, OG default, Twitter card
+- `listings/[id]` — `generateMetadata`: title=listing title+price, OG image=foto listing
+- `listings/page.tsx`, `sell/page.tsx`, `profile/[id]` — page-specific metadata
+- `GET /api/og` — Edge ImageResponse 1200×630, branded, params: `title`, `subtitle`, `price`, `mode`
+  - mode=flash → teal · mode=swap → hijau
+- `/robots.txt` — allow public, disallow dashboard/api/admin/auth
+- `/sitemap.xml` — homepage + listings feed + sehingga 500 active listings
+
 ## Pending (Belum Selesai)
 - Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
 - Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
-- SEO meta/OG tags
 - Beta testing 100 users
-- Full public launch
+- Full public launch ✅ SEO dah siap
