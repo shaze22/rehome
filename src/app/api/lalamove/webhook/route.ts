@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 // Lalamove order status → our shippingStatus mapping
 const STATUS_MAP: Record<string, string | null> = {
-  ASSIGNING_DRIVER: null,        // driver belum ada, no update needed
-  ON_GOING: null,                // driver otw pickup
-  PICKED_UP: 'SHIPPED',         // penjual punye barang dah pickup
-  COMPLETED: 'DELIVERED',       // barang sampai
+  ASSIGNING_DRIVER: null,
+  ON_GOING: null,
+  PICKED_UP: 'SHIPPED',
+  COMPLETED: 'DELIVERED',
   CANCELLED: null,
   EXPIRED: null,
 }
@@ -16,14 +16,24 @@ function verifySignature(rawBody: string, signature: string): boolean {
   const secret = process.env.LALAMOVE_API_SECRET
   if (!secret) return false
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  } catch {
+    return false
+  }
+}
+
+// Lalamove sends GET to verify URL reachability during registration
+export async function GET() {
+  return NextResponse.json({ status: 'ok' })
 }
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
   const signature = request.headers.get('x-lalamove-signature') ?? ''
 
-  if (!verifySignature(rawBody, signature)) {
+  // Allow empty-signature verification pings from Lalamove during webhook registration
+  if (signature && !verifySignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Signature tidak sah.' }, { status: 401 })
   }
 
