@@ -13,14 +13,15 @@ export default function OfflinePage() {
           Semak sambungan internet anda dan cuba lagi. Halaman yang pernah dilawati tersedia secara offline.
         </p>
         <div className="flex flex-col gap-3">
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal"
+          {/* Use a link to self — forces SW to retry the navigation */}
+          <a
+            href="/"
+            className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal inline-block"
           >
             Cuba Lagi
-          </button>
-          <Link href="/" className="text-sm" style={{ color: 'var(--teal)' }}>
-            Balik ke Laman Utama
+          </a>
+          <Link href="/listings" className="text-sm" style={{ color: 'var(--teal)' }}>
+            Semak Lelongan
           </Link>
         </div>
       </div>
