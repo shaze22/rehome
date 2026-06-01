@@ -48,7 +48,7 @@ Had mutlak     → auction tidak boleh melebihi 30 minit dari bid pertama
 6. **swapAcceptCash: false** — tolak CASH-only offer (tapi HYBRID masih ok)
 7. **swapOpenOffers: true** — terima semua jenis tawaran walaupun kategori berbeza
 
-## Swap Escrow Flow (Phase 3)
+## Swap Escrow Flow
 ```
 Offer ACCEPTED
   → listing.status = SOLD
@@ -63,19 +63,26 @@ Buyer hantar  → buyerItemShipped = true + buyerPhotos (SWAP/HYBRID sahaja)
 Buyer sahkan terima  → buyerItemReceived = true
 Seller sahkan terima → sellerItemReceived = true (SWAP/HYBRID sahaja)
   → bila semua terima → escrowStatus = COMPLETED
-  → successfulSwaps++ untuk seller dan buyer
+  → SwapScore dikira semula, successfulSwaps++, swapVerified check
 
-Pertikaian → escrowStatus = DISPUTED (admin review)
+Pertikaian → escrowStatus = DISPUTED → email admin → admin resolve/buka semula
+```
+
+## SwapScore Formula
+```typescript
+swapScore = Math.min(4.0 + successfulSwaps * 0.1, 5.0)
+// 1 swap → 4.1 | 5 swaps → 4.5 (Verified) | 10 swaps → 5.0
+swapVerified = successfulSwaps >= 5
 ```
 
 ## Swap Bid Schema (Listing)
 ```prisma
 mode               ListingMode  // FLASH | SWAP
-swapWantedItem     String?      // "Laptop MacBook"
-swapWantedCategory String?      // "ELECTRONICS"
-swapOpenOffers     Boolean      // terima apa-apa sahaja
-swapAcceptCash     Boolean      // terima wang tunai sahaja
-swapMinCashTopup   Float?       // min tambahan wang jika HYBRID
+swapWantedItem     String?
+swapWantedCategory String?
+swapOpenOffers     Boolean
+swapAcceptCash     Boolean
+swapMinCashTopup   Float?
 swapValueEstimate  Float?       // AI-generated fair value
 endsAt             DateTime?    // Flash: null sehingga bid | Swap: now+72h
 status             // ACTIVE → SOLD (bila offer diterima)
@@ -91,7 +98,7 @@ offeredItemValue  Float?
 totalOfferValue   Float?
 status            OfferStatus // PENDING | COUNTERED | ACCEPTED | REJECTED | EXPIRED
 counterRounds     Int         // max 3
-parentOfferId     String?     // link ke offer sebelum (counter chain)
+parentOfferId     String?
 ```
 
 ## Swap Escrow Schema (SwapTransaction)
@@ -101,47 +108,80 @@ acceptedOfferId    String @unique
 sellerId / buyerId String
 offerType          OfferType
 escrowStatus       EscrowStatus // PENDING | BOTH_SHIPPED | COMPLETED | DISPUTED
-sellerItemShipped  Boolean      // seller dah hantar
+sellerItemShipped  Boolean
 buyerItemShipped   Boolean?     // null = CASH (tidak perlu)
 sellerItemReceived Boolean
 buyerItemReceived  Boolean
-sellerPhotos       String[]     // foto sebelum hantar
-buyerPhotos        String[]
-sellerTracking     String?      // nombor tracking
-buyerTracking      String?
-sellerCourier      String?
-buyerCourier       String?
+sellerPhotos / buyerPhotos  String[]
+sellerTracking / buyerTracking String?
+sellerCourier / buyerCourier   String?
 disputeReason      String?
+resolvedAt         DateTime?
+```
+
+## Enums
+```prisma
+enum ListingMode  { FLASH  SWAP }
+enum OfferType    { CASH   SWAP   HYBRID }
+enum OfferStatus  { PENDING  COUNTERED  ACCEPTED  REJECTED  EXPIRED }
+enum EscrowStatus { PENDING  BOTH_SHIPPED  COMPLETED  DISPUTED }
 ```
 
 ## API Routes
 
 ### Flash Bid
 - `POST /api/bid` — place bid, extends timer
-- `GET /api/listings/[id]/delivery-quote` — calculate courier cost
+- `GET  /api/listings/[id]/delivery-quote` — calculate courier cost
 - `POST /api/listings/[id]/expire` — expire auction
 - `POST /api/payment/checkout` — Stripe checkout
 - `POST /api/payment/webhook` — Stripe webhook
-- `GET /api/cron/expire-auctions` — cron job (CRON_SECRET required)
+- `GET  /api/cron/expire-auctions` — cron job (CRON_SECRET=rehome-cron-2026)
 
 ### Swap Bid — Offers
-- `POST /api/offers` — hantar tawaran (CASH/SWAP/HYBRID)
-- `GET /api/offers?listingId=xxx` — seller: semua offers; buyer: tambah `&myOffer=true`
-- `PUT /api/offers/[id]` — `{ action: 'accept' | 'reject' | 'counter', ...fields }`
+- `POST /api/offers` — hantar tawaran + email seller
+- `GET  /api/offers?listingId=xxx` — seller: semua; buyer: +`&myOffer=true`
+- `PUT  /api/offers/[id]` — `{ action: 'accept'|'reject'|'counter', ...fields }` + email
 
-### Swap Bid — Escrow (Phase 3)
-- `GET /api/swap-transactions?listingId=xxx` — fetch transaksi (seller atau buyer sahaja)
-- `POST /api/swap-transactions/[id]/ship` — `{ photos[], trackingNumber?, courier? }`
-- `POST /api/swap-transactions/[id]/receive` — `{ conditionOk: bool, notes? }`
-- `POST /api/swap-transactions/[id]/dispute` — `{ reason, evidence[]? }`
+### Swap Bid — Escrow
+- `GET  /api/swap-transactions?listingId=xxx` — fetch tx (seller/buyer sahaja)
+- `POST /api/swap-transactions/[id]/ship` — `{ photos[], trackingNumber?, courier? }` + email
+- `POST /api/swap-transactions/[id]/receive` — `{ conditionOk }` → COMPLETED + SwapScore + email
+- `POST /api/swap-transactions/[id]/dispute` — `{ reason }` → DISPUTED + email admin
 
 ### Listings
-- `POST /api/listings` — cipta listing (Flash atau Swap, ikut field `mode`)
-- `GET /api/listings?mode=flash|swap` — fetch dengan filter
+- `POST /api/listings` — cipta listing (Flash atau Swap)
+- `GET  /api/listings?mode=flash|swap` — fetch dengan filter
 
 ### Gemini AI
 - `POST /api/gemini/price` — AI pricing suggestion
 - `POST /api/gemini/analyze` — analyze foto → title, description, conditionScore
+- `POST /api/gemini/swap-suggest` — AI suggest swap items → suggestedItems[], suggestedCategories[], reasoning
+
+### Admin
+- `POST /api/admin/verify-ic` — verify IC pengguna
+- `POST /api/admin/resolve-dispute` — `{ transactionId, resolution: 'complete'|'cancel' }`
+
+## Notifications (Resend — `src/lib/resend.ts`)
+| Trigger | Fungsi | Penerima |
+|---------|--------|---------|
+| Offer masuk | `sendSwapOfferReceivedEmail` | Seller |
+| Offer di-counter | `sendSwapOfferCounteredEmail` | Pihak lain |
+| Offer diterima | `sendSwapOfferAcceptedEmail` | Buyer |
+| Barang dihantar | `sendSwapItemShippedEmail` | Penerima |
+| Swap selesai | `sendSwapCompletedEmail` | Seller + Buyer |
+| Pertikaian difailkan | `sendSwapDisputeEmail` | Admin |
+
+## Gemini AI (`src/lib/gemini.ts`)
+```typescript
+getAIPriceSuggestion({ category, condition, originalPrice, state })
+→ { low, fair, high, suggested_min, suggested_max, reasoning }
+
+analyzeItemPhotos(photoUrls, category)
+→ { conditionScore, title, description, isPhotoValid, invalidReason }
+
+getSwapSuggestions({ title, category, condition, estimatedValue })
+→ { suggestedItems[], suggestedCategories[], valueSuggestion, reasoning, confidence }
+```
 
 ## Courier Rates (Hardcoded + 30% Markup)
 | Zon           | Base  | Dengan Markup |
@@ -155,71 +195,43 @@ disputeReason      String?
 src/
   app/
     api/
-      bid/                   — Flash bidding engine + timer logic
-      offers/                — Swap offer CRUD + counter flow
-      swap-transactions/     — Escrow: GET, ship, receive, dispute
-      gemini/                — price/ + analyze/
-      listings/              — Listing CRUD + delivery quote
-      payment/               — Stripe checkout + webhook
-      transactions/          — Flash: confirm receipt + ship
-      cron/                  — Expire auctions
-    listings/[id]/           — Listing detail (Flash + Swap + Escrow UI)
-    sell/                    — Create listing (mode toggle)
-    dashboard/               — Seller/buyer dashboard
+      bid/                        — Flash bidding engine + timer
+      offers/                     — Swap offer CRUD + counter + email
+      swap-transactions/          — Escrow: GET, ship, receive, dispute
+      gemini/price|analyze|swap-suggest — AI endpoints
+      listings/                   — Listing CRUD + delivery quote
+      payment/                    — Stripe checkout + webhook
+      transactions/               — Flash: confirm receipt + ship
+      admin/verify-ic|resolve-dispute
+      cron/                       — Expire auctions
+    listings/[id]/                — Listing detail (Flash + Swap + Escrow)
+    sell/                         — Create listing (mode toggle + AI swap suggest)
+    dashboard/                    — Seller/buyer dashboard
+    profile/[id]/                 — Profil + swap history + SwapScore + badges
+    admin/                        — IC verify + disputed swaps
   lib/
-    gemini.ts                — geminiGenerate(), getAIPriceSuggestion(), analyzeItemPhotos()
-    delivery.ts              — Courier rate calculator
-    co2.ts                   — Carbon savings calculator
-    badges.ts                — Impact badge logic
-    prisma.ts                — Prisma client
-    stripe.ts                — Stripe helpers
-    resend.ts                — Email helpers
-    supabase/                — Server + client Supabase
+    gemini.ts   — getAIPriceSuggestion(), analyzeItemPhotos(), getSwapSuggestions()
+    resend.ts   — Flash + Swap email notifications (6 swap functions)
+    delivery.ts — Courier rate calculator
+    co2.ts      — Carbon savings calculator
+    badges.ts   — Impact badge logic
+    prisma.ts   — Prisma client
+    stripe.ts   — Stripe helpers
+    supabase/   — Server + client Supabase
   components/
-    sell/SellForm.tsx             — Mode toggle + swap fields
-    listings/ListingCard.tsx      — Flash listing card
-    listings/SwapListingCard.tsx  — Swap listing card (hijau, nilai + dicari)
-    listings/ListingDetailClient.tsx — Detail page (Flash + Swap + Escrow)
-    listings/OfferModal.tsx       — Modal buat tawaran (3 tab jenis)
-    listings/OwnerOffersPanel.tsx — Dashboard seller: semua offer, accept/reject/counter
-    listings/SwapEscrowPanel.tsx  — Escrow progress tracker + ship/receive/dispute actions
+    sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest
+    listings/ListingCard.tsx       — Flash card
+    listings/SwapListingCard.tsx   — Swap card (hijau, nilai, dicari, offer count)
+    listings/ListingDetailClient.tsx — Detail (Flash + Swap + Escrow)
+    listings/OfferModal.tsx        — 3-tab offer form
+    listings/OwnerOffersPanel.tsx  — Accept/reject/counter + Match% score
+    listings/SwapEscrowPanel.tsx   — Escrow progress + ship/receive/dispute
 proxy.ts              — Auth middleware (bukan middleware.ts!)
 ```
 
-## Gemini AI
-```typescript
-import { geminiGenerate, getAIPriceSuggestion, analyzeItemPhotos } from '@/lib/gemini'
-// Model: gemini-2.5-flash
-// getAIPriceSuggestion({ category, condition, originalPrice, state })
-// → { low, fair, high, suggested_min, suggested_max, reasoning }
-// analyzeItemPhotos(photoUrls, category)
-// → { conditionScore, title, description, isPhotoValid, invalidReason }
-```
-
-## Database Key Fields
-```prisma
-Listing {
-  mode       ListingMode   // FLASH (default) | SWAP
-  endsAt     DateTime?     // Flash: null sehingga bid | Swap: now+72h
-  firstBidAt DateTime?     // Flash only
-  status     ListingStatus // ACTIVE | ENDED | SOLD | CANCELLED
-  // SOLD = swap offer diterima (escrow sedang berjalan) ATAU Flash menang + bayar
-}
-
-enum ListingMode  { FLASH  SWAP }
-enum OfferType    { CASH   SWAP   HYBRID }
-enum OfferStatus  { PENDING  COUNTERED  ACCEPTED  REJECTED  EXPIRED }
-enum EscrowStatus { PENDING  BOTH_SHIPPED  COMPLETED  DISPUTED }
-```
-
-## Cara Cipta Listing (API)
-```json
-// Flash
-{ "mode": "FLASH", "title": "...", "startingBid": 50, ... }
-
-// Swap
-{ "mode": "SWAP", "title": "...", "swapWantedItem": "Laptop", "swapWantedCategory": "ELECTRONICS", "swapAcceptCash": true, "swapOpenOffers": false, ... }
-```
+## Migrations
+- `20260601032951_add_swap_bid_feature` — Offer model, swap fields, ListingMode/OfferType/OfferStatus
+- `20260601041150_add_swap_transaction_escrow` — SwapTransaction, EscrowStatus
 
 ## Environment Variables
 ```
@@ -232,6 +244,7 @@ RESEND_API_KEY
 GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL
 CRON_SECRET=rehome-cron-2026
+ADMIN_EMAIL=syedshazni@todak.com
 ```
 
 ## Deployment
@@ -240,10 +253,10 @@ vercel deploy --prod --force --scope syedshazni-7682s-projects
 ```
 Live: https://rehome-eta.vercel.app
 
-## Pending (Belum Buat)
-- AI Value Matcher suggestions (AML-001 to AML-003) — Phase 4
-- Swap Score (swapScore field) auto-update formula — Phase 4 (successfulSwaps dah update)
-- Dispute resolution admin dashboard — Phase 4
-- Winner email bila Flash auction tamat (cron ada, email belum)
+## Pending (Phase 5 — Beta + Polish)
+- Beta testing 100 users
 - Real EasyParcel API (sekarang hardcoded base rates)
-- Self-pickup arrangement flow selepas menang (Flash)
+- Flash: winner email via cron (cron ada, email belum)
+- Flash: self-pickup arrangement flow selepas menang
+- Performance optimization (swap feed <2s target)
+- Full public launch
