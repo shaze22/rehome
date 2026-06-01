@@ -250,9 +250,9 @@ ADMIN_EMAIL=syedshazni@todak.com
 EASYPARCEL_API_KEY=          ← kosong = guna hardcoded fallback; isi dari portal.easyparcel.com
 LALAMOVE_API_KEY=            ← dari developers.lalamove.com
 LALAMOVE_API_SECRET=
-LALAMOVE_SANDBOX=true        ← tukar ke false untuk production
-UPSTASH_REDIS_REST_URL=      ← dari console.upstash.com (Redis database → REST API)
-UPSTASH_REDIS_REST_TOKEN=    ← dari console.upstash.com (Redis database → REST API)
+LALAMOVE_SANDBOX=false       ← sudah set di Vercel
+UPSTASH_REDIS_REST_URL=      ← ✅ sudah set di Vercel (ballout-ratelimit, Singapore)
+UPSTASH_REDIS_REST_TOKEN=    ← ✅ sudah set di Vercel
 ```
 
 ## Deployment
@@ -369,14 +369,17 @@ Buyer pilih "Penghantaran Pos"
 ## Cron Schedule (vercel.json)
 | Route | Schedule | Fungsi |
 |-------|----------|--------|
-| `/api/cron/expire-auctions` | Setiap minit | Expire Flash auctions |
+| `/api/cron/expire-auctions` | 0 0 * * * (daily) | Expire Flash auctions |
 | `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
 
+## Last Deployed
+2026-06-01, commit `65066df` → redeploy dengan Upstash env vars aktif
+Live: https://rehome-eta.vercel.app
+
 ## Pending (Belum Selesai)
-- Set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` di Vercel (dari console.upstash.com)
-- Set `EASYPARCEL_API_KEY` di Vercel untuk kadar live
+- Set `EASYPARCEL_API_KEY` di Vercel untuk kadar courier live (portal.easyparcel.com)
 - Lalamove API key perlu diaktifkan oleh Lalamove (502 error semasa test)
 - Set `NEXT_PUBLIC_SENTRY_DSN` di Vercel (daftar di sentry.io — free tier)
 - Enable Vercel Analytics di dashboard Vercel
-- Verify Supabase RLS policies untuk semua tables di dashboard
+- Verify Supabase RLS policies untuk semua tables di Supabase dashboard
 - Beta testing 100 users → LAUNCH 🚀
