@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapOfferReceivedEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
@@ -92,12 +93,18 @@ export async function POST(request: NextRequest) {
     include: { bidder: { select: { name: true, rehomeScore: true, swapScore: true, successfulSwaps: true } } },
   })
 
-  // Email seller — awaited so it doesn't drop on Vercel serverless shutdown
+  // Email + push seller
   try {
     const seller = await prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true, name: true } })
     if (seller?.email) {
       await sendSwapOfferReceivedEmail(seller.email, seller.name ?? 'Pemilik', listing.title ?? data.listingId, data.offerType, data.listingId)
     }
+    sendPushToUser(listing.sellerId, {
+      title: '🔄 Tawaran baru diterima!',
+      body: listing.title ?? 'Semak tawaran anda',
+      url: `/listings/${data.listingId}`,
+      tag: `offer-${data.listingId}`,
+    }).catch(() => {})
   } catch {}
 
   return NextResponse.json({ offer }, { status: 201 })

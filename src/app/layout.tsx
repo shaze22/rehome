@@ -4,6 +4,9 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Analytics } from '@vercel/analytics/next'
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
+import { PWASetup } from '@/components/pwa/PWASetup'
+import { createClient } from '@/lib/supabase/server'
+import { PushPermission } from '@/components/pwa/PushPermission'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rehome-eta.vercel.app'
 const SITE_NAME = 'BALLOUT'
@@ -20,6 +23,13 @@ export const metadata: Metadata = {
   authors: [{ name: 'BALLOUT' }],
   creator: 'BALLOUT',
   robots: { index: true, follow: true },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'BALLOUT',
+  },
+  formatDetection: { telephone: false },
   openGraph: {
     type: 'website',
     locale: 'ms_MY',
@@ -37,15 +47,25 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <html lang="ms" className="h-full">
+      <head>
+        <link rel="apple-touch-icon" href="/api/pwa-icon?size=192" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className="min-h-full flex flex-col" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
         <FeedbackWidget />
         <Analytics />
+        <PWASetup />
+        {user && <PushPermission userId={user.id} />}
       </body>
     </html>
   )

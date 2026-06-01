@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendOutbidEmail, sendWatchlistAlertEmail } from '@/lib/resend'
+import { sendPushToUser } from '@/lib/push'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
@@ -144,8 +145,15 @@ export async function POST(request: NextRequest) {
       if (prevBidder?.email) {
         await sendOutbidEmail(prevBidder.email, prevBidder.name ?? 'Pengguna', listing.title, amount, listingId, newEndsAt)
       }
+      // Push notification
+      sendPushToUser(listing.currentBidder, {
+        title: '⚡ Tawaran anda dikalahkan!',
+        body: `${listing.title} — tawaran semasa RM${amount}`,
+        url: `/listings/${listingId}`,
+        tag: `outbid-${listingId}`,
+      }).catch(() => {})
     } catch {
-      // Email failure shouldn't fail the bid
+      // Email/push failure shouldn't fail the bid
     }
   }
 

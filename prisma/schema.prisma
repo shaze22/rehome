@@ -23,9 +23,10 @@ model User {
   swapVerified    Boolean     @default(false)
   referralCode    String?     @unique
   creditBalance   Float       @default(0)
-  referrals       Referral[]  @relation("ReferrerReferrals")
-  referredBy      Referral?   @relation("ReferredUser")
-  listings        Listing[]
+  referrals         Referral[]         @relation("ReferrerReferrals")
+  referredBy        Referral?          @relation("ReferredUser")
+  pushSubscriptions PushSubscription[]
+  listings          Listing[]
   bids            Bid[]
   sentMessages    Message[]   @relation("MessageSender")
   reviews         Review[]    @relation("ReviewAuthor")
@@ -292,6 +293,18 @@ enum OfferStatus {
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Referral {
