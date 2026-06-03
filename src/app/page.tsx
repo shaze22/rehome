@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { WasteCounter } from '@/components/home/WasteCounter'
-import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
@@ -349,8 +348,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <HowItWorks />
     </div>
   )
 }
