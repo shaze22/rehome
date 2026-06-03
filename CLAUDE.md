@@ -408,12 +408,9 @@ Buyer selects "Delivery"
 - Webhook auto-books EasyParcel on `checkout.session.completed` + stores `easyparcelOrderId`
 
 ## Lalamove Integration
-- `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→coordinates, serviceType by weight
-  - < 3kg → MOTORCYCLE · < 25kg → CAR · ≥ 25kg → VAN
-- EasyParcel + Lalamove run **in parallel** (Promise.all), combined + sorted cheapest first
-- **Webhook URL**: `https://kassim.app/api/lalamove/webhook`
-- `PICKED_UP` → `shippingStatus=SHIPPED`
-- `COMPLETED` → `shippingStatus=DELIVERED` + escrow released + `rehomeScore+5`
+- **REMOVED** (2026-06-03) — EasyParcel sudah cukup untuk parcel delivery
+- `lalamove.ts` + `/api/lalamove/webhook` dah delete
+- Kalau nak same-day delivery, boleh tambah balik kemudian
 
 ## SEO
 - `layout.tsx` — metadata template `'%s | KASSIM'`, OG default, Twitter card
@@ -546,7 +543,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `a576343` — DeliveryCheckout UI: postcode → courier picker → address → checkout
+2026-06-03, commit `(pending)` — Remove Lalamove, EasyParcel-only delivery
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)

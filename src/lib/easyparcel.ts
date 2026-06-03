@@ -1,5 +1,4 @@
 import { calculateDeliveryQuote } from './delivery'
-import { getLalamoveQuote } from './lalamove'
 
 const EP_BASE = 'https://api.easyparcel.com'
 const MARKUP = 0.30
@@ -132,33 +131,14 @@ export async function getDeliveryQuote(
   buyerPostcode?: string,
 ): Promise<DeliveryQuoteResult> {
   const fromPostcode = STATE_POSTCODE[sellerState] ?? '50000'
-  const toPostcode = buyerPostcode ?? STATE_POSTCODE[buyerState] ?? '50000'
+  const toPostcode = buyerPostcode ?? (buyerState ? STATE_POSTCODE[buyerState] : null) ?? '50000'
 
-  const [epRates, lalamoveRate] = await Promise.all([
-    fetchEasyParcelRates(fromPostcode, toPostcode, weightKg),
-    getLalamoveQuote(sellerState, buyerState, weightKg),
-  ])
-
-  const allCouriers: CourierRate[] = [...epRates]
-
-  if (lalamoveRate) {
-    const base = lalamoveRate.price
-    const markup = Math.round(base * MARKUP * 100) / 100
-    allCouriers.push({
-      id: 'lalamove_sameday',
-      courierName: lalamoveRate.courierName,
-      serviceName: lalamoveRate.serviceName,
-      basePrice: base,
-      chargedPrice: Math.round((base + markup) * 100) / 100,
-      markup,
-    })
-  }
+  const allCouriers = await fetchEasyParcelRates(fromPostcode, toPostcode, weightKg)
 
   allCouriers.sort((a, b) => a.chargedPrice - b.chargedPrice)
 
   if (allCouriers.length > 0) {
-    const source = epRates.length > 0 ? 'easyparcel' : 'lalamove'
-    return { cheapest: allCouriers[0].chargedPrice, couriers: allCouriers, source }
+    return { cheapest: allCouriers[0].chargedPrice, couriers: allCouriers, source: 'easyparcel' as const }
   }
 
   // Fallback: hardcoded estimate + markup
