@@ -281,6 +281,7 @@ next.config.ts        — withNextIntl() wrapper + image patterns
 - `20260601130000_add_featured_listing`
 - `20260601140000_add_referral_system`
 - `20260601150000_add_push_subscriptions`
+- `add_featured_scheduling` (2026-06-03, Supabase MCP) — Listing.featuredAt + Listing.featuredUntil
 
 ## Environment Variables
 ```
@@ -415,8 +416,12 @@ Buyer selects "Delivery"
 ## Cron Schedule (vercel.json)
 | Route | Schedule | Function |
 |-------|----------|---------|
-| `/api/cron/expire-auctions` | 0 0 * * * (daily) | Expire Flash auctions |
+| `/api/cron/expire-auctions` | 0 0 * * * (daily midnight) | Expire Flash auctions |
 | `/api/cron/auto-release-swaps` | 0 18 * * * (2am MYT) | Auto-release stuck escrow + reminder + expire stale offers |
+| `/api/cron/retry-emails` | 0 6 * * * (daily 6am) | Process Upstash Redis email retry queue (max 3 retries) |
+| `/api/cron/expire-featured` | 0 12 * * * (daily noon) | Auto-expire isFeatured listings past featuredUntil |
+
+**Note:** Hobby plan = daily crons only. Upgrade to Pro for sub-daily schedules.
 
 ## Referral Program
 - `User.referralCode String? @unique`, `User.creditBalance Float @default(0)`, model `Referral`
@@ -454,14 +459,18 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 ## All Routes
 | Route | Purpose |
 |-------|---------|
+| `/how-it-works` | Flash vs Swap guide + 8 FAQ accordion |
 | `/jual` | Seller acquisition landing page + fee calculator (English) |
 | `/r/[code]` | Referral landing page (English) |
 | `/offline` | PWA offline fallback |
+| `/api/time` | Edge: server timestamp for client clock sync |
 | `/api/referral` | GET referral stats |
 | `/api/referral/set-cookie` | Set kassim_ref cookie + redirect |
 | `/api/push/subscribe` | POST/DELETE push subscription |
 | `/api/pwa-icon` | Edge: generate PWA icon PNG |
-| `/api/admin/feature-listing` | Toggle isFeatured (admin) |
+| `/api/admin/feature-listing` | Toggle isFeatured + set featuredAt/featuredUntil (admin) |
+| `/api/cron/retry-emails` | Process email retry queue from Upstash Redis |
+| `/api/cron/expire-featured` | Auto-expire isFeatured listings |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
@@ -471,9 +480,38 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 - `src/instrumentation.ts` — Next.js App Router hook: loads server/edge Sentry on `register()`
 - **`NEXT_PUBLIC_SENTRY_DSN`** set in Vercel ✅ (2026-06-01)
 
+## Email Queue (`src/lib/email-queue.ts`)
+- `queueEmail(to, subject, html)` — push to Upstash Redis list `kassim:email_queue`
+- `processEmailQueue()` — pop up to 50 items, send via Resend, retry up to 3x on failure
+- All email functions in `resend.ts` use `safeSend()` wrapper — auto-queues on Resend failure
+- Cron: `/api/cron/retry-emails` runs daily 6am
+
+## Featured Listing Scheduling
+- `Listing.featuredAt DateTime?` — timestamp when featured was toggled ON
+- `Listing.featuredUntil DateTime?` — auto-set to next Friday 8pm MYT when featured
+- Admin toggle: ON → sets both fields, OFF → clears both fields + isFeatured=false
+- AdminPanel `FeaturedListingRow` shows expiry date in amber
+- Cron: `/api/cron/expire-featured` auto-expires past `featuredUntil` daily at noon
+
+## Dashboard Seller Analytics ("My Performance")
+Shown when user has at least 1 listing:
+- Total Views (sum viewCount across all listings)
+- Watchlisted (count Watchlist records on user's listings)
+- Total Earnings (sum Transaction.sellerPayout, RELEASED)
+- Active / Sold count
+- Avg Rating (from Review table)
+
 ## Last Deployed
-2026-06-01, commit `71b2e30` — Rebrand KASSIM + English UI + next-intl i18n foundation
+2026-06-03, commit `123098b` — Fasa 4: email queue, featured scheduling, seller analytics
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+## Completed Fasa (2026-06-03 session)
+| Fasa | What |
+|------|------|
+| 1 | USP copywriting, trust badges, WhatsApp seller deep link, urgency copy |
+| 2 | Live stats bar, CO2 impact card, HowItWorks redesign (Flash vs Swap), /how-it-works FAQ |
+| 3 | Server time sync (/api/time), timer urgency levels (orange→red→pulse), ENDING SOON card, realtime fallback |
+| 4 | Email retry queue (Upstash), featured scheduling (Friday 8pm MYT), seller analytics dashboard |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
@@ -484,4 +522,5 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - Lalamove API key needs activation by Lalamove (502 error)
 - Enable Vercel Analytics in Vercel dashboard
 - Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
+- Fasa 5 remaining: T&C + Privacy pages, Dark Mode toggle, Audit Log, Sentry user context
 - Beta testing 100 users → LAUNCH 🚀
