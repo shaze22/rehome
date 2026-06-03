@@ -574,7 +574,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-04, commit `141be3c` — 19 UX improvements (Fasa 9). Auto-deploy via GitHub push.
+2026-06-04, commit `144457f` — /how-it-works visual infographic + branding fix. Auto-deploy via GitHub push.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa
@@ -598,6 +598,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **7** | **13 UI/UX improvements:** consumer copy, CTA above fold, search bar in hero, register 3 fields, footer logo, ThemeToggle system pref, feedback icon-only, Ending Soon section, card placeholders, Why Sell section, testimonials BM+stars, WhatsApp support button. |
 | **8** | **Branding cleanup:** em dashes replaced, Ballout→KASSIM Score, login logo fix, Flash RM0 reset, Supabase Auth URL → kassim.app. |
 | **9** | **19 UX overhaul (2026-06-04):** Simplified hero (no rule cards), homepage reorder (Flash→Swap→Trust), Navbar profile dropdown + bell, BottomNav mobile (Home/Browse/Sell/Saved/Account), max 2 card image overlays + condition label in body, WhatsApp uses seller.phone, breadcrumb history.back(), DeliveryCheckout 4-step indicator, mobile filter slide-up drawer, KASSIM Score tooltip, new user onboarding card (3 steps), password strength bars, LanguageSwitcher removed from navbar. |
+| **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid 8-step process diagram (horizontal desktop/vertical mobile), timer mechanics bar diagram, real bid scenario with payout breakdown, Swap Bid 8-step diagram, 3 offer type cards (Cash/Swap Bid/Hybrid), real swap scenario with counter-offer. KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
