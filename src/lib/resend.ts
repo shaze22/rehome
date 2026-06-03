@@ -100,6 +100,29 @@ export async function sendPaymentReceivedEmail(to: string, name: string, listing
   ))
 }
 
+export async function sendShipNowEmail(
+  to: string, sellerName: string, listingTitle: string, listingId: string,
+  courierName: string | null, buyerPostcode: string | null, easyparcelOrderId: string | null,
+) {
+  const deliveryBlock = courierName
+    ? `<div style="background:#1e293b;padding:16px;border-radius:8px;margin:16px 0">
+        <p style="color:#94a3b8;font-size:12px;margin:0 0 8px">Delivery Details</p>
+        ${courierName ? `<p style="margin:4px 0"><span style="color:#94a3b8">Courier:</span> <strong>${courierName}</strong></p>` : ''}
+        ${buyerPostcode ? `<p style="margin:4px 0"><span style="color:#94a3b8">Buyer Postcode:</span> <strong>${buyerPostcode}</strong></p>` : ''}
+        ${easyparcelOrderId ? `<p style="margin:4px 0"><span style="color:#94a3b8">EasyParcel Order ID:</span> <strong style="color:#14b8a6;font-family:monospace">${easyparcelOrderId}</strong></p>` : ''}
+       </div>`
+    : '<p>Buyer has chosen self pick-up. Arrange with them via the chat on the listing page.</p>'
+
+  await safeSend(to, `📦 Ship your item — ${listingTitle}`, baseTemplate(
+    '📦 Payment Confirmed — Ship Now!',
+    `<p>Hi ${sellerName},</p>
+     <p>Your item "<strong>${listingTitle}</strong>" has been paid for. Please ship it as soon as possible.</p>
+     ${deliveryBlock}
+     <p style="color:#f59e0b;font-size:13px">⚠️ Please ship within 3 working days to keep your seller score high.</p>`,
+    'View Listing', `${BASE}/listings/${listingId}`
+  ))
+}
+
 // ── Swap Bid ──────────────────────────────────────────────────────
 
 export async function sendSwapOfferReceivedEmail(to: string, sellerName: string, listingTitle: string, offerType: string, listingId: string) {

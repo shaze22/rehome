@@ -1,1 +1,27 @@
-{}
+{
+  "nav": { "browse": "Jelajahi", "sell": "Jual", "impact": "Dampak", "dashboard": "Dasbor", "saved": "Tersimpan", "signIn": "Masuk", "register": "Daftar", "signOut": "Keluar" },
+  "home": {
+    "badge": "Platform Lelang Barang Bekas #1 Malaysia",
+    "hero": { "title": "Jual Barang Lama.", "titleHighlight": "Dapat Uang Hari Ini.", "subtitle": "Lelang progresif 30 menit. Tukar barang. Escrow aman.", "ctaSell": "Mulai Jual", "ctaBrowse": "Jelajahi Barang" },
+    "stats": { "itemsSold": "Barang Terjual", "co2Saved": "CO₂ Tersimpan", "swapsCompleted": "Penukaran Selesai", "avgSellTime": "Rata-rata Waktu Jual" },
+    "trust": { "title": "Mengapa KASSIM Aman?", "subtitle": "Dibangun untuk melindungi pembeli dan penjual di seluruh Malaysia" },
+    "flash": { "title": "Flash Auctions ⚡", "subtitle": "Tawar sekarang, menang dalam 30 menit", "viewAll": "Lihat Semua", "empty": "Belum ada lelang aktif", "startSelling": "Mulai Jual" },
+    "swap": { "title": "Tukar Barang 🔄", "subtitle": "Tukar barang bekas tanpa uang tunai", "viewAll": "Lihat Semua", "empty": "Belum ada penawaran tukar", "listItem": "Daftarkan Barangmu" },
+    "trending": { "title": "Trending Minggu Ini 🔥", "subtitle": "Barang paling populer 7 hari terakhir" },
+    "megaAuction": { "title": "⚡ Lelang Mega Jumat", "subtitle": "Listing pilihan setiap Jumat malam", "startsIn": "Dimulai dalam", "tonight": "MALAM INI!" },
+    "recentlyViewed": "Baru Dilihat",
+    "testimonials": { "title": "Kata Pengguna Kami", "subtitle": "Pengalaman nyata dari komunitas kami" }
+  },
+  "listing": { "currentBid": "Tawaran saat ini", "timeLeft": "Sisa waktu", "waitingFirstBid": "Menunggu tawaran pertama", "waitingDays": "Menunggu {days} hari", "noTimeLimit": "Tidak ada batas waktu", "ended": "Berakhir", "hot": "🔥 Populer", "wants": "Ingin:", "cashOk": "Tunai ok", "estValue": "Estimasi nilai", "openToAll": "Terbuka untuk semua penawaran", "viewDetails": "Lihat detail", "firstBid": "Tawaran Pertama — Bisa Menang Gratis!", "placeBid": "Tawar RM {amount}", "placingBid": "Memasang tawaran...", "bidPlaced": "✓ Tawaran Dipasang!", "gettingRate": "Mendapatkan tarif...", "chooseDelivery": "Pilih pengiriman dulu", "submitOffer": "Kirim Penawaran", "aiPriceSuggestion": "Saran Harga AI", "conditionScore": "Skor kondisi barang", "profile": "Profil", "score": "Skor {score}", "repliesTime": "Balas < 24 jam", "activeListings": "listing aktif" },
+  "errors": { "signInRequired": "Harap masuk untuk menawar.", "ownListing": "Anda tidak bisa menawar listing sendiri.", "auctionEnded": "Lelang telah berakhir.", "bidTooLow": "Tawaran harus lebih tinggi dari RM {amount}.", "listingNotFound": "Listing tidak ditemukan.", "unauthorized": "Tidak diizinkan.", "invalidData": "Data tidak valid." },
+  "sell": { "title": "Jual Barang", "subtitle": "Isi detail barangmu. AI akan menyarankan harga awal yang wajar.", "flashAuction": "Flash Auction", "swap": "Tukar", "conditionScore": "Skor Kondisi" },
+  "dashboard": { "myListings": "Listing Saya", "myBids": "Tawaran Saya", "orders": "Pesanan", "referralProgram": "Program Referral", "startSelling": "Mulai Jual" },
+  "referral": { "availableCredit": "Kredit tersedia", "friendsInvited": "Teman diundang", "totalEarned": "Total diperoleh", "howItWorks": "Cara kerja", "yourLink": "Link referral kamu", "shareWhatsApp": "Bagikan di WhatsApp", "copy": "Salin", "copied": "Tersalin!" },
+  "offline": { "title": "Tidak Ada Koneksi Internet", "subtitle": "Periksa koneksimu dan coba lagi. Halaman yang pernah dikunjungi tersedia offline.", "tryAgain": "Coba Lagi", "browse": "Jelajahi Listing" },
+  "notFound": { "title": "Halaman Tidak Ditemukan", "subtitle": "Halaman yang kamu cari tidak ada atau telah dipindahkan.", "backHome": "Kembali ke Beranda", "browse": "Jelajahi Listing" },
+  "auth": { "signIn": "Masuk ke KASSIM", "signInSubtitle": "Lanjutkan pengalaman lelang kamu", "register": "Bergabung dengan KASSIM", "registerSubtitle": "Mulai perjalanan ekonomi sirkularmu hari ini", "checkEmail": "Cek Email Kamu!", "verificationSent": "Kami telah mengirim tautan verifikasi ke emailmu. Klik tautan untuk mengaktifkan akun.", "backToLogin": "Kembali ke login" },
+  "pwa": { "addToHome": "Tambahkan KASSIM ke layar utama", "addSubtitle": "Akses cepat, notifikasi tawaran, dan penggunaan offline", "install": "Pasang", "noThanks": "Tidak, terima kasih", "enableNotifications": "Aktifkan notifikasi tawaran", "notificationsSubtitle": "Dapatkan notifikasi ketika kamu dikalahkan atau menerima penawaran baru", "enable": "Aktifkan", "dismiss": "Tidak" },
+  "impact": { "title": "Dampak Nyata KASSIM", "heading": "Bersama Kita Ubah Malaysia", "subtitle": "Setiap transaksi di KASSIM adalah langkah menuju Malaysia yang lebih hijau dan berkelanjutan.", "co2Saved": "CO₂ Tersimpan", "treesEquivalent": "Setara Pohon", "waterSaved": "Air Tersimpan" },
+  "footer": { "description": "Platform ekonomi sirkular Malaysia. Berikan kehidupan baru pada barangmu melalui lelang progresif yang aman dan transparan.", "ecoFriendly": "Ramah lingkungan", "safeSecure": "Aman & Terjamin", "realTime": "Waktu nyata", "platform": "Platform", "account": "Akun", "copyright": "© 2026 KASSIM. Semua hak dilindungi. Dibangun untuk Malaysia yang lebih hijau.", "fees": "Biaya platform 15% · Escrow aman · Terverifikasi IC" },
+  "categories": { "title": "Jelajahi berdasarkan Kategori", "FURNITURE": "Furnitur", "ELECTRONICS": "Elektronik", "FASHION": "Fashion", "BOOKS": "Buku", "SPORTS": "Olahraga", "KITCHEN": "Dapur", "OTHERS": "Lainnya" }
+}

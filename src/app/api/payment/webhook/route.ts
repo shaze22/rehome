@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendPaymentReceivedEmail } from '@/lib/resend'
+import { sendPaymentReceivedEmail, sendShipNowEmail } from '@/lib/resend'
 import { createEasyParcelShipment } from '@/lib/easyparcel'
 
 export async function POST(request: NextRequest) {
@@ -115,11 +115,15 @@ export async function POST(request: NextRequest) {
       }).catch(err => console.error('[webhook] EasyParcel booking error:', err))
     }
 
-    // Notify seller
+    // Notify seller — payment received + ship instructions
     try {
       const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
       if (seller?.email && listing) {
         await sendPaymentReceivedEmail(seller.email, seller.name ?? 'Seller', listing.title, parseFloat(sellerPayout))
+        await sendShipNowEmail(
+          seller.email, seller.name ?? 'Seller', listing.title, listingId,
+          courierName || null, buyerPostcode || null, null, // easyparcelOrderId saved async later
+        )
       }
     } catch {}
   }

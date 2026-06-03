@@ -12,14 +12,20 @@ export async function GET(request: NextRequest) {
     const { data } = await supabase.auth.exchangeCodeForSession(code)
 
     if (data.user) {
-      // Ensure user row exists
+      const meta = data.user.user_metadata ?? {}
       await prisma.user.upsert({
         where: { id: data.user.id },
-        update: {},
+        update: {
+          name: meta.name ?? undefined,
+          ...(meta.phone ? { phone: meta.phone } : {}),
+          ...(meta.state ? { state: meta.state } : {}),
+        },
         create: {
           id: data.user.id,
           email: data.user.email!,
-          name: data.user.user_metadata?.name ?? data.user.email?.split('@')[0],
+          name: meta.name ?? data.user.email?.split('@')[0],
+          phone: meta.phone ?? null,
+          state: meta.state ?? null,
         },
       })
     }

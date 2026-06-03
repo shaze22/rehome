@@ -1,1 +1,27 @@
-{}
+{
+  "nav": { "browse": "浏览", "sell": "出售", "impact": "影响", "dashboard": "控制台", "saved": "收藏", "signIn": "登录", "register": "注册", "signOut": "退出" },
+  "home": {
+    "badge": "马来西亚#1二手拍卖平台",
+    "hero": { "title": "出售旧物。", "titleHighlight": "今天就收钱。", "subtitle": "30分钟递进拍卖。物品交换。安全托管。每笔交易都拯救地球。", "ctaSell": "立即开始销售", "ctaBrowse": "浏览物品" },
+    "stats": { "itemsSold": "已售物品", "co2Saved": "节省CO₂", "swapsCompleted": "完成交换", "avgSellTime": "平均销售时间" },
+    "trust": { "title": "为什么KASSIM安全？", "subtitle": "专为保护马来西亚买家和卖家而建" },
+    "flash": { "title": "Flash拍卖 ⚡", "subtitle": "现在出价，30分钟内赢得", "viewAll": "查看全部", "empty": "暂无进行中的拍卖", "startSelling": "开始销售" },
+    "swap": { "title": "物品交换 🔄", "subtitle": "无需现金交换二手物品", "viewAll": "查看全部", "empty": "暂无交换报价", "listItem": "挂牌您的物品" },
+    "trending": { "title": "本周热门 🔥", "subtitle": "过去7天最受欢迎的物品" },
+    "megaAuction": { "title": "⚡ 周五超级拍卖", "subtitle": "每周五晚精选商品", "startsIn": "开始于", "tonight": "今晚！" },
+    "recentlyViewed": "最近浏览",
+    "testimonials": { "title": "用户评价", "subtitle": "来自我们社区的真实体验" }
+  },
+  "listing": { "currentBid": "当前出价", "timeLeft": "剩余时间", "waitingFirstBid": "等待第一个出价", "waitingDays": "等待{days}天", "noTimeLimit": "无时间限制", "ended": "已结束", "hot": "🔥 热门", "wants": "想要：", "cashOk": "接受现金", "estValue": "估计价值", "openToAll": "接受所有报价", "viewDetails": "查看详情", "firstBid": "第一次出价 — 可能免费获得！", "placeBid": "出价 RM {amount}", "placingBid": "正在出价...", "bidPlaced": "✓ 出价成功！", "gettingRate": "获取费率...", "chooseDelivery": "先选择配送方式", "submitOffer": "提交报价", "aiPriceSuggestion": "AI价格建议", "conditionScore": "物品状况评分", "profile": "个人资料", "score": "评分 {score}", "repliesTime": "24小时内回复", "activeListings": "个在售商品" },
+  "errors": { "signInRequired": "请登录后出价。", "ownListing": "您不能对自己的商品出价。", "auctionEnded": "拍卖已结束。", "bidTooLow": "出价必须高于 RM {amount}。", "listingNotFound": "商品未找到。", "unauthorized": "未授权。", "invalidData": "数据无效。" },
+  "sell": { "title": "出售物品", "subtitle": "填写您的物品详情。AI将建议合理的起始价格。", "flashAuction": "Flash拍卖", "swap": "交换", "conditionScore": "状况评分" },
+  "dashboard": { "myListings": "我的商品", "myBids": "我的出价", "orders": "订单", "referralProgram": "推荐计划", "startSelling": "开始销售" },
+  "referral": { "availableCredit": "可用积分", "friendsInvited": "已邀请好友", "totalEarned": "总收益", "howItWorks": "工作原理", "yourLink": "您的推荐链接", "shareWhatsApp": "分享到WhatsApp", "copy": "复制", "copied": "已复制！" },
+  "offline": { "title": "无网络连接", "subtitle": "请检查您的网络连接并重试。已访问过的页面可离线浏览。", "tryAgain": "重试", "browse": "浏览商品" },
+  "notFound": { "title": "页面未找到", "subtitle": "您查找的页面不存在或已移动。", "backHome": "返回首页", "browse": "浏览商品" },
+  "auth": { "signIn": "登录 KASSIM", "signInSubtitle": "继续您的拍卖体验", "register": "加入 KASSIM", "registerSubtitle": "今天开始您的循环经济之旅", "checkEmail": "查看您的邮件！", "verificationSent": "我们已向您的邮箱发送验证链接。请点击链接激活账户。", "backToLogin": "返回登录" },
+  "pwa": { "addToHome": "将KASSIM添加到主屏幕", "addSubtitle": "快速访问、出价通知和离线使用", "install": "安装", "noThanks": "不，谢谢", "enableNotifications": "开启出价通知", "notificationsSubtitle": "当您被超价或收到新报价时获得通知", "enable": "开启", "dismiss": "不" },
+  "impact": { "title": "KASSIM真实影响", "heading": "共同改变马来西亚", "subtitle": "KASSIM上的每笔交易都是迈向更绿色、更可持续马来西亚的一步。", "co2Saved": "节省CO₂", "treesEquivalent": "等效树木", "waterSaved": "节省用水" },
+  "footer": { "description": "马来西亚循环经济平台。通过安全透明的递进拍卖，让您的物品焕发新生。", "ecoFriendly": "环保", "safeSecure": "安全可靠", "realTime": "实时", "platform": "平台", "account": "账户", "copyright": "© 2026 KASSIM。保留所有权利。为更绿色的马来西亚而建。", "fees": "15%平台费 · 安全托管 · IC认证" },
+  "categories": { "title": "按类别浏览", "FURNITURE": "家具", "ELECTRONICS": "电子产品", "FASHION": "时尚", "BOOKS": "书籍", "SPORTS": "运动", "KITCHEN": "厨房", "OTHERS": "其他" }
+}

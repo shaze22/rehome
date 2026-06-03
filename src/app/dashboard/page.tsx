@@ -293,6 +293,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 status: o.status, shippingStatus: o.shippingStatus,
                 trackingNumber: o.trackingNumber, deliveryConfirmed: o.deliveryConfirmed,
                 isSeller: true,
+                courierName: o.courierName, courierService: o.courierService,
+                buyerPostcode: o.buyerPostcode, buyerPhone: o.buyerPhone,
+                buyerAddress: o.buyerAddress, deliveryFee: o.deliveryFee,
+                easyparcelOrderId: o.easyparcelOrderId,
               }} />
             ))}
             {(buyerOrders as any[]).map(o => (
@@ -302,6 +306,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 status: o.status, shippingStatus: o.shippingStatus,
                 trackingNumber: o.trackingNumber, deliveryConfirmed: o.deliveryConfirmed,
                 isSeller: false,
+                courierName: o.courierName, deliveryFee: o.deliveryFee,
               }} />
             ))}
           </div>

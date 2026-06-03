@@ -14,6 +14,13 @@ interface Order {
   trackingNumber: string | null
   deliveryConfirmed: boolean
   isSeller: boolean
+  courierName?: string | null
+  courierService?: string | null
+  buyerPostcode?: string | null
+  buyerPhone?: string | null
+  buyerAddress?: string | null
+  deliveryFee?: number | null
+  easyparcelOrderId?: string | null
 }
 
 interface Props { order: Order }
@@ -83,6 +90,19 @@ export function OrderCard({ order }: Props) {
           {statusLabel[localOrder.shippingStatus] ?? localOrder.shippingStatus}
         </span>
       </div>
+
+      {/* Delivery booking details (seller sees buyer info; buyer sees tracking) */}
+      {localOrder.isSeller && localOrder.courierName && (
+        <div className="mb-3 px-3 py-2 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <p className="font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>📦 Delivery Info</p>
+          {localOrder.courierName && <p style={{ color: 'var(--text-muted)' }}>Courier: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{localOrder.courierName} {localOrder.courierService ? `· ${localOrder.courierService}` : ''}</span></p>}
+          {localOrder.buyerPostcode && <p style={{ color: 'var(--text-muted)' }}>Buyer postcode: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{localOrder.buyerPostcode}</span></p>}
+          {localOrder.buyerPhone && <p style={{ color: 'var(--text-muted)' }}>Buyer phone: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{localOrder.buyerPhone}</span></p>}
+          {localOrder.buyerAddress && <p style={{ color: 'var(--text-muted)' }}>Address: <span style={{ color: 'var(--text-primary)' }}>{localOrder.buyerAddress}</span></p>}
+          {localOrder.easyparcelOrderId && <p style={{ color: 'var(--text-muted)' }}>EasyParcel ID: <span className="font-mono" style={{ color: 'var(--teal)' }}>{localOrder.easyparcelOrderId}</span></p>}
+          {localOrder.deliveryFee && <p style={{ color: 'var(--text-muted)' }}>Delivery charged: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>RM {localOrder.deliveryFee.toFixed(2)}</span></p>}
+        </div>
+      )}
 
       {localOrder.trackingNumber && (
         <p className="text-xs mb-3 px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>

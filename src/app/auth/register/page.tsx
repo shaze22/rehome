@@ -4,12 +4,21 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Recycle, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
+
+const MALAYSIAN_STATES = [
+  'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Melaka',
+  'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang',
+  'Putrajaya', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu',
+]
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [state, setState] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,13 +30,23 @@ export default function RegisterPage() {
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     if (!agreed) { setError('You must agree to the Terms & Privacy Policy.'); return }
     setLoading(true)
-    const { error } = await createClient().auth.signUp({
+    const { data, error: signUpError } = await createClient().auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, phone: phone || null, state: state || null } },
     })
+    if (signUpError) { setError(signUpError.message); setLoading(false); return }
+
+    // Save phone + state to profile if provided (for verified sessions only)
+    if (data.session && (phone || state)) {
+      await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone: phone || undefined, state: state || undefined }),
+      }).catch(() => {})
+    }
+
     setLoading(false)
-    if (error) { setError(error.message); return }
     setSuccess(true)
   }
 
@@ -47,7 +66,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-2xl font-bold mb-3">Check Your Email!</h1>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            We have sent a verification link to <strong>{email}</strong>. Please click the link to activate your account.
+            We&apos;ve sent a verification link to <strong>{email}</strong>. Click the link to activate your account.
           </p>
           <Link href="/auth/login" className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal inline-block">
             Back to Login
@@ -61,9 +80,8 @@ export default function RegisterPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl gradient-teal flex items-center justify-center mx-auto mb-4">
-            <Recycle className="w-6 h-6 text-white" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
           <h1 className="text-2xl font-bold mb-2">Join KASSIM</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Start your circular economy journey today</p>
         </div>
@@ -93,61 +111,71 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
+            {/* Name */}
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Your name"
+                <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
-                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                />
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               </div>
             </div>
 
+            {/* Email */}
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
-                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                />
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
-                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                />
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                Phone Number <span style={{ color: 'var(--text-muted)' }}>(for delivery)</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 0123456789"
+                  className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              </div>
+            </div>
+
+            {/* State */}
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                Your State <span style={{ color: 'var(--text-muted)' }}>(for delivery estimate)</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                <select value={state} onChange={e => setState(e.target.value)}
+                  className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none appearance-none"
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: state ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                  <option value="">Select your state</option>
+                  {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
               </div>
             </div>
 
             <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={e => setAgreed(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded accent-teal flex-shrink-0"
-              />
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-teal flex-shrink-0" />
               <span className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 I agree to the{' '}
                 <a href="/terms" target="_blank" className="underline hover:no-underline" style={{ color: 'var(--teal)' }}>Terms of Service</a>
@@ -162,20 +190,15 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-60 transition-all hover:scale-105 active:scale-95"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-60 transition-all hover:scale-105 active:scale-95">
               {loading ? 'Registering...' : 'Register Now'}
             </button>
           </form>
 
           <p className="text-center text-sm mt-6" style={{ color: 'var(--text-secondary)' }}>
             Already have an account?{' '}
-            <Link href="/auth/login" className="font-medium hover:underline" style={{ color: 'var(--teal)' }}>
-              Log in
-            </Link>
+            <Link href="/auth/login" className="font-medium hover:underline" style={{ color: 'var(--teal)' }}>Log in</Link>
           </p>
         </div>
       </div>

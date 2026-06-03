@@ -1,1 +1,27 @@
-{}
+{
+  "nav": { "browse": "تصفح", "sell": "بيع", "impact": "التأثير", "dashboard": "لوحة التحكم", "saved": "المحفوظات", "signIn": "تسجيل الدخول", "register": "إنشاء حساب", "signOut": "تسجيل الخروج" },
+  "home": {
+    "badge": "منصة مزادات المستعمل #1 في ماليزيا",
+    "hero": { "title": "بع أغراضك القديمة.", "titleHighlight": "احصل على المال اليوم.", "subtitle": "مزادات تصاعدية 30 دقيقة. تبادل الأغراض. ضمان آمن. كل صفقة تنقذ الكوكب.", "ctaSell": "ابدأ البيع الآن", "ctaBrowse": "تصفح الأغراض" },
+    "stats": { "itemsSold": "أغراض مباعة", "co2Saved": "CO₂ موفر", "swapsCompleted": "تبادلات مكتملة", "avgSellTime": "متوسط وقت البيع" },
+    "trust": { "title": "لماذا KASSIM آمن؟", "subtitle": "مصمم لحماية المشترين والبائعين في جميع أنحاء ماليزيا" },
+    "flash": { "title": "مزادات Flash ⚡", "subtitle": "قدم عرضك الآن، اربح خلال 30 دقيقة", "viewAll": "عرض الكل", "empty": "لا توجد مزادات نشطة", "startSelling": "ابدأ البيع" },
+    "swap": { "title": "تبادل الأغراض 🔄", "subtitle": "تبادل الأغراض المستعملة بدون نقود", "viewAll": "عرض الكل", "empty": "لا توجد عروض تبادل", "listItem": "أضف غرضك" },
+    "trending": { "title": "الأكثر رواجاً هذا الأسبوع 🔥", "subtitle": "الأغراض الأكثر شعبية في آخر 7 أيام" },
+    "megaAuction": { "title": "⚡ مزاد الجمعة الكبير", "subtitle": "قوائم مختارة كل جمعة مساءً", "startsIn": "يبدأ خلال", "tonight": "الليلة!" },
+    "recentlyViewed": "شوهد مؤخراً",
+    "testimonials": { "title": "ماذا يقول مستخدمونا", "subtitle": "تجارب حقيقية من مجتمعنا" }
+  },
+  "listing": { "currentBid": "العرض الحالي", "timeLeft": "الوقت المتبقي", "waitingFirstBid": "في انتظار أول عرض", "waitingDays": "في انتظار {days} أيام", "noTimeLimit": "لا يوجد حد زمني", "ended": "انتهى", "hot": "🔥 رائج", "wants": "يريد:", "cashOk": "نقد مقبول", "estValue": "القيمة المقدرة", "openToAll": "مفتوح لجميع العروض", "viewDetails": "عرض التفاصيل", "firstBid": "أول عرض — قد تفوز مجاناً!", "placeBid": "عرض RM {amount}", "placingBid": "جارٍ تقديم العرض...", "bidPlaced": "✓ تم تقديم العرض!", "gettingRate": "جارٍ الحصول على الأسعار...", "chooseDelivery": "اختر طريقة التوصيل أولاً", "submitOffer": "تقديم العرض", "aiPriceSuggestion": "اقتراح سعر الذكاء الاصطناعي", "conditionScore": "تقييم حالة الغرض", "profile": "الملف الشخصي", "score": "النقاط {score}", "repliesTime": "يرد خلال 24 ساعة", "activeListings": "قوائم نشطة" },
+  "errors": { "signInRequired": "يرجى تسجيل الدخول للمزايدة.", "ownListing": "لا يمكنك المزايدة على قائمتك الخاصة.", "auctionEnded": "انتهى المزاد.", "bidTooLow": "يجب أن يكون العرض أعلى من RM {amount}.", "listingNotFound": "القائمة غير موجودة.", "unauthorized": "غير مصرح.", "invalidData": "بيانات غير صالحة." },
+  "sell": { "title": "بيع غرض", "subtitle": "أدخل تفاصيل غرضك. سيقترح الذكاء الاصطناعي سعراً ابتدائياً عادلاً.", "flashAuction": "مزاد Flash", "swap": "تبادل", "conditionScore": "تقييم الحالة" },
+  "dashboard": { "myListings": "قوائمي", "myBids": "عروضي", "orders": "الطلبات", "referralProgram": "برنامج الإحالة", "startSelling": "ابدأ البيع" },
+  "referral": { "availableCredit": "الرصيد المتاح", "friendsInvited": "أصدقاء مدعوون", "totalEarned": "إجمالي المكاسب", "howItWorks": "كيف يعمل", "yourLink": "رابط الإحالة الخاص بك", "shareWhatsApp": "مشاركة عبر WhatsApp", "copy": "نسخ", "copied": "تم النسخ!" },
+  "offline": { "title": "لا يوجد اتصال بالإنترنت", "subtitle": "تحقق من اتصالك بالإنترنت وحاول مرة أخرى. الصفحات التي زرتها سابقاً متاحة بدون إنترنت.", "tryAgain": "حاول مجدداً", "browse": "تصفح القوائم" },
+  "notFound": { "title": "الصفحة غير موجودة", "subtitle": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.", "backHome": "العودة للرئيسية", "browse": "تصفح القوائم" },
+  "auth": { "signIn": "تسجيل الدخول إلى KASSIM", "signInSubtitle": "تابع تجربة المزاد الخاصة بك", "register": "انضم إلى KASSIM", "registerSubtitle": "ابدأ رحلتك في الاقتصاد الدائري اليوم", "checkEmail": "تحقق من بريدك الإلكتروني!", "verificationSent": "لقد أرسلنا رابط التحقق إلى بريدك الإلكتروني. انقر على الرابط لتفعيل حسابك.", "backToLogin": "العودة لتسجيل الدخول" },
+  "pwa": { "addToHome": "أضف KASSIM إلى الشاشة الرئيسية", "addSubtitle": "وصول سريع وإشعارات العروض والاستخدام بدون إنترنت", "install": "تثبيت", "noThanks": "لا، شكراً", "enableNotifications": "تفعيل إشعارات العروض", "notificationsSubtitle": "احصل على إشعار عند تجاوز عرضك أو استلام عرض جديد", "enable": "تفعيل", "dismiss": "لا" },
+  "impact": { "title": "التأثير الحقيقي لـ KASSIM", "heading": "معاً نغير ماليزيا", "subtitle": "كل صفقة على KASSIM هي خطوة نحو ماليزيا أكثر خضرة واستدامة ومسؤولية.", "co2Saved": "CO₂ موفر", "treesEquivalent": "ما يعادل أشجار", "waterSaved": "ماء موفر" },
+  "footer": { "description": "منصة الاقتصاد الدائري في ماليزيا. امنح أغراضك حياة جديدة من خلال مزادات تصاعدية آمنة وشفافة.", "ecoFriendly": "صديق للبيئة", "safeSecure": "آمن ومضمون", "realTime": "وقت فعلي", "platform": "المنصة", "account": "الحساب", "copyright": "© 2026 KASSIM. جميع الحقوق محفوظة. مبني من أجل ماليزيا أكثر خضرة.", "fees": "رسوم المنصة 15% · ضمان آمن · تحقق من الهوية" },
+  "categories": { "title": "تصفح حسب الفئة", "FURNITURE": "أثاث", "ELECTRONICS": "إلكترونيات", "FASHION": "أزياء", "BOOKS": "كتب", "SPORTS": "رياضة", "KITCHEN": "مطبخ", "OTHERS": "أخرى" }
+}
