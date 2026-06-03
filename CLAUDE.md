@@ -372,6 +372,21 @@ Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `
 - `PWASetup.tsx` — SW registration + install banner (30s delay)
 - `PushPermission.tsx` — push permission prompt (5s delay, logged-in only)
 
+## Flash Bid UX Flow (updated 2026-06-03)
+
+**Pre-bid (listing detail page):**
+- Client-side auth fallback: if server SSR misses session, `createClient().auth.getUser()` runs on mount
+- No delivery method selection required before bidding — removed, was too much friction
+- Auto-fetches delivery estimate from `currentUserState` (profile) silently, shown as "~RM X" note
+- Bid button: always available once logged in (no delivery gate)
+- After bid: green banner "Bid placed! You are now the highest bidder."
+- Login link: `/auth/login?next=/listings/[id]` (returns to listing after login)
+
+**Post-win (auction ended, user won):**
+- `DeliveryCheckout` component: pick courier OR self pickup
+- Pre-populates phone from `currentUserPhone` (saved in profile)
+- Checkout URL includes all delivery params → Stripe line items → webhook books EasyParcel
+
 ## Flash: Self-Pickup Flow
 After Stripe payment, buyer redirects to listing page (`?payment=success`).
 
@@ -554,7 +569,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `03e4bfe` — KASSIM logo: SVG wordmark + PNG assets + navbar + favicon
+2026-06-03, commit `38b09db` — Bid UX fixes: remove delivery friction, fix auth, fix success message
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -573,6 +588,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6b | DeliveryCheckout UI: winner enters postcode → live EasyParcel quotes → pick courier → phone+address → checkout with delivery line item |
 | 6c | Seller phone: User.phone field + PUT /api/user/profile + ProfileEditForm in dashboard (warns if missing) + EasyParcel booking uses real phone |
 | 6d | Logo: public/logo.svg (wordmark) + logo-512.png (EasyParcel/favicon/PWA) + logo-wide.png — Navbar uses logo.svg, layout.tsx icons metadata updated |
+| 6e | Bid UX fix: remove Step 1 delivery selector, auto-estimate from profile state, client-side auth fallback, correct success message, login ?next= redirect, pre-fill phone in DeliveryCheckout |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
