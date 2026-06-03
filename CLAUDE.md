@@ -543,7 +543,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `(pending)` — Remove Lalamove, EasyParcel-only delivery
+2026-06-03, commit `3695bf8` — Remove Lalamove, EasyParcel-only delivery
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
