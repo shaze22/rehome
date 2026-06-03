@@ -578,7 +578,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-03, commit `a6e90c9` — All 13 UI/UX critique improvements (Fasa 7)
+2026-06-03, commit `21f08f0` — Login page logo fix + Flash listings reset to RM0
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -601,15 +601,23 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6f | Onboarding: phone+state in register form → synced via auth/callback user_metadata. Seller ship email (sendShipNowEmail) with courier+postcode+EasyParcel ID. OrderCard shows delivery info. id/zh/ar translations complete. |
 | **7** | **13 UI/UX improvements:** consumer copy (remove "circular economy"), CTA above fold + search bar in hero, register → 3 fields only (removed phone+state JIT), footer logo.svg, Impact removed from nav (moved to footer), ThemeToggle detects system pref, FeedbackWidget → icon-only button, Ending Soon section in listings, prominent search bar in listings, category gradient placeholders in cards, Why Sell on KASSIM? section, testimonials rewritten in BM + star ratings, WhatsApp floating support button (bottom-left). |
 
+## Supabase Auth URL Config (updated 2026-06-03)
+- **Site URL:** `https://kassim.app`
+- **Redirect URLs:** `https://kassim.app/**`, `https://www.kassim.app/**`, `http://localhost:3000/**`
+- Keep localhost entry — needed for local dev (`npm run dev`)
+
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
+- ✅ Supabase Auth Site URL → https://kassim.app (2026-06-03)
 - ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
 - ✅ Fasa 1-7 complete — all improvements done
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
 - ✅ DeliveryCheckout UI complete — postcode → EasyParcel quotes → courier picker → address → checkout
 - ✅ id/zh/ar translations complete
-- **Update WhatsApp number** in `src/components/layout/WhatsAppSupport.tsx` (currently placeholder `60123456789`)
+- ✅ WhatsApp support number → +60189899495
+- ✅ Login page: Recycle icon → logo.svg (commit 21f08f0)
+- ✅ All 15 active Flash listings reset to RM0 (startingBid + currentBid)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
