@@ -407,6 +407,17 @@ Buyer selects "Delivery"
 - **Revenue**: platform keeps 30% delivery markup; pays courier base price
 - Webhook auto-books EasyParcel on `checkout.session.completed` + stores `easyparcelOrderId`
 
+## Logo Assets
+| File | Size | Use |
+|------|------|-----|
+| `public/logo.svg` | 320×90 | Navbar (used via `<img>`) |
+| `public/logo-square.svg` | 200×200 | Source SVG icon |
+| `public/logo-512.png` | 512×512 | EasyParcel, favicon, PWA icon |
+| `public/logo-wide.png` | 640×180 | Email, marketing |
+
+Live URLs: `https://kassim.app/logo-512.png`, `https://kassim.app/logo.svg`
+Design: teal (#14b8a6) lightning bolt + "KASSIM" bold white, dark (#0a0a0f) background
+
 ## Lalamove Integration
 - **REMOVED** (2026-06-03) — EasyParcel sudah cukup untuk parcel delivery
 - `lalamove.ts` + `/api/lalamove/webhook` dah delete
@@ -543,7 +554,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `777c15f` — Seller phone field + ProfileEditForm + EasyParcel booking fix
+2026-06-03, commit `03e4bfe` — KASSIM logo: SVG wordmark + PNG assets + navbar + favicon
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -561,6 +572,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6 | EasyParcel OAuth2 client, 30% delivery markup enforced, checkout has delivery line item, webhook auto-books shipment, Transaction schema +10 delivery fields |
 | 6b | DeliveryCheckout UI: winner enters postcode → live EasyParcel quotes → pick courier → phone+address → checkout with delivery line item |
 | 6c | Seller phone: User.phone field + PUT /api/user/profile + ProfileEditForm in dashboard (warns if missing) + EasyParcel booking uses real phone |
+| 6d | Logo: public/logo.svg (wordmark) + logo-512.png (EasyParcel/favicon/PWA) + logo-wide.png — Navbar uses logo.svg, layout.tsx icons metadata updated |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
