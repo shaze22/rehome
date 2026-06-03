@@ -7,7 +7,8 @@ import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
-import { ArrowRight, Leaf, Zap, ArrowLeftRight, Flame } from 'lucide-react'
+import { HeroBanner } from '@/components/home/HeroBanner'
+import { ArrowRight, Zap, ArrowLeftRight, Flame } from 'lucide-react'
 
 async function getFeaturedListings() {
   try {
@@ -134,45 +135,14 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(20,184,166,0.12) 0%, transparent 70%)' }} />
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-              <Leaf className="w-3.5 h-3.5" />
-              Malaysia&apos;s #1 Pre-Loved Auction Platform
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Sell Old Stuff.{' '}
-              <span style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Get Paid Today.
-              </span>
-            </h1>
-            <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Progressive 30-min auctions. Item swaps. Secure escrow. Every deal saves the planet.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/jual"
-                className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white gradient-teal glow-teal transition-all hover:scale-105"
-              >
-                Start Selling Now
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/listings"
-                className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold transition-colors"
-                style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
-              >
-                Browse Items →
-              </Link>
-            </div>
-          </div>
+      {/* Hero — Flash Bid + Swap Bid USP */}
+      <HeroBanner />
 
-          {/* Live Stats Bar */}
-          <div className="mt-12 rounded-2xl px-6 py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 divide-x-0 md:divide-x" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
+      {/* Live Stats Bar */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="rounded-2xl px-6 py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { emoji: '⚡', value: activeFlash, label: 'Flash Live', desc: 'auctions now', color: 'var(--orange)' },
                 { emoji: '🔄', value: activeSwap, label: 'Swaps Open', desc: 'items to swap', color: '#16a34a' },
