@@ -147,7 +147,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               <Search className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
               <p className="text-lg font-medium mb-2">No items found</p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'Try adjusting your filters or search'}
+                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'No auctions right now — check back soon or list yours!'}
               </p>
             </div>
           ) : (
@@ -168,11 +168,11 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
                     >
-                      ← Sebelum
+                      ← Previous
                     </Link>
                   )}
                   <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Halaman {page} / {totalPages}
+                    Page {page} / {totalPages}
                   </span>
                   {page < totalPages && (
                     <Link
@@ -180,7 +180,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
                     >
-                      Seterusnya →
+                      Next →
                     </Link>
                   )}
                 </div>

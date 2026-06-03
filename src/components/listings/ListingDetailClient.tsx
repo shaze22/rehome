@@ -434,7 +434,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
           <div className="mt-6 rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-              Condition Report (Ballout Shield)
+              Condition Report (KASSIM Shield)
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -915,6 +915,41 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 Profile
               </Link>
             </div>
+
+            {/* Trust badges */}
+            <div className="flex flex-wrap gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
+                🔒 Escrow Protected
+              </span>
+              {listing.seller.icVerified && (
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
+                  ✅ IC Verified Seller
+                </span>
+              )}
+              {listing.mode === 'FLASH' && (
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
+                  ⚡ Flash — 30 Min Only
+                </span>
+              )}
+              {listing.mode === 'SWAP' && (
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
+                  🔄 Swap — 72hr Window
+                </span>
+              )}
+            </div>
+
+            {/* WhatsApp Seller — logged in + not own listing */}
+            {currentUserId && !isOwnListing && (
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in ${listing.title} on KASSIM: https://kassim.app/listings/${listing.id}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full mt-3 py-2.5 rounded-xl text-sm font-medium"
+                style={{ backgroundColor: '#25D366', color: 'white' }}
+              >
+                💬 WhatsApp {listing.seller.name ?? 'Seller'}
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -922,7 +957,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
       {/* Swap Escrow Panel — shown to both seller & buyer once offer accepted (listing SOLD) */}
       {isSwap && currentUserId && listing.status === 'SOLD' && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold mb-4">Status Escrow</h2>
+          <h2 className="text-xl font-bold mb-4">Escrow Status</h2>
           <SwapEscrowPanel
             listingId={listing.id}
             currentUserId={currentUserId}

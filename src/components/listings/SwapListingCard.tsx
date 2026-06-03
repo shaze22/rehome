@@ -132,6 +132,13 @@ export function SwapListingCard({ listing }: Props) {
             )}
           </div>
 
+          {/* CTA micro-copy */}
+          {offerCount === 0 ? (
+            <p className="text-xs font-medium mb-2" style={{ color: '#16a34a' }}>Open for offers — make your move</p>
+          ) : (
+            <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>🔥 {offerCount} offer{offerCount > 1 ? 's' : ''} already in!</p>
+          )}
+
           {/* Footer */}
           <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>

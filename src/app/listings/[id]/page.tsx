@@ -100,7 +100,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const relatedSlot = relatedListings.length > 0 ? (
     <section className="mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-      <h2 className="text-xl font-bold mb-4">Mungkin Anda Suka Juga</h2>
+      <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
       <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
         {relatedListings.map((l: any) => (
           <div key={l.id} className="flex-shrink-0 w-64">

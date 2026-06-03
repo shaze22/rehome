@@ -35,7 +35,10 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
               <Recycle className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
+            <div>
+              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
+              <p className="text-xs hidden md:block leading-none mt-0.5" style={{ color: 'var(--text-muted)' }}>Bid Fast. Swap Smart.</p>
+            </div>
           </Link>
 
           {/* Desktop Nav */}

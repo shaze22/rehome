@@ -37,7 +37,7 @@ function useCountdown(endsAt: Date | string | null) {
 
   useEffect(() => {
     if (!endsAt) {
-      setTimeLeft('Waiting for first bid')
+      setTimeLeft('🎯 No bids yet — could be yours for FREE!')
       setIsUrgent(false)
       return
     }
@@ -120,16 +120,21 @@ export function ListingCard({ listing }: Props) {
           {/* Bid info */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Current bid</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>
+                {bidCount === 0 ? 'Be the first bidder' : 'Current bid'}
+              </p>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--teal)' }}>
-                RM {bid.toFixed(0)}
+                {bidCount === 0 && listing.startingBid === 0 ? 'Starting at RM 0' : `RM ${bid.toFixed(0)}`}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Time left</p>
               {isWaitingLong ? (
                 <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
                   Waiting {daysWaiting} days
+                </p>
+              ) : !listing.endsAt ? (
+                <p className="text-xs font-mono text-right" style={{ color: 'var(--text-muted)', maxWidth: '120px' }}>
+                  {timeLeft}
                 </p>
               ) : (
                 <p className={`text-sm font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>
