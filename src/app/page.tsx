@@ -240,11 +240,11 @@ export default async function HomePage() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h2 className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    ⚡ Friday Mega Auction
+                    ⚡ Friday FLASH BID Night
                   </h2>
                   <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>FEATURED</span>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Curated listings every Friday night</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Curated Flash Bid listings every Friday night</p>
               </div>
               <MegaLelongCountdown />
             </div>
@@ -266,9 +266,9 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <Zap className="w-5 h-5" style={{ color: 'var(--orange)' }} />
-                Flash Auctions ⚡
+                <span style={{ color: '#ff6b35' }}>⚡ FLASH BID</span>
               </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bid now, win in 30 minutes</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bid from RM0 · Timer starts on first bid · 30 min to win</p>
             </div>
             <Link href="/listings?mode=flash" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: 'var(--teal)' }}>
               View All <ArrowRight className="w-4 h-4" />
@@ -297,9 +297,9 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
-                Item Swaps 🔄
+                <span style={{ color: '#16a34a' }}>🔄 SWAP BID</span>
               </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Trade pre-loved items without cash</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Offer cash or swap your item · Seller picks the best deal · 3-day window</p>
             </div>
             <Link href="/listings?mode=swap" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: '#16a34a' }}>
               View All <ArrowRight className="w-4 h-4" />
