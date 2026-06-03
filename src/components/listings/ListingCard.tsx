@@ -34,11 +34,13 @@ interface Props {
 function useCountdown(endsAt: Date | string | null) {
   const [timeLeft, setTimeLeft] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
+  const [isEndingSoon, setIsEndingSoon] = useState(false)
 
   useEffect(() => {
     if (!endsAt) {
       setTimeLeft('🎯 No bids yet — could be yours for FREE!')
       setIsUrgent(false)
+      setIsEndingSoon(false)
       return
     }
     function update() {
@@ -48,7 +50,8 @@ function useCountdown(endsAt: Date | string | null) {
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
       setIsUrgent(diff < 300000)
-      if (h > 0) setTimeLeft(`${h}j ${m}m`)
+      setIsEndingSoon(diff < 300000)
+      if (h > 0) setTimeLeft(`${h}h ${m}m`)
       else if (m > 0) setTimeLeft(`${m}m ${s}s`)
       else setTimeLeft(`${s}s`)
     }
@@ -57,7 +60,7 @@ function useCountdown(endsAt: Date | string | null) {
     return () => clearInterval(id)
   }, [endsAt])
 
-  return { timeLeft, isUrgent }
+  return { timeLeft, isUrgent, isEndingSoon }
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -66,7 +69,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export function ListingCard({ listing }: Props) {
-  const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
+  const { timeLeft, isUrgent, isEndingSoon } = useCountdown(listing.endsAt ?? null)
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
   const bidCount = listing._count?.bids ?? 0
   const isHot = (listing.viewCount ?? 0) >= 20 || bidCount >= 3
@@ -79,7 +82,14 @@ export function ListingCard({ listing }: Props) {
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
-      <div className="rounded-xl overflow-hidden card-hover cursor-pointer" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <div
+        className="rounded-xl overflow-hidden card-hover cursor-pointer"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          border: isEndingSoon ? '1px solid rgba(239,68,68,0.5)' : '1px solid var(--border)',
+          boxShadow: isEndingSoon ? '0 0 16px rgba(239,68,68,0.15)' : undefined,
+        }}
+      >
         {/* Image */}
         <div className="relative aspect-square bg-[var(--bg-elevated)] overflow-hidden">
           {listing.photos[0] ? (
@@ -95,13 +105,23 @@ export function ListingCard({ listing }: Props) {
               <Gavel className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
             </div>
           )}
+          {/* ENDING SOON full-width banner */}
+          {isEndingSoon && (
+            <div className="absolute top-0 left-0 right-0 z-10 py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.9)', color: 'white' }}>
+              🔥 ENDING SOON
+            </div>
+          )}
           {/* Category badge */}
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-medium" style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)', backdropFilter: 'blur(4px)' }}>
+          <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-medium ${isEndingSoon ? 'top-8' : 'top-2'}`} style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)', backdropFilter: 'blur(4px)' }}>
             {CATEGORY_LABELS[listing.category] ?? listing.category}
           </div>
-          {/* HOT badge */}
-          {isHot && (
-            <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+          {/* HOT / bid count badge */}
+          {bidCount >= 5 ? (
+            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-14' : 'top-8'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+              🔥 {bidCount} bids
+            </div>
+          ) : isHot && (
+            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-14' : 'top-8'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
               🔥 Hot
             </div>
           )}
@@ -152,6 +172,11 @@ export function ListingCard({ listing }: Props) {
               {listing.state}
             </div>
             <div className="flex items-center gap-2">
+              {(listing.viewCount ?? 0) > 10 && (
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  👀 {listing.viewCount}
+                </span>
+              )}
               {listing.seller.icVerified && (
                 <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
               )}

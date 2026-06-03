@@ -119,9 +119,22 @@ function CreditCheckoutButton({ listingId, bidAmount }: { listingId: string; bid
   )
 }
 
-function useCountdown(endsAt: string | null) {
+function useServerTimeOffset() {
+  const [offset, setOffset] = useState(0)
+  useEffect(() => {
+    fetch('/api/time')
+      .then(r => r.json())
+      .then(({ serverTime }: { serverTime: number }) => setOffset(serverTime - Date.now()))
+      .catch(() => {})
+  }, [])
+  return offset
+}
+
+type UrgencyLevel = 0 | 1 | 2 | 3
+
+function useCountdown(endsAt: string | null, offset = 0) {
   const [timeLeft, setTimeLeft] = useState('')
-  const [isUrgent, setIsUrgent] = useState(false)
+  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(0)
   const [isEnded, setIsEnded] = useState(false)
   const [isWaiting, setIsWaiting] = useState(!endsAt)
 
@@ -133,13 +146,16 @@ function useCountdown(endsAt: string | null) {
     }
     setIsWaiting(false)
     function update() {
-      const diff = new Date(endsAt as string).getTime() - Date.now()
+      const diff = new Date(endsAt as string).getTime() - (Date.now() + offset)
       if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); return }
       const d = Math.floor(diff / 86400000)
       const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-      setIsUrgent(diff < 3600000)
+      if (diff < 60000) setUrgencyLevel(3)
+      else if (diff < 300000) setUrgencyLevel(2)
+      else if (diff < 600000) setUrgencyLevel(1)
+      else setUrgencyLevel(0)
       if (d > 0) setTimeLeft(`${d}d ${h}h ${m}m`)
       else if (h > 0) setTimeLeft(`${h}h ${m}m ${s}s`)
       else if (m > 0) setTimeLeft(`${m}m ${s}s`)
@@ -148,9 +164,9 @@ function useCountdown(endsAt: string | null) {
     update()
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
-  }, [endsAt])
+  }, [endsAt, offset])
 
-  return { timeLeft, isUrgent, isEnded, isWaiting }
+  return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting }
 }
 
 export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton, relatedListingsSlot }: Props) {
@@ -166,7 +182,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [photoIdx, setPhotoIdx] = useState(0)
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
-  const { timeLeft, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt)
+  const serverTimeOffset = useServerTimeOffset()
+  const { timeLeft, urgencyLevel, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt, serverTimeOffset)
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [offerSubmitted, setOfferSubmitted] = useState(false)
   const searchParams = useSearchParams()
@@ -251,6 +268,30 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
 
     return () => { supabase.removeChannel(channel) }
   }, [listing.id])
+
+  // Postgres changes fallback — catches Listing updates if broadcast misses (Flash only)
+  useEffect(() => {
+    if (isSwap) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`listing-db:${listing.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'Listing',
+        filter: `id=eq.${listing.id}`,
+      }, ({ new: updated }) => {
+        const u = updated as { currentBid: number; currentBidder: string | null; endsAt: string | null }
+        setListing(prev => ({
+          ...prev,
+          currentBid: u.currentBid ?? prev.currentBid,
+          currentBidder: u.currentBidder ?? prev.currentBidder,
+          endsAt: u.endsAt ?? prev.endsAt,
+        }))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [listing.id, isSwap])
 
   // Real-time swap offer notifications (seller sees new offers instantly)
   useEffect(() => {
@@ -503,9 +544,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             </div>
             {/* View count + interest indicator */}
             <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <span>👁 {listing.viewCount ?? 0} views</span>
+              <span>👀 {listing.viewCount ?? 0} people viewed this</span>
               <span>·</span>
-              <span>{isSwap ? `${listing._count.offers ?? 0} offers received` : `${listing._count.bids} interested`}</span>
+              <span>{isSwap ? `${listing._count.offers ?? 0} offers received` : `🔥 ${listing._count.bids} bids`}</span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{listing.description}</p>
           </div>
@@ -569,17 +610,40 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             )}
 
             {/* Timer */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Clock className={`w-4 h-4 ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : isSwap ? '#16a34a' : 'var(--teal)' }} />
-                <span className={`text-sm font-mono font-bold ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : isWaiting ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-                  {timeLeft}
-                </span>
-              </div>
-              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {isSwap ? `${listing._count.bids} offers received` : `${listing._count.bids} bids`}
-              </span>
-            </div>
+            {(() => {
+              const timerColor = isWaiting ? 'var(--text-muted)'
+                : isSwap ? '#16a34a'
+                : urgencyLevel >= 2 ? '#ef4444'
+                : urgencyLevel >= 1 ? '#f97316'
+                : 'var(--teal)'
+              const urgencyLabel = !isSwap && !isWaiting
+                ? urgencyLevel >= 3 ? '⏱ Final seconds!'
+                  : urgencyLevel >= 2 ? '🔥 Almost over!'
+                  : urgencyLevel >= 1 ? '⚡ Ending soon!'
+                  : 'Time left'
+                : null
+              return (
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    {urgencyLabel && (
+                      <p className="text-xs mb-0.5 font-medium" style={{ color: timerColor }}>{urgencyLabel}</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-4 h-4 ${urgencyLevel >= 3 ? 'timer-urgent' : ''}`} style={{ color: timerColor }} />
+                      <span
+                        className={`text-sm font-mono ${urgencyLevel >= 2 ? 'font-bold' : 'font-medium'} ${urgencyLevel >= 3 ? 'timer-urgent' : ''}`}
+                        style={{ color: timerColor }}
+                      >
+                        {timeLeft}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {isSwap ? `${listing._count.bids} offers received` : `${listing._count.bids} bids`}
+                  </span>
+                </div>
+              )
+            })()}
 
             {isWaiting && (
               <div className="mb-4 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: 'var(--text-secondary)' }}>
