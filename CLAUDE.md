@@ -555,18 +555,14 @@ Shown when user has at least 1 listing:
 - Navbar: ThemeToggle rendered on both desktop + mobile
 
 ## HeroBanner (`src/components/home/HeroBanner.tsx`)
-Above-the-fold section at top:
+Simplified above-fold section (updated Fasa 9):
 - Badge: "Malaysia's #1 Pre-Loved Marketplace"
-- H1: "Turn Old Stuff Into Cash — or Find a Bargain"
-- Subline: "30-min flash auctions · Item swaps · 100% secure escrow · Delivery included"
-- Two CTA buttons: **Browse Auctions** (orange gradient) + **Sell My Item** (teal)
-- **Search bar**: form → `/listings?q=...`, placeholder varies by mode
-
-Below fold — split-panel "Choose your mode":
-- **⚡ FLASH BID** (orange): RM0 start, +RM1 min increment, 30min from first bid, sole bidder wins at RM0, real example scenario
-- **🔄 SWAP BID** (green): cash bid OR item swap, seller decides, AI-priced, 3-day window, real example scenario
-Bottom CTA: "List Your Item Free · 15% only on sale"
-Note: `HowItWorks` component removed from homepage (still exists at `/how-it-works`)
+- H1: "Turn Old Stuff Into Cash or Find a Bargain"
+- 3 CTAs: **Browse Auctions** (orange) + **Sell My Item** (teal) + **Browse Swaps** (green outline)
+- **Search bar**: `<form action="/listings" method="get">`
+- 4 trust micro-indicators: 🔒 Escrow, ✅ IC Verified, 📦 Auto Delivery, 0% Free to List
+- "New here? Learn how..." link → `/how-it-works`
+- No split Flash/Swap explanation cards — moved fully to /how-it-works
 
 ## Listings Page (`src/app/listings/page.tsx`)
 - **Ending Soon section** (Flash only, no active search): `getEndingSoonListings()` — Flash listings with `endsAt < now + 2h`, max 6, sorted ASC. Red FOMO banner at top.
@@ -578,10 +574,10 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-03, commit `f3bae81` — em dash cleanup, Ballout→KASSIM Score, login logo fix, Flash RM0
+2026-06-04, commit `141be3c` — 19 UX improvements (Fasa 9). Auto-deploy via GitHub push.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
-## Completed Fasa (2026-06-03 session)
+## Completed Fasa
 | Fasa | What |
 |------|------|
 | 1 | USP copywriting, trust badges, WhatsApp seller deep link, urgency copy |
@@ -599,8 +595,9 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6d | Logo: public/logo.svg (wordmark) + logo-512.png (EasyParcel/favicon/PWA) + logo-wide.png — Navbar uses logo.svg, layout.tsx icons metadata updated |
 | 6e | Bid UX fix: remove Step 1 delivery selector, auto-estimate from profile state, client-side auth fallback, correct success message, login ?next= redirect, pre-fill phone in DeliveryCheckout |
 | 6f | Onboarding: phone+state in register form → synced via auth/callback user_metadata. Seller ship email (sendShipNowEmail) with courier+postcode+EasyParcel ID. OrderCard shows delivery info. id/zh/ar translations complete. |
-| **7** | **13 UI/UX improvements:** consumer copy (remove "circular economy"), CTA above fold + search bar in hero, register → 3 fields only (removed phone+state JIT), footer logo.svg, Impact removed from nav (moved to footer), ThemeToggle detects system pref, FeedbackWidget → icon-only button, Ending Soon section in listings, prominent search bar in listings, category gradient placeholders in cards, Why Sell on KASSIM? section, testimonials rewritten in BM + star ratings, WhatsApp floating support button (bottom-left). |
-| **8** | **Copy/branding cleanup:** All em dashes (—) replaced with standard punctuation throughout. "Ballout Score" → "KASSIM Score" in DashboardStats + profile page. Login page Recycle icon → logo.svg. All 15 Flash listings reset to RM0. Supabase Auth Site URL → kassim.app. Page titles use \| separator. |
+| **7** | **13 UI/UX improvements:** consumer copy, CTA above fold, search bar in hero, register 3 fields, footer logo, ThemeToggle system pref, feedback icon-only, Ending Soon section, card placeholders, Why Sell section, testimonials BM+stars, WhatsApp support button. |
+| **8** | **Branding cleanup:** em dashes replaced, Ballout→KASSIM Score, login logo fix, Flash RM0 reset, Supabase Auth URL → kassim.app. |
+| **9** | **19 UX overhaul (2026-06-04):** Simplified hero (no rule cards), homepage reorder (Flash→Swap→Trust), Navbar profile dropdown + bell, BottomNav mobile (Home/Browse/Sell/Saved/Account), max 2 card image overlays + condition label in body, WhatsApp uses seller.phone, breadcrumb history.back(), DeliveryCheckout 4-step indicator, mobile filter slide-up drawer, KASSIM Score tooltip, new user onboarding card (3 steps), password strength bars, LanguageSwitcher removed from navbar. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -614,18 +611,42 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - Supabase storage bucket: `rehome-photos` (internal only — do NOT rename)
 - Em dashes (—) are banned in all user-visible text. Use `.`, `,`, `:`, `-`, or `|` instead.
 
+## UX Architecture Notes (Fasa 9)
+
+### Navigation
+- **Navbar**: Logo | Browse | How It Works | (logged-in: ❤ Bell + Sell + Avatar dropdown) | ThemeToggle
+- **Avatar dropdown**: Dashboard · Saved Items · Sign Out
+- **BottomNav** (`src/components/layout/BottomNav.tsx`): mobile-only sticky nav, md:hidden. Home/Browse/Sell(float CTA)/Saved/Account
+- **LanguageSwitcher**: removed from Navbar (translations incomplete). Still in `src/components/layout/LanguageSwitcher.tsx` for future use.
+
+### Listing Cards (updated)
+- Max 2 image overlays: ENDING SOON banner (top, red) + mode badge (bottom-left: FLASH BID / SWAP BID)
+- Bid count shown bottom-right only when ≥2 bids
+- Condition: label text in card body (`Like New`, `Excellent`, `Good`, `Fair`, `Used`, `Worn`, `Poor`, `For Parts`) with color-coded pill
+- Category text shown in card body, not as image overlay
+
+### Mobile Filter Drawer (`src/components/listings/MobileFilterDrawer.tsx`)
+- "Filters (N)" button visible on mobile, hidden on desktop (lg:hidden)
+- Desktop: sticky sidebar `top-20`, hidden on mobile (hidden lg:block)
+- Drawer: slide-up from bottom, backdrop click to close, auto-close on filter change (300ms delay)
+
+### DeliveryCheckout Steps
+4-step progress indicator (courier mode only): Method → Postcode → Courier → Your Details
+`step` computed from state: pickup = jump to 3, courier progresses through all 4
+
+### WhatsApp Seller
+- Uses `seller.phone` — formatted as `wa.me/60${phone.replace(/^0/, '')}`
+- Shown only when seller.phone exists
+- Falls back to "Contact via chat below" message
+
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
 - ✅ Supabase Auth Site URL → https://kassim.app (2026-06-03)
-- ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
+- ✅ Friday Mega Auction: 5 listings featured
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
-- ✅ Fasa 1-7 complete — all improvements done
+- ✅ Fasa 1-9 complete
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
-- ✅ DeliveryCheckout UI complete — postcode → EasyParcel quotes → courier picker → address → checkout
-- ✅ id/zh/ar translations complete
-- ✅ WhatsApp support number → +60189899495
-- ✅ Login page: Recycle icon → logo.svg (commit 21f08f0)
-- ✅ All 15 active Flash listings reset to RM0 (startingBid + currentBid)
+- ✅ All 15 active Flash listings reset to RM0
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
