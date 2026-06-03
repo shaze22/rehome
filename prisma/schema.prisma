@@ -16,6 +16,7 @@ model User {
   icStatus        ICStatus    @default(UNVERIFIED)
   icPhoto         String?
   rehomeScore     Int         @default(50)
+  phone           String?
   state           String?
   role            Role        @default(BUYER)
   swapScore       Float?

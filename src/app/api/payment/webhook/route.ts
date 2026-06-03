@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         where: { id: listingId },
         select: {
           currentBidder: true, sellerId: true, title: true, weightKg: true,
-          seller: { select: { name: true, email: true, state: true } },
+          seller: { select: { name: true, email: true, state: true, phone: true } },
         },
       }),
       prisma.transaction.findUnique({ where: { listingId } }),
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
       void createEasyParcelShipment({
         fromName: sellerUser?.name ?? 'KASSIM Seller',
-        fromPhone: '0123456789', // seller phone not in schema yet — placeholder
+        fromPhone: sellerUser?.phone ?? '0123456789',
         fromAddress: sellerState,
         fromPostcode: sellerPostcode,
         toName: 'KASSIM Buyer',

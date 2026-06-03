@@ -7,6 +7,7 @@ import { SellerListingCard } from '@/components/dashboard/SellerListingCard'
 import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
 import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
+import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
 import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp } from 'lucide-react'
 
 async function getDashboardData(userId: string) {
@@ -175,6 +176,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
         </div>
       )}
+
+      {/* Profile — phone required for EasyParcel delivery booking */}
+      <ProfileEditForm
+        initialName={dbUser?.name ?? ''}
+        initialPhone={dbUser?.phone ?? ''}
+        initialState={dbUser?.state ?? ''}
+        missingPhone={!dbUser?.phone}
+      />
 
       {/* IC Verification */}
       {dbUser?.icStatus !== 'VERIFIED' && (
