@@ -4,10 +4,11 @@ import { getDeliveryQuote } from '@/lib/easyparcel'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const buyerState = request.nextUrl.searchParams.get('buyerState')
+  const buyerState = request.nextUrl.searchParams.get('buyerState') ?? ''
+  const buyerPostcode = request.nextUrl.searchParams.get('buyerPostcode') ?? undefined
 
-  if (!buyerState) {
-    return NextResponse.json({ error: 'buyerState is required.' }, { status: 400 })
+  if (!buyerState && !buyerPostcode) {
+    return NextResponse.json({ error: 'buyerState or buyerPostcode is required.' }, { status: 400 })
   }
 
   const listing = await prisma.listing.findUnique({
@@ -19,6 +20,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   }
 
-  const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg)
-  return NextResponse.json({ ...result, sellerState: listing.state, buyerState })
+  const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg, buyerPostcode)
+  return NextResponse.json({ ...result, sellerState: listing.state, buyerState, buyerPostcode })
 }

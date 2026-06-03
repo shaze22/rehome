@@ -98,22 +98,197 @@ const CATEGORY_LABELS: Record<string, string> = {
   BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
-function CreditCheckoutButton({ listingId, bidAmount }: { listingId: string; bidAmount: number }) {
+interface DCourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
+
+function DeliveryCheckout({ listingId, bidAmount, sellerState }: { listingId: string; bidAmount: number; sellerState: string }) {
   const [credit, setCredit] = useState(0)
+  const [method, setMethod] = useState<'pickup' | 'courier'>('courier')
+  const [postcode, setPostcode] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [quotes, setQuotes] = useState<DCourierRate[] | null>(null)
+  const [quotesLoading, setQuotesLoading] = useState(false)
+  const [selected, setSelected] = useState<DCourierRate | null>(null)
+
   useEffect(() => {
     fetch('/api/referral').then(r => r.json()).then(d => setCredit(d.creditBalance ?? 0)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (method !== 'courier' || postcode.length !== 5 || !/^\d{5}$/.test(postcode)) {
+      setQuotes(null); setSelected(null); return
+    }
+    setQuotesLoading(true)
+    const t = setTimeout(() => {
+      fetch(`/api/listings/${listingId}/delivery-quote?buyerState=${sellerState}&buyerPostcode=${postcode}`)
+        .then(r => r.json())
+        .then((d: { couriers?: DCourierRate[] }) => {
+          const list = d.couriers ?? []
+          setQuotes(list)
+          setSelected(list[0] ?? null)
+        })
+        .catch(() => setQuotes(null))
+        .finally(() => setQuotesLoading(false))
+    }, 500)
+    return () => clearTimeout(t)
+  }, [postcode, method, listingId, sellerState])
+
+  const platformFee = Math.round(bidAmount * 0.15 * 100) / 100
   const discount = Math.min(credit, Math.max(0, bidAmount - 1))
-  const chargeAmount = bidAmount - discount
+  const deliveryFee = method === 'courier' ? (selected?.chargedPrice ?? 0) : 0
+  const total = bidAmount - discount + platformFee + deliveryFee
+
+  const ready = method === 'pickup' || (method === 'courier' && selected !== null && phone.length >= 10 && address.length >= 10)
+
+  const checkoutParams = new URLSearchParams({ listingId })
+  if (method === 'courier' && selected) {
+    checkoutParams.set('deliveryFee', selected.chargedPrice.toString())
+    checkoutParams.set('deliveryBase', selected.basePrice.toString())
+    checkoutParams.set('deliveryMarkup', selected.markup.toString())
+    checkoutParams.set('courierName', selected.courierName)
+    checkoutParams.set('courierService', selected.serviceName)
+    checkoutParams.set('courierServiceId', selected.id)
+    checkoutParams.set('buyerPostcode', postcode)
+    checkoutParams.set('buyerPhone', phone)
+    checkoutParams.set('buyerAddress', address.slice(0, 490))
+  }
+
   return (
-    <div>
-      {discount > 0 && (
-        <div className="mb-2 text-xs text-center rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(20,184,166,0.08)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.2)' }}>
-          💳 RM{discount.toFixed(0)} credit will be deducted — pay only RM{chargeAmount.toFixed(0)}
+    <div className="space-y-3">
+      {/* Method toggle */}
+      <div className="grid grid-cols-2 gap-2">
+        {(['pickup', 'courier'] as const).map(m => (
+          <button key={m} type="button" onClick={() => { setMethod(m); setSelected(null); setQuotes(null) }}
+            className="px-3 py-2.5 rounded-lg text-xs font-medium transition-all"
+            style={{
+              backgroundColor: method === m ? (m === 'pickup' ? 'rgba(20,184,166,0.15)' : 'rgba(79,140,255,0.15)') : 'var(--bg-elevated)',
+              border: method === m ? (m === 'pickup' ? '1px solid rgba(20,184,166,0.5)' : '1px solid rgba(79,140,255,0.5)') : '1px solid var(--border)',
+              color: method === m ? (m === 'pickup' ? 'var(--teal)' : 'var(--blue)') : 'var(--text-secondary)',
+            }}>
+            {m === 'pickup' ? '🤝 Self Pick-Up (Free)' : '📦 Courier Delivery'}
+          </button>
+        ))}
+      </div>
+
+      {method === 'pickup' && (
+        <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
+          Arrange pick-up directly with the seller via the chat below.
+        </p>
+      )}
+
+      {method === 'courier' && (
+        <div className="space-y-2">
+          {/* Postcode */}
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Your postcode</label>
+            <input
+              type="text" inputMode="numeric" maxLength={5} value={postcode}
+              onChange={e => setPostcode(e.target.value.replace(/\D/g, ''))}
+              placeholder="e.g. 50480"
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+            />
+          </div>
+
+          {/* Courier picker */}
+          {quotesLoading && (
+            <p className="text-xs text-center py-2" style={{ color: 'var(--text-muted)' }}>Getting courier rates...</p>
+          )}
+          {quotes && quotes.length > 0 && (
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Select courier</label>
+              <div className="space-y-1.5">
+                {quotes.map(c => (
+                  <button key={c.id} type="button" onClick={() => setSelected(c)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all"
+                    style={{
+                      backgroundColor: selected?.id === c.id ? 'rgba(79,140,255,0.12)' : 'var(--bg-elevated)',
+                      border: selected?.id === c.id ? '1px solid rgba(79,140,255,0.5)' : '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                    }}>
+                    <span>
+                      <span className="font-medium">{c.courierName}</span>
+                      <span style={{ color: 'var(--text-muted)' }}> · {c.serviceName}</span>
+                      {c.eta && <span className="ml-1" style={{ color: 'var(--text-muted)' }}>({c.eta})</span>}
+                    </span>
+                    <span className="font-mono font-bold" style={{ color: 'var(--teal)' }}>RM {c.chargedPrice.toFixed(2)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {quotes && quotes.length === 0 && (
+            <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
+              No rates found. Try a different postcode.
+            </p>
+          )}
+
+          {/* Contact & address */}
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Phone number</label>
+            <input
+              type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+              placeholder="e.g. 0123456789"
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Delivery address</label>
+            <textarea
+              value={address} onChange={e => setAddress(e.target.value)}
+              placeholder="Full address including unit, street, city"
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+            />
+          </div>
         </div>
       )}
-      <Link href={`/api/payment/checkout?listingId=${listingId}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
-        Make Payment {discount > 0 ? `— RM${chargeAmount.toFixed(0)}` : ''}
+
+      {/* Payment summary */}
+      {(method === 'pickup' || selected) && (
+        <div className="rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div className="flex justify-between">
+            <span style={{ color: 'var(--text-muted)' }}>Item bid</span>
+            <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between" style={{ color: 'var(--teal)' }}>
+              <span>💳 Credit discount</span>
+              <span className="font-mono">− RM {discount.toFixed(0)}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
+            <span className="font-mono">RM {platformFee.toFixed(2)}</span>
+          </div>
+          {deliveryFee > 0 && (
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-muted)' }}>Delivery ({selected?.courierName})</span>
+              <span className="font-mono">RM {deliveryFee.toFixed(2)}</span>
+            </div>
+          )}
+          {method === 'pickup' && (
+            <div className="flex justify-between">
+              <span style={{ color: 'var(--text-muted)' }}>Delivery</span>
+              <span className="font-mono" style={{ color: 'var(--green)' }}>Free</span>
+            </div>
+          )}
+          <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
+            <span>Total</span>
+            <span className="font-mono">RM {total.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+
+      <Link
+        href={ready ? `/api/payment/checkout?${checkoutParams.toString()}` : '#'}
+        className={`block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal ${!ready ? 'opacity-50 pointer-events-none' : ''}`}
+      >
+        {!ready
+          ? method === 'courier' ? 'Fill in delivery details' : 'Proceed to Payment'
+          : `Proceed to Payment — RM ${total.toFixed(2)}`}
       </Link>
     </div>
   )
@@ -198,7 +373,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [trackingInput, setTrackingInput] = useState('')
   const [cancelling, setCancelling] = useState(false)
 
-  interface QuoteResult { cheapest: number; couriers: { courierName: string; serviceName: string; price: number }[]; source: string }
+  interface CourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
+  interface QuoteResult { cheapest: number; couriers: CourierRate[]; source: string }
   const [deliveryQuote, setDeliveryQuote] = useState<QuoteResult | null>(null)
   const [quoteLoading, setQuoteLoading] = useState(false)
 
@@ -830,7 +1006,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                                   {deliveryQuote.couriers.slice(0, 5).map((c, i) => (
                                     <div key={i} className="flex justify-between" style={{ color: 'var(--text-muted)' }}>
                                       <span>{c.courierName} · {c.serviceName}</span>
-                                      <span className="font-mono">RM {c.price.toFixed(2)}</span>
+                                      <span className="font-mono">RM {c.chargedPrice.toFixed(2)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -905,8 +1081,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Auction Has Ended</p>
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
-                    <p className="text-sm mb-3" style={{ color: 'var(--green)' }}>Congratulations! You are the winner!</p>
-                    <CreditCheckoutButton listingId={listing.id} bidAmount={listing.currentBid} />
+                    <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
+                    <DeliveryCheckout listingId={listing.id} bidAmount={listing.currentBid} sellerState={listing.seller.state ?? 'Kuala Lumpur'} />
                   </div>
                 )}
               </div>
