@@ -525,9 +525,17 @@ Split-panel hero on homepage replacing generic hero. Two panels:
 - **⚡ FLASH BID** (orange): RM0 start, +RM1 min increment, 30min from first bid, sole bidder wins at RM0, real example scenario
 - **🔄 SWAP BID** (green): cash bid OR item swap, seller decides, AI-priced, 3-day window, real example scenario
 Bottom CTA: "List Your Item Free · 15% only on sale"
+Note: `HowItWorks` component removed from homepage (still exists at `/how-it-works`)
+
+## Listings Page USP Labels (`src/app/listings/page.tsx`)
+- Tabs renamed: ⚡ FLASH BID / 🔄 SWAP BID with gradient active state + glow
+- Mode explainer strip below tabs: one-liner rule + active count
+- `ListingCard`: ⚡ FLASH BID gradient badge (orange→yellow) top-left on every Flash card
+- `SwapListingCard`: 🔄 SWAP BID gradient badge (green→teal), offer type chips (🔄 Item Swap / 💰 Cash Bid)
+- `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `d62c16e` — Hero section: Flash Bid + Swap Bid USP split-panel
+2026-06-03, commit `c5a5548` — Listings page labels, HowItWorks removed from homepage
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -539,6 +547,8 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 4 | Email retry queue (Upstash), featured scheduling (Friday 8pm MYT), seller analytics dashboard |
 | 5 | /terms + /privacy (PDPA), Dark Mode toggle, AuditLog table + AdminPanel tab, Sentry replayIntegration |
 | Hero | New split-panel HeroBanner: Flash Bid + Swap Bid USP, rules, examples, mode CTAs |
+| Listings | ⚡ FLASH BID / 🔄 SWAP BID tabs, mode explainer strip, card badges, offer type chips |
+| Homepage | Removed HowItWorks section — hero already covers it. /how-it-works page still exists. |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
