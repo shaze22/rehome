@@ -520,8 +520,14 @@ Shown when user has at least 1 listing:
 - Default: `dark`. Persists in `localStorage.kassim_theme`
 - Navbar: ThemeToggle rendered on both desktop + mobile
 
+## HeroBanner (`src/components/home/HeroBanner.tsx`)
+Split-panel hero on homepage replacing generic hero. Two panels:
+- **⚡ FLASH BID** (orange): RM0 start, +RM1 min increment, 30min from first bid, sole bidder wins at RM0, real example scenario
+- **🔄 SWAP BID** (green): cash bid OR item swap, seller decides, AI-priced, 3-day window, real example scenario
+Bottom CTA: "List Your Item Free · 15% only on sale"
+
 ## Last Deployed
-2026-06-03, commit `aa6a215` — Fasa 5: T&C/Privacy, Dark Mode, Audit Log, Sentry context
+2026-06-03, commit `d62c16e` — Hero section: Flash Bid + Swap Bid USP split-panel
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -532,6 +538,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 3 | Server time sync (/api/time), timer urgency levels (orange→red→pulse), ENDING SOON card, realtime fallback |
 | 4 | Email retry queue (Upstash), featured scheduling (Friday 8pm MYT), seller analytics dashboard |
 | 5 | /terms + /privacy (PDPA), Dark Mode toggle, AuditLog table + AdminPanel tab, Sentry replayIntegration |
+| Hero | New split-panel HeroBanner: Flash Bid + Swap Bid USP, rules, examples, mode CTAs |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
