@@ -1,5 +1,10 @@
 import crypto from 'crypto'
-import type { CourierRate } from './easyparcel'
+
+interface LalamoveRate {
+  courierName: string
+  serviceName: string
+  price: number
+}
 
 const STATE_COORDS: Record<string, { lat: string; lng: string; city: string }> = {
   'Johor': { lat: '1.4927', lng: '103.7414', city: 'Johor Bahru' },
@@ -49,7 +54,7 @@ export async function getLalamoveQuote(
   sellerState: string,
   buyerState: string,
   weightKg: number,
-): Promise<CourierRate | null> {
+): Promise<LalamoveRate | null> {
   const apiKey = process.env.LALAMOVE_API_KEY
   const apiSecret = process.env.LALAMOVE_API_SECRET
   if (!apiKey || !apiSecret) return null

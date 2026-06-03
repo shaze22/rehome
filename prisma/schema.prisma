@@ -121,6 +121,17 @@ model Transaction {
   deliveryConfirmed     Boolean           @default(false)
   pickupMethod          String?
   sellerPickupConfirmed Boolean           @default(false)
+  // Delivery via platform
+  deliveryFee           Float?            // charged to buyer (base + 30% markup)
+  deliveryBase          Float?            // cost platform pays courier
+  deliveryMarkup        Float?            // platform's 30% cut
+  courierName           String?
+  courierService        String?
+  courierServiceId      String?           // EasyParcel service_id for booking
+  easyparcelOrderId     String?
+  buyerPostcode         String?
+  buyerPhone            String?
+  buyerAddress          String?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 }

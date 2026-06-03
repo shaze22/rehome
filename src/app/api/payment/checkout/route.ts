@@ -11,10 +11,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  const listingId = request.nextUrl.searchParams.get('listingId')
+  const p = request.nextUrl.searchParams
+  const listingId = p.get('listingId')
   if (!listingId) {
     return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
   }
+
+  // Delivery params (buyer must select courier before checkout)
+  const deliveryFee = parseFloat(p.get('deliveryFee') ?? '0')       // charged to buyer
+  const deliveryBase = parseFloat(p.get('deliveryBase') ?? '0')     // cost to platform
+  const deliveryMarkup = parseFloat(p.get('deliveryMarkup') ?? '0') // platform's cut
+  const courierName = p.get('courierName') ?? ''
+  const courierService = p.get('courierService') ?? ''
+  const courierServiceId = p.get('courierServiceId') ?? ''
+  const buyerPostcode = p.get('buyerPostcode') ?? ''
+  const buyerPhone = p.get('buyerPhone') ?? ''
+  const buyerAddress = p.get('buyerAddress') ?? ''
 
   const [listing, dbUser] = await Promise.all([
     prisma.listing.findUnique({
@@ -36,27 +48,42 @@ export async function GET(request: NextRequest) {
   }
 
   const creditAvailable = dbUser?.creditBalance ?? 0
-  // Apply credit — max discount is (bidAmount - 1) to keep Stripe minimum of RM1
   const creditToUse = Math.min(creditAvailable, Math.max(0, listing.currentBid - 1))
   const chargeAmount = listing.currentBid - creditToUse
 
   const { platformFee, sellerPayout } = calculateFees(chargeAmount)
 
-  const lineItems = [
-    {
+  const lineItems = []
+
+  // Bid line item
+  lineItems.push({
+    price_data: {
+      currency: 'myr',
+      product_data: {
+        name: listing.title,
+        description: creditToUse > 0
+          ? `KASSIM ⚡ FLASH BID — ${listing.category} (RM${creditToUse.toFixed(0)} credit applied)`
+          : `KASSIM ⚡ FLASH BID — ${listing.category}`,
+      },
+      unit_amount: Math.round(chargeAmount * 100),
+    },
+    quantity: 1,
+  })
+
+  // Delivery line item (required — platform handles all shipping)
+  if (deliveryFee > 0) {
+    lineItems.push({
       price_data: {
         currency: 'myr',
         product_data: {
-          name: listing.title,
-          description: creditToUse > 0
-            ? `KASSIM Auction — ${listing.category} (RM${creditToUse.toFixed(0)} credit ditolak)`
-            : `KASSIM Auction — ${listing.category}`,
+          name: `Delivery — ${courierName} ${courierService}`.trim(),
+          description: `kassim.app delivery (incl. 30% platform handling fee)`,
         },
-        unit_amount: Math.round(chargeAmount * 100),
+        unit_amount: Math.round(deliveryFee * 100),
       },
       quantity: 1,
-    },
-  ]
+    })
+  }
 
   const session = await getStripe().checkout.sessions.create({
     mode: 'payment',
@@ -69,6 +96,16 @@ export async function GET(request: NextRequest) {
       platformFee: platformFee.toString(),
       sellerPayout: sellerPayout.toString(),
       creditUsed: creditToUse.toString(),
+      // Delivery metadata
+      deliveryFee: deliveryFee.toString(),
+      deliveryBase: deliveryBase.toString(),
+      deliveryMarkup: deliveryMarkup.toString(),
+      courierName,
+      courierService,
+      courierServiceId,
+      buyerPostcode,
+      buyerPhone,
+      buyerAddress: buyerAddress.slice(0, 490), // Stripe metadata max 500 chars per value
     },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=success`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}`,

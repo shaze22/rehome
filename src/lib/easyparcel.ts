@@ -1,8 +1,43 @@
 import { calculateDeliveryQuote } from './delivery'
 import { getLalamoveQuote } from './lalamove'
 
-// State capital postcodes for EasyParcel rate lookup
-const STATE_POSTCODE: Record<string, string> = {
+const EP_BASE = 'https://api.easyparcel.com'
+const MARKUP = 0.30
+
+// In-memory token cache (survives across requests in same Node.js instance)
+let _token: string | null = null
+let _tokenExpiry = 0
+
+async function getToken(): Promise<string | null> {
+  const clientId = process.env.EASYPARCEL_CLIENT_ID
+  const clientSecret = process.env.EASYPARCEL_CLIENT_SECRET
+  if (!clientId || !clientSecret) return null
+
+  if (_token && Date.now() < _tokenExpiry - 60_000) return _token
+
+  try {
+    const res = await fetch(`${EP_BASE}/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return null
+    const json = await res.json() as { access_token?: string; expires_in?: number }
+    _token = json.access_token ?? null
+    _tokenExpiry = Date.now() + (json.expires_in ?? 3600) * 1000
+    return _token
+  } catch {
+    return null
+  }
+}
+
+// State capital postcodes for approximation when actual postcode unavailable
+export const STATE_POSTCODE: Record<string, string> = {
   'Johor': '80000',
   'Kedah': '05000',
   'Kelantan': '15000',
@@ -22,46 +57,69 @@ const STATE_POSTCODE: Record<string, string> = {
 }
 
 export interface CourierRate {
+  id: string
   courierName: string
   serviceName: string
-  price: number
+  basePrice: number     // what platform pays courier
+  chargedPrice: number  // what buyer pays (with 30% markup)
+  markup: number        // platform's cut
+  eta?: string
 }
 
 export interface DeliveryQuoteResult {
-  cheapest: number
+  cheapest: number  // chargedPrice of cheapest option
   couriers: CourierRate[]
   source: 'easyparcel' | 'lalamove' | 'fallback'
 }
 
-async function getEasyParcelRates(
-  sellerState: string,
-  buyerState: string,
+async function fetchEasyParcelRates(
+  fromPostcode: string,
+  toPostcode: string,
   weightKg: number,
 ): Promise<CourierRate[]> {
-  const apiKey = process.env.EASYPARCEL_API_KEY
-  const pickCode = STATE_POSTCODE[sellerState]
-  const sendCode = STATE_POSTCODE[buyerState]
-  if (!apiKey || !pickCode || !sendCode) return []
+  const token = await getToken()
+  if (!token) return []
 
   try {
-    const res = await fetch('https://api.easyparcel.com/api/CheckingScheduledRates', {
+    const res = await fetch(`${EP_BASE}/api/CheckingScheduledRates`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
-        api_key: apiKey,
-        bulk: [{ pick_code: pickCode, send_code: sendCode, weight: Math.max(0.5, weightKg) }],
+        bulk: [{
+          pick_code: fromPostcode,
+          send_code: toPostcode,
+          weight: Math.max(0.5, weightKg),
+        }],
       }),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return []
 
-    const json = await res.json()
-    const rates: Array<{ courier_name: string; service_name: string; price: string }> =
-      json?.payload?.[0]?.rates ?? []
+    const json = await res.json() as {
+      payload?: Array<{
+        rates?: Array<{ service_id?: string; courier_name: string; service_name: string; price: string; eta?: string }>
+      }>
+    }
+    const rates = json?.payload?.[0]?.rates ?? []
 
     return rates
-      .map(r => ({ courierName: r.courier_name, serviceName: r.service_name, price: parseFloat(r.price) }))
-      .filter(r => r.price > 0)
+      .map(r => {
+        const base = parseFloat(r.price)
+        const markup = Math.round(base * MARKUP * 100) / 100
+        return {
+          id: r.service_id ?? `${r.courier_name}_${r.service_name}`,
+          courierName: r.courier_name,
+          serviceName: r.service_name,
+          basePrice: base,
+          chargedPrice: Math.round((base + markup) * 100) / 100,
+          markup,
+          eta: r.eta,
+        }
+      })
+      .filter(r => r.basePrice > 0)
   } catch {
     return []
   }
@@ -71,27 +129,109 @@ export async function getDeliveryQuote(
   sellerState: string,
   buyerState: string,
   weightKg: number,
+  buyerPostcode?: string,
 ): Promise<DeliveryQuoteResult> {
-  // Run EasyParcel + Lalamove in parallel
+  const fromPostcode = STATE_POSTCODE[sellerState] ?? '50000'
+  const toPostcode = buyerPostcode ?? STATE_POSTCODE[buyerState] ?? '50000'
+
   const [epRates, lalamoveRate] = await Promise.all([
-    getEasyParcelRates(sellerState, buyerState, weightKg),
+    fetchEasyParcelRates(fromPostcode, toPostcode, weightKg),
     getLalamoveQuote(sellerState, buyerState, weightKg),
   ])
 
   const allCouriers: CourierRate[] = [...epRates]
-  if (lalamoveRate) allCouriers.push(lalamoveRate)
-  allCouriers.sort((a, b) => a.price - b.price)
+
+  if (lalamoveRate) {
+    const base = lalamoveRate.price
+    const markup = Math.round(base * MARKUP * 100) / 100
+    allCouriers.push({
+      id: 'lalamove_sameday',
+      courierName: lalamoveRate.courierName,
+      serviceName: lalamoveRate.serviceName,
+      basePrice: base,
+      chargedPrice: Math.round((base + markup) * 100) / 100,
+      markup,
+    })
+  }
+
+  allCouriers.sort((a, b) => a.chargedPrice - b.chargedPrice)
 
   if (allCouriers.length > 0) {
     const source = epRates.length > 0 ? 'easyparcel' : 'lalamove'
-    return { cheapest: allCouriers[0].price, couriers: allCouriers, source }
+    return { cheapest: allCouriers[0].chargedPrice, couriers: allCouriers, source }
   }
 
-  // Fallback: hardcoded rates
-  const fallbackPrice = calculateDeliveryQuote(sellerState, buyerState)
+  // Fallback: hardcoded estimate + markup
+  const fallbackCharged = calculateDeliveryQuote(sellerState, buyerState)
+  const fallbackBase = Math.round(fallbackCharged / (1 + MARKUP) * 100) / 100
   return {
-    cheapest: fallbackPrice,
-    couriers: [{ courierName: 'J&T / Pos Laju', serviceName: 'Standard (anggaran)', price: fallbackPrice }],
+    cheapest: fallbackCharged,
+    couriers: [{
+      id: 'fallback_standard',
+      courierName: 'J&T / Pos Laju',
+      serviceName: 'Standard (estimate)',
+      basePrice: fallbackBase,
+      chargedPrice: fallbackCharged,
+      markup: Math.round((fallbackCharged - fallbackBase) * 100) / 100,
+    }],
     source: 'fallback',
+  }
+}
+
+export interface ShipmentInput {
+  fromName: string
+  fromPhone: string
+  fromAddress: string
+  fromPostcode: string
+  toName: string
+  toPhone: string
+  toAddress: string
+  toPostcode: string
+  serviceId: string
+  weightKg: number
+  description: string
+  declaredValue?: number
+}
+
+export async function createEasyParcelShipment(input: ShipmentInput): Promise<string | null> {
+  const token = await getToken()
+  if (!token) return null
+
+  try {
+    const res = await fetch(`${EP_BASE}/api/placeOrder`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        bulk: [{
+          service_id: input.serviceId,
+          pick_name: input.fromName,
+          pick_contact: input.fromPhone,
+          pick_addr1: input.fromAddress,
+          pick_code: input.fromPostcode,
+          pick_country: 'MY',
+          send_name: input.toName,
+          send_contact: input.toPhone,
+          send_addr1: input.toAddress,
+          send_code: input.toPostcode,
+          send_country: 'MY',
+          weight: Math.max(0.5, input.weightKg),
+          content: input.description,
+          value: input.declaredValue ?? 1,
+        }],
+      }),
+      signal: AbortSignal.timeout(10000),
+    })
+    if (!res.ok) {
+      console.error('[easyparcel] placeOrder failed:', res.status)
+      return null
+    }
+    const json = await res.json() as { payload?: Array<{ order_number?: string }> }
+    return json?.payload?.[0]?.order_number ?? null
+  } catch (err) {
+    console.error('[easyparcel] placeOrder error:', err)
+    return null
   }
 }
