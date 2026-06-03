@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'How It Works',
-  description: 'Learn how KASSIM Flash Auctions and Item Swaps work — step by step guide with FAQ.',
+  description: 'Learn how KASSIM Flash Auctions and Item Swaps work, step by step guide with FAQ.',
 }
 
 const FLASH_STEPS = [
@@ -17,13 +17,13 @@ const FLASH_STEPS = [
   {
     icon: Eye,
     title: 'Watch bids roll in',
-    desc: 'Your listing goes live instantly. The 30-minute countdown timer does NOT start until someone places the first bid. Until then, your item stays active indefinitely — so there\'s no rush to promote it.',
+    desc: 'Your listing goes live instantly. The 30-minute countdown timer does NOT start until someone places the first bid. Until then, your item stays active indefinitely, so there\'s no rush to promote it.',
     tip: 'Each counter-bid adds 5 minutes (first counter) or 2.5 minutes (subsequent). Maximum 30 minutes from first bid.',
   },
   {
     icon: CreditCard,
     title: 'Winner pays, you ship',
-    desc: 'The highest bidder at the end of the timer wins. They pay via Stripe — funds held in escrow. You ship the item using any courier. Buyer confirms receipt, then payment is released to you.',
+    desc: 'The highest bidder at the end of the timer wins. They pay via Stripe, funds held in escrow. You ship the item using any courier. Buyer confirms receipt, then payment is released to you.',
     tip: 'Platform fee is 15% of the final bid. A RM0 winning bid has RM0 fee.',
   },
 ]
@@ -32,13 +32,13 @@ const SWAP_STEPS = [
   {
     icon: ArrowLeftRight,
     title: 'List your item + state what you want',
-    desc: 'Create a Swap listing with your item\'s details. Specify what you\'d like in return — a specific item, a category, or leave it open to all offers. You can also set a minimum cash top-up if your item is worth more.',
+    desc: 'Create a Swap listing with your item\'s details. Specify what you\'d like in return: a specific item, a category, or leave it open to all offers. You can also set a minimum cash top-up if your item is worth more.',
     tip: 'Marking "Open to all offers" gets you the most responses.',
   },
   {
     icon: MessageSquare,
     title: 'Review incoming offers',
-    desc: 'Buyers can send three types of offers: (1) Cash — pay you money, (2) Item Swap — trade their item, (3) Hybrid — item + cash top-up. You can counter-offer up to 3 rounds per offer. Our AI shows a SwapMatch% score to help you evaluate.',
+    desc: 'Buyers can send three types of offers: (1) Cash - pay you money, (2) Item Swap - trade their item, (3) Hybrid - item + cash top-up. You can counter-offer up to 3 rounds per offer. Our AI shows a SwapMatch% score to help you evaluate.',
     tip: 'You can have multiple offers open at once. Accept the best one.',
   },
   {
@@ -52,7 +52,7 @@ const SWAP_STEPS = [
 const FAQ = [
   {
     q: 'Is KASSIM safe? What if the seller doesn\'t ship?',
-    a: 'KASSIM uses escrow for all Flash Auction payments. Your money is never sent directly to the seller — it\'s held securely until you confirm you\'ve received the item. For Item Swaps, the escrow tracks both parties\' shipments before marking the deal complete.',
+    a: 'KASSIM uses escrow for all Flash Auction payments. Your money is never sent directly to the seller. It is held securely until you confirm you\'ve received the item. For Item Swaps, the escrow tracks both parties\' shipments before marking the deal complete.',
   },
   {
     q: 'What are the fees?',
@@ -64,7 +64,7 @@ const FAQ = [
   },
   {
     q: 'Can I swap items across different states in Malaysia?',
-    a: 'Yes — both parties simply ship their items via courier. KASSIM supports Peninsular Malaysia and East Malaysia shipping. The escrow only releases once both sides confirm receipt.',
+    a: 'Yes. Both parties simply ship their items via courier. KASSIM supports Peninsular Malaysia and East Malaysia shipping. The escrow only releases once both sides confirm receipt.',
   },
   {
     q: 'What is IC Verification?',

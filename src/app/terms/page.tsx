@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Shield } from 'lucide-react'
 
-export const metadata = { title: 'Terms of Service — KASSIM' }
+export const metadata = { title: 'Terms of Service | KASSIM' }
 
 export default function TermsPage() {
   return (

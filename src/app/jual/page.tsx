@@ -22,10 +22,10 @@ const HOW_TO_SELL = [
 ]
 
 const FAQS = [
-  { q: 'What is the platform fee?', a: 'A 15% fee applies to the final sale price for Flash Bid. Swap listings carry a 0% fee — completely free.' },
+  { q: 'What is the platform fee?', a: 'A 15% fee applies to the final sale price for Flash Bid. Swap listings carry a 0% fee, completely free.' },
   { q: 'When do I get paid?', a: 'Money is transferred to your account after the buyer confirms receipt of the item. Usually within 1–3 business days after shipping.' },
   { q: 'Is it safe to transact on KASSIM?', a: 'Yes. KASSIM\'s Escrow system holds the buyer\'s payment until you ship the item and the buyer confirms receipt. No fraud risk.' },
-  { q: 'Can I cancel a listing?', a: 'Yes — as long as no bids have come in, you can withdraw your listing at any time through the dashboard.' },
+  { q: 'Can I cancel a listing?', a: 'Yes. As long as no bids have come in, you can withdraw your listing at any time through the dashboard.' },
   { q: 'What is the difference between Flash Bid and Swap?', a: 'Flash Bid is a 30-minute auction for cash. Swap allows you to exchange your item for another item (you can also add cash, or accept cash only if the owner allows).' },
 ]
 
@@ -55,7 +55,7 @@ export default function JualPage() {
                 href="/sell"
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white gradient-teal glow-teal transition-all hover:scale-105"
               >
-                Sell Now — Free
+                Sell Now - Free
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -97,7 +97,7 @@ export default function JualPage() {
               <ul className="space-y-3 mb-6">
                 {[
                   'Fee only deducted on successful sale',
-                  'SWAP listings 0% fee — completely free',
+                  'SWAP listings 0% fee, completely free',
                   'Money goes straight to your account in 1–3 days',
                   'No limit on number of listings',
                 ].map(item => (
@@ -199,7 +199,7 @@ export default function JualPage() {
             href="/sell"
             className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-semibold text-white gradient-teal glow-teal transition-all hover:scale-105 text-lg"
           >
-            Sell Now — Free
+            Sell Now - Free
             <ArrowRight className="w-5 h-5" />
           </Link>
           <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>

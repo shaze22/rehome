@@ -175,9 +175,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         color: 'var(--text-secondary)',
       }}>
         {activeMode === 'flash' ? (
-          <span>⚡ <strong style={{ color: '#ff6b35' }}>FLASH BID</strong> — Bid from RM0. Timer starts on the first bid. 30 minutes to win. Highest bid takes it.</span>
+          <span>⚡ <strong style={{ color: '#ff6b35' }}>FLASH BID</strong>: Bid from RM0. Timer starts on the first bid. 30 minutes to win. Highest bid takes it.</span>
         ) : (
-          <span>🔄 <strong style={{ color: '#16a34a' }}>SWAP BID</strong> — Offer cash or trade your item. Seller picks the best deal. 3-day window.</span>
+          <span>🔄 <strong style={{ color: '#16a34a' }}>SWAP BID</strong>: Offer cash or trade your item. Seller picks the best deal. 3-day window.</span>
         )}
         <span className="ml-3 font-semibold" style={{ color: activeMode === 'flash' ? '#ff6b35' : '#16a34a' }}>
           {total} {activeMode === 'flash' ? 'auction' : 'swap'}{total !== 1 ? 's' : ''} active
@@ -193,7 +193,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             name="q"
             type="text"
             defaultValue={params.q ?? ''}
-            placeholder={activeMode === 'flash' ? 'Search auctions — laptops, phones, furniture...' : 'Search items to swap...'}
+            placeholder={activeMode === 'flash' ? 'Search auctions: laptops, phones, furniture...' : 'Search items to swap...'}
             className="w-full bg-transparent text-sm outline-none"
             style={{ color: 'var(--text-primary)' }}
           />
@@ -214,7 +214,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               <Search className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
               <p className="text-lg font-medium mb-2">No items found</p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'No auctions right now — check back soon or list yours!'}
+                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'No auctions right now. Check back soon or list yours!'}
               </p>
             </div>
           ) : (

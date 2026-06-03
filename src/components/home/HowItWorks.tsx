@@ -10,12 +10,12 @@ const FLASH_STEPS = [
   {
     icon: Eye,
     title: 'Watch bids roll in (30 min!)',
-    desc: 'Timer only starts on the first bid. Each counter-bid adds more time — drama guaranteed.',
+    desc: 'Timer only starts on the first bid. Each counter-bid adds more time. Drama guaranteed.',
   },
   {
     icon: CreditCard,
     title: 'Winner pays, you ship',
-    desc: 'Buyer pays via secure escrow. Ship the item, get your money — done in one day.',
+    desc: 'Buyer pays via secure escrow. Ship the item, get your money. Done in one day.',
   },
 ]
 
@@ -75,7 +75,7 @@ export function HowItWorks() {
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold mb-2">How It Works</h2>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Two ways to trade — pick what suits you
+            Two ways to trade. Pick what suits you.
           </p>
         </div>
 
@@ -121,7 +121,7 @@ export function HowItWorks() {
 
         <div className="text-center mt-6">
           <Link href="/how-it-works" className="text-sm hover:underline" style={{ color: 'var(--text-muted)' }}>
-            Learn more — full guide with FAQ →
+            Learn more: full guide with FAQ →
           </Link>
         </div>
       </div>

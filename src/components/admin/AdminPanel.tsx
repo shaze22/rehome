@@ -382,7 +382,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
               <tbody>
                 {allUsers.map((u, i) => (
                   <tr key={u.id} style={{ backgroundColor: 'var(--bg-card)', borderBottom: i < allUsers.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                    <td className="px-4 py-2.5 font-medium">{u.name ?? '—'}</td>
+                    <td className="px-4 py-2.5 font-medium">{u.name ?? '-'}</td>
                     <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
                     <td className="px-4 py-2.5">
                       <span className="px-1.5 py-0.5 rounded text-xs font-mono"
@@ -393,7 +393,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                     <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--yellow)' }}>⭐{u.rehomeScore}</td>
                     <td className="px-4 py-2.5 text-center text-xs">{u._count.listings}</td>
                     <td className="px-4 py-2.5 text-center">
-                      {u.icVerified ? <CheckCircle className="w-4 h-4 inline" style={{ color: 'var(--green)' }} /> : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
+                      {u.icVerified ? <CheckCircle className="w-4 h-4 inline" style={{ color: 'var(--green)' }} /> : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>-</span>}
                     </td>
                     <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-muted)' }}>
                       {new Date(u.createdAt).toLocaleDateString('ms-MY')}
@@ -460,10 +460,10 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                             <span className="text-xs font-mono font-semibold" style={{ color: actionColor }}>{log.action}</span>
                           </td>
                           <td className="px-4 py-2.5 text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
-                            {log.targetId ? log.targetId.slice(0, 8) + '…' : '—'}
+                            {log.targetId ? log.targetId.slice(0, 8) + '…' : '-'}
                           </td>
                           <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {log.targetType ?? '—'}
+                            {log.targetType ?? '-'}
                           </td>
                         </tr>
                       )

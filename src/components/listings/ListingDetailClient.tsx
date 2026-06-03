@@ -290,7 +290,7 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
       >
         {!ready
           ? method === 'courier' ? 'Fill in delivery details' : 'Proceed to Payment'
-          : `Proceed to Payment — RM ${total.toFixed(2)}`}
+          : `Proceed to Payment: RM ${total.toFixed(2)}`}
       </Link>
     </div>
   )
@@ -728,8 +728,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   const url = window.location.href
                   const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
                   const text = isSwap
-                    ? `I found *${listing.title}* on KASSIM — swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap? ${url}`
-                    : `I found *${listing.title}* on KASSIM — starting at RM${listing.startingBid}!\n\n${interestCount > 0 ? `${interestCount} people already bid. ` : 'No bids yet! '}Bid now, timer is only 30 mins.\n\n${url}`
+                    ? `I found *${listing.title}* on KASSIM - swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap? ${url}`
+                    : `I found *${listing.title}* on KASSIM - starting at RM${listing.startingBid}!\n\n${interestCount > 0 ? `${interestCount} people already bid. ` : 'No bids yet! '}Bid now, timer is only 30 mins.\n\n${url}`
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
                 }}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -756,7 +756,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>AI Price Suggestion</span>
               </div>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--purple)' }}>
-                RM {listing.aiSuggestedMin} — RM {listing.aiSuggestedMax}
+                RM {listing.aiSuggestedMin} to RM {listing.aiSuggestedMax}
               </p>
               {listing.aiReasoning && (
                 <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{listing.aiReasoning}</p>
@@ -995,7 +995,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     disabled={bidLoading || isLastBidder}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Placing bid...' : isFirstBid ? '⚡ Place First Bid — Could Win for Free!' : `Bid RM ${bidAmount}`}
+                    {bidLoading ? 'Placing bid...' : isFirstBid ? '⚡ Place First Bid - Could Win for Free!' : `Bid RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -1035,7 +1035,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             {/* Trust badge */}
             <div className="flex items-center justify-center gap-2 mt-3 px-3 py-2 rounded-lg text-xs font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.2)', color: 'var(--green)' }}>
               <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-              Safe Escrow — Payment released only after item is received
+              Safe Escrow: Payment released only after item is received
             </div>
           </div>
 
@@ -1093,12 +1093,12 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               )}
               {listing.mode === 'FLASH' && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  ⚡ Flash — 30 Min Only
+                  ⚡ Flash: 30 Min Only
                 </span>
               )}
               {listing.mode === 'SWAP' && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  🔄 Swap — 72hr Window
+                  🔄 Swap: 72hr Window
                 </span>
               )}
             </div>

@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const modeLabel = listing.mode === 'SWAP' ? 'Item Swap' : 'Flash Auction'
   const priceText = listing.mode === 'SWAP' ? 'Item Swap' : `RM ${listing.currentBid.toFixed(0)}`
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
-  const title = `${listing.title} — ${priceText}`
+  const title = `${listing.title} | ${priceText}`
   const description = `${modeLabel} · ${category} · ${listing.state} · ${listing.description.slice(0, 120)}...`
   const photo = listing.photos[0]
   const ogImage = photo ?? `${BASE}/api/og?title=${encodeURIComponent(listing.title)}&subtitle=${encodeURIComponent(`${modeLabel} · ${category} · ${listing.state}`)}&price=${encodeURIComponent(priceText)}&mode=${listing.mode === 'SWAP' ? 'swap' : 'flash'}`

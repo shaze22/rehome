@@ -38,7 +38,7 @@ function useCountdown(endsAt: Date | string | null) {
 
   useEffect(() => {
     if (!endsAt) {
-      setTimeLeft('🎯 No bids yet — could be yours for FREE!')
+      setTimeLeft('🎯 No bids yet! Could be yours for FREE!')
       setIsUrgent(false)
       setIsEndingSoon(false)
       return

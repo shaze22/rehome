@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Impak Alam',
-  description: 'See the real impact of KASSIM — CO₂ saved, trees equivalent, and water conserved from pre-loved item transactions in Malaysia.',
+  description: 'See the real impact of KASSIM: CO₂ saved, trees equivalent, and water conserved from pre-loved item transactions in Malaysia.',
 }
 
 async function getImpactStats() {

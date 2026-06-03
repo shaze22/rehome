@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Lock } from 'lucide-react'
 
-export const metadata = { title: 'Privacy Policy — KASSIM' }
+export const metadata = { title: 'Privacy Policy | KASSIM' }
 
 export default function PrivacyPage() {
   return (
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
               <li>Name, email address, and password when you register</li>
               <li>MyKad (IC) photograph for optional identity verification</li>
               <li>Listing details: title, description, photos, pricing</li>
-              <li>Payment information (processed by Stripe — we do not store card details)</li>
+              <li>Payment information (processed by Stripe; we do not store card details)</li>
               <li>Shipping address for order fulfilment</li>
               <li>Messages exchanged with other users or support</li>
             </ul>

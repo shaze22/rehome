@@ -115,7 +115,7 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
               <>
                 <Upload className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
                 <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Upload IC photo (front)</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>JPG, PNG — maximum 5MB</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>JPG or PNG, maximum 5MB</span>
               </>
             )}
           </label>

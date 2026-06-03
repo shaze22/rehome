@@ -112,7 +112,7 @@ const TRUST_FEATURES = [
   { emoji: '🔒', title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
   { emoji: '🤖', title: 'AI Pricing', desc: 'AI price suggestions based on current market. Sell at a fair and accurate price.' },
   { emoji: '✅', title: 'IC Verified', desc: 'Sellers who verify their IC get a trust badge. You know who you\'re dealing with.' },
-  { emoji: '⚡', title: '30-Min Auctions', desc: 'Fast 30-minute auctions. Bid, win, pay — done in one day.' },
+  { emoji: '⚡', title: '30-Min Auctions', desc: 'Fast 30-minute auctions. Bid, win, pay. Done in one day.' },
 ]
 
 const TESTIMONIALS = [
@@ -122,7 +122,7 @@ const TESTIMONIALS = [
 ]
 
 const SELL_FEATURES = [
-  { emoji: '🔒', title: 'Escrow Protection', desc: 'Buyer payment is held securely. You get paid the moment your item is delivered — guaranteed.' },
+  { emoji: '🔒', title: 'Escrow Protection', desc: 'Buyer payment is held securely. You get paid the moment your item is delivered. Guaranteed.' },
   { emoji: '✅', title: 'IC-Verified Buyers', desc: 'Only verified Malaysians can bid. No fake accounts, no ghosting.' },
   { emoji: '📦', title: 'Auto-Shipping via EasyParcel', desc: 'Courier booking is handled for you after payment. Just pack and hand over.' },
   { emoji: '💸', title: '15% Only on Sale', desc: 'Zero listing fee. Zero monthly fee. We only earn when you earn.' },
@@ -179,7 +179,7 @@ export default async function HomePage() {
                 of CO₂
               </p>
               <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                — equivalent to planting{' '}
+                , equivalent to planting{' '}
                 <span className="font-semibold" style={{ color: 'var(--green)' }}>{new Intl.NumberFormat('en-MY').format(Math.round(co2Full / 21))} trees</span> 🌳
               </p>
             </div>

@@ -159,7 +159,7 @@ export function SwapListingCard({ listing }: Props) {
 
           {/* CTA micro-copy */}
           {offerCount === 0 ? (
-            <p className="text-xs font-medium mb-2" style={{ color: '#16a34a' }}>Open for offers — make your move</p>
+            <p className="text-xs font-medium mb-2" style={{ color: '#16a34a' }}>Open for offers. Make your move!</p>
           ) : (
             <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>🔥 {offerCount} offer{offerCount > 1 ? 's' : ''} already in!</p>
           )}

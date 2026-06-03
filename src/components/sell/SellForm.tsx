@@ -247,8 +247,8 @@ export function SellForm({ userId }: Props) {
         </div>
         <p className="text-xs text-center mt-2 pb-1" style={{ color: 'var(--text-muted)' }}>
           {mode === 'FLASH'
-            ? '30-minute auction after first bid — get cash'
-            : '3-day offer period — swap items, cash, or a combination'}
+            ? '30-minute auction after first bid. Get cash.'
+            : '3-day offer period. Swap items, cash, or a combination.'}
         </p>
       </section>
 
@@ -304,7 +304,7 @@ export function SellForm({ userId }: Props) {
 
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Estimated Weight (kg) — for delivery quote
+              Estimated Weight (kg) - for delivery quote
             </label>
             <div className="flex items-center gap-3">
               <input

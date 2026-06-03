@@ -18,7 +18,7 @@ const DEFAULT_OG = `${BASE_URL}/api/og`
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'KASSIM — Buy, Sell & Swap in Malaysia',
+    default: 'KASSIM | Buy, Sell & Swap in Malaysia',
     template: '%s | KASSIM',
   },
   description: 'Buy and sell pre-loved items through 30-minute progressive auctions or swap directly. AI pricing. Secure escrow. Every deal saves the planet.',
@@ -46,13 +46,13 @@ export const metadata: Metadata = {
     locale: 'en_MY',
     url: BASE_URL,
     siteName: SITE_NAME,
-    title: 'KASSIM — Buy, Sell & Swap in Malaysia',
+    title: 'KASSIM | Buy, Sell & Swap in Malaysia',
     description: 'Buy and sell pre-loved items through progressive auctions or item swaps. AI pricing, secure escrow, save the planet.',
     images: [{ url: DEFAULT_OG, width: 1200, height: 630, alt: 'KASSIM Platform' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KASSIM — Buy, Sell & Swap in Malaysia',
+    title: 'KASSIM | Buy, Sell & Swap in Malaysia',
     description: 'Buy and sell pre-loved items through progressive auctions or item swaps.',
     images: [DEFAULT_OG],
   },

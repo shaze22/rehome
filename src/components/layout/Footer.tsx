@@ -13,7 +13,7 @@ export function Footer() {
               <img src="/logo.svg" alt="KASSIM" height={32} style={{ height: '32px', width: 'auto' }} />
             </div>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Malaysia&apos;s best place to buy, sell &amp; swap pre-loved items — safe, simple, and money in your pocket.
+              Malaysia&apos;s best place to buy, sell &amp; swap pre-loved items. Safe, simple, and money in your pocket.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--green)' }}>

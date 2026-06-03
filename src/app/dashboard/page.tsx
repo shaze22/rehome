@@ -164,7 +164,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               },
               {
                 icon: Star, label: `Avg Rating${reviewCount > 0 ? ` (${reviewCount})` : ''}`, color: 'var(--yellow)',
-                value: reviewCount > 0 ? avgRating.toFixed(1) + ' ★' : '—',
+                value: reviewCount > 0 ? avgRating.toFixed(1) + ' ★' : 'N/A',
               },
             ].map(stat => (
               <div key={stat.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
