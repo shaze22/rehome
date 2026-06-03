@@ -578,7 +578,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-03, commit `21f08f0` — Login page logo fix + Flash listings reset to RM0
+2026-06-03, commit `f3bae81` — em dash cleanup, Ballout→KASSIM Score, login logo fix, Flash RM0
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -600,11 +600,19 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6e | Bid UX fix: remove Step 1 delivery selector, auto-estimate from profile state, client-side auth fallback, correct success message, login ?next= redirect, pre-fill phone in DeliveryCheckout |
 | 6f | Onboarding: phone+state in register form → synced via auth/callback user_metadata. Seller ship email (sendShipNowEmail) with courier+postcode+EasyParcel ID. OrderCard shows delivery info. id/zh/ar translations complete. |
 | **7** | **13 UI/UX improvements:** consumer copy (remove "circular economy"), CTA above fold + search bar in hero, register → 3 fields only (removed phone+state JIT), footer logo.svg, Impact removed from nav (moved to footer), ThemeToggle detects system pref, FeedbackWidget → icon-only button, Ending Soon section in listings, prominent search bar in listings, category gradient placeholders in cards, Why Sell on KASSIM? section, testimonials rewritten in BM + star ratings, WhatsApp floating support button (bottom-left). |
+| **8** | **Copy/branding cleanup:** All em dashes (—) replaced with standard punctuation throughout. "Ballout Score" → "KASSIM Score" in DashboardStats + profile page. Login page Recycle icon → logo.svg. All 15 Flash listings reset to RM0. Supabase Auth Site URL → kassim.app. Page titles use \| separator. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
 - **Redirect URLs:** `https://kassim.app/**`, `https://www.kassim.app/**`, `http://localhost:3000/**`
 - Keep localhost entry — needed for local dev (`npm run dev`)
+
+## Naming Conventions (Important)
+- Brand name: **KASSIM** (all caps in logo/badge, "Kassim" in prose)
+- Score displayed to users: **KASSIM Score** (was "Ballout Score" — fixed)
+- DB field: `rehomeScore` (internal only — do NOT rename, will break DB)
+- Supabase storage bucket: `rehome-photos` (internal only — do NOT rename)
+- Em dashes (—) are banned in all user-visible text. Use `.`, `,`, `:`, `-`, or `|` instead.
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
