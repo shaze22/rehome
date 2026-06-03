@@ -123,32 +123,29 @@ export default function HowItWorksPage() {
         <div className="rounded-2xl p-5 sm:p-6 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${orange}25` }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
 
-          {/* Desktop: 2-row grid (4+4). Mobile: vertical */}
-          <div className="hidden sm:block space-y-2">
-            {/* Row 1: steps 1-4 */}
-            <div className="flex items-start gap-1">
-              <StepBubble n={1} emoji="📸" label="List Item" sub="RM0 start ok" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={2} emoji="🟢" label="Goes Live" sub="No timer yet" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={3} emoji="⚡" label="First Bid" sub="30:00 starts" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={4} emoji="🔥" label="Counter Bids" sub="+5min / +2.5min" color={orange} />
-            </div>
-            {/* Connector line row 1→2 */}
-            <div className="flex justify-end pr-8">
-              <div className="w-px h-6" style={{ backgroundColor: `${orange}40` }} />
-            </div>
-            {/* Row 2: steps 5-8 (right to left for snake pattern) */}
-            <div className="flex items-start gap-1 flex-row-reverse">
-              <StepBubble n={5} emoji="🏆" label="Timer Ends" sub="Highest wins" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={6} emoji="💳" label="Buyer Pays" sub="Escrow holds" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={7} emoji="📦" label="You Ship" sub="Any courier" color={orange} />
-              <Arrow color={orange} />
-              <StepBubble n={8} emoji="💸" label="You Get Paid" sub="After confirm" color={orange} />
-            </div>
+          {/* Desktop: 4-column grid, 2 rows. Mobile: vertical */}
+          <div className="hidden sm:grid grid-cols-4 gap-3">
+            {[
+              { n: 1, emoji: '📸', label: 'List Item', sub: 'RM0 start ok' },
+              { n: 2, emoji: '🟢', label: 'Goes Live', sub: 'No timer yet' },
+              { n: 3, emoji: '⚡', label: 'First Bid', sub: '30:00 starts' },
+              { n: 4, emoji: '🔥', label: 'Counter Bids', sub: '+5min / +2.5min' },
+              { n: 5, emoji: '🏆', label: 'Timer Ends', sub: 'Highest wins' },
+              { n: 6, emoji: '💳', label: 'Buyer Pays', sub: 'Escrow holds' },
+              { n: 7, emoji: '📦', label: 'You Ship', sub: 'Any courier' },
+              { n: 8, emoji: '💸', label: 'You Get Paid', sub: 'After confirm' },
+            ].map((s, i) => (
+              <div key={s.n} className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: `${orange}08`, border: `1px solid ${orange}20` }}>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl mb-2 relative" style={{ background: `${orange}20`, border: `1.5px solid ${orange}40` }}>
+                  {s.emoji}
+                  <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: orange }}>{s.n}</span>
+                </div>
+                <p className="text-xs font-bold leading-tight">{s.label}</p>
+                <p className="text-xs mt-0.5 leading-tight" style={{ color: 'var(--text-muted)' }}>{s.sub}</p>
+                {/* Row 1: show → between cols except last */}
+                {i < 3 && <div className="hidden" />}
+              </div>
+            ))}
           </div>
 
           {/* Mobile vertical */}
@@ -318,32 +315,27 @@ export default function HowItWorksPage() {
         <div className="rounded-2xl p-5 sm:p-6 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${green}25` }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
 
-          {/* Desktop: 2-row grid (4+4) */}
-          <div className="hidden sm:block space-y-2">
-            {/* Row 1: steps 1-4 */}
-            <div className="flex items-start gap-1">
-              <StepBubble n={1} emoji="📝" label="List + State Wants" sub="Item or open" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={2} emoji="📬" label="Offers Arrive" sub="Cash/Swap/Hybrid" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={3} emoji="💬" label="Counter (≤3x)" sub="Negotiate" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={4} emoji="🤝" label="You Accept" sub="Best offer" color={green} />
-            </div>
-            {/* Connector */}
-            <div className="flex justify-end pr-8">
-              <div className="w-px h-6" style={{ backgroundColor: `${green}40` }} />
-            </div>
-            {/* Row 2: steps 5-8 (snake) */}
-            <div className="flex items-start gap-1 flex-row-reverse">
-              <StepBubble n={5} emoji="🔒" label="Escrow Active" sub="Locked in" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={6} emoji="📦" label="Both Ship" sub="Track items" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={7} emoji="✅" label="Both Confirm" sub="Receipt ok" color={green} />
-              <Arrow color={green} />
-              <StepBubble n={8} emoji="🌟" label="Complete!" sub="SwapScore ++" color={green} />
-            </div>
+          {/* Desktop: 4-column grid, 2 rows */}
+          <div className="hidden sm:grid grid-cols-4 gap-3">
+            {[
+              { n: 1, emoji: '📝', label: 'List + State Wants', sub: 'Item or open' },
+              { n: 2, emoji: '📬', label: 'Offers Arrive', sub: 'Cash/Swap/Hybrid' },
+              { n: 3, emoji: '💬', label: 'Counter (≤3x)', sub: 'Negotiate' },
+              { n: 4, emoji: '🤝', label: 'You Accept', sub: 'Best offer' },
+              { n: 5, emoji: '🔒', label: 'Escrow Active', sub: 'Locked in' },
+              { n: 6, emoji: '📦', label: 'Both Ship', sub: 'Track items' },
+              { n: 7, emoji: '✅', label: 'Both Confirm', sub: 'Receipt ok' },
+              { n: 8, emoji: '🌟', label: 'Complete!', sub: 'SwapScore ++' },
+            ].map(s => (
+              <div key={s.n} className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: `${green}08`, border: `1px solid ${green}20` }}>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl mb-2 relative" style={{ background: `${green}20`, border: `1.5px solid ${green}40` }}>
+                  {s.emoji}
+                  <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: green }}>{s.n}</span>
+                </div>
+                <p className="text-xs font-bold leading-tight">{s.label}</p>
+                <p className="text-xs mt-0.5 leading-tight" style={{ color: 'var(--text-muted)' }}>{s.sub}</p>
+              </div>
+            ))}
           </div>
 
           {/* Mobile */}
