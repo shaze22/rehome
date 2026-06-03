@@ -8,7 +8,8 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const saved = localStorage.getItem('kassim_theme') as 'dark' | 'light' | null
-    const initial = saved ?? 'dark'
+    const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches
+    const initial = saved ?? (systemLight ? 'light' : 'dark')
     setTheme(initial)
     document.documentElement.dataset.theme = initial === 'light' ? 'light' : ''
   }, [])

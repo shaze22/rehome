@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Recycle, Leaf, Shield, Zap } from 'lucide-react'
+import { Leaf, Shield, Zap } from 'lucide-react'
 
 export function Footer() {
   return (
@@ -9,13 +9,11 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
-                <Recycle className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="KASSIM" height={32} style={{ height: '32px', width: 'auto' }} />
             </div>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Malaysia&apos;s circular economy platform. Give your items a new life through safe and transparent progressive auctions.
+              Malaysia&apos;s best place to buy, sell &amp; swap pre-loved items — safe, simple, and money in your pocket.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--green)' }}>
@@ -41,6 +39,8 @@ export function Footer() {
                 { href: '/listings', label: 'Browse' },
                 { href: '/sell', label: 'Sell' },
                 { href: '/dashboard', label: 'Dashboard' },
+                { href: '/impact', label: 'Our Impact' },
+                { href: '/how-it-works', label: 'How It Works' },
               ].map(link => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>

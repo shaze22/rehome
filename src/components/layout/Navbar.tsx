@@ -46,9 +46,6 @@ export function Navbar() {
             <Link href="/jual" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
               Sell
             </Link>
-            <Link href="/impact" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
-              Impact
-            </Link>
             {user ? (
               <div className="flex items-center gap-3">
                 <Link href="/dashboard" className="flex items-center gap-1.5 text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>

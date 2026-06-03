@@ -62,6 +62,16 @@ const CATEGORY_LABELS: Record<string, string> = {
   BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
+const CATEGORY_PLACEHOLDERS: Record<string, { emoji: string; bg: string }> = {
+  FURNITURE: { emoji: '🛋️', bg: 'linear-gradient(135deg,#78350f,#92400e)' },
+  ELECTRONICS: { emoji: '📱', bg: 'linear-gradient(135deg,#1e3a5f,#1e40af)' },
+  FASHION: { emoji: '👗', bg: 'linear-gradient(135deg,#5b21b6,#7c3aed)' },
+  BOOKS: { emoji: '📚', bg: 'linear-gradient(135deg,#14532d,#15803d)' },
+  SPORTS: { emoji: '⚽', bg: 'linear-gradient(135deg,#7f1d1d,#b91c1c)' },
+  KITCHEN: { emoji: '🍳', bg: 'linear-gradient(135deg,#713f12,#ca8a04)' },
+  OTHERS: { emoji: '📦', bg: 'linear-gradient(135deg,#1f2937,#374151)' },
+}
+
 export function SwapListingCard({ listing }: Props) {
   const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
   const offerCount = listing._count?.offers ?? 0
@@ -86,8 +96,10 @@ export function SwapListingCard({ listing }: Props) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ArrowLeftRight className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2"
+              style={{ background: CATEGORY_PLACEHOLDERS[listing.category]?.bg ?? CATEGORY_PLACEHOLDERS.OTHERS.bg }}>
+              <span className="text-4xl">{CATEGORY_PLACEHOLDERS[listing.category]?.emoji ?? '📦'}</span>
+              <span className="text-xs font-medium text-white opacity-70">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
             </div>
           )}
           {/* 🔄 SWAP BID mode badge */}

@@ -2,23 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Mail, Lock, User, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
-
-const MALAYSIAN_STATES = [
-  'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Melaka',
-  'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang',
-  'Putrajaya', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu',
-]
+import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [phone, setPhone] = useState('')
-  const [state, setState] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -30,21 +20,12 @@ export default function RegisterPage() {
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     if (!agreed) { setError('You must agree to the Terms & Privacy Policy.'); return }
     setLoading(true)
-    const { data, error: signUpError } = await createClient().auth.signUp({
+    const { error: signUpError } = await createClient().auth.signUp({
       email,
       password,
-      options: { data: { name, phone: phone || null, state: state || null } },
+      options: { data: { name } },
     })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
-
-    // Save phone + state to profile if provided (for verified sessions only)
-    if (data.session && (phone || state)) {
-      await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone: phone || undefined, state: state || undefined }),
-      }).catch(() => {})
-    }
 
     setLoading(false)
     setSuccess(true)
@@ -83,7 +64,7 @@ export default function RegisterPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
           <h1 className="text-2xl font-bold mb-2">Join KASSIM</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Start your circular economy journey today</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Join thousands of Malaysians buying &amp; selling smarter</p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
@@ -141,35 +122,6 @@ export default function RegisterPage() {
                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters"
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
                   style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Phone Number <span style={{ color: 'var(--text-muted)' }}>(for delivery)</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 0123456789"
-                  className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
-                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-              </div>
-            </div>
-
-            {/* State */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Your State <span style={{ color: 'var(--text-muted)' }}>(for delivery estimate)</span>
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                <select value={state} onChange={e => setState(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none appearance-none"
-                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: state ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                  <option value="">Select your state</option>
-                  {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
               </div>
             </div>
 

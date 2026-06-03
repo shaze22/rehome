@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { ListingsFilters } from '@/components/listings/ListingsFilters'
 import { SwapListingCard } from '@/components/listings/SwapListingCard'
-import { Search, Zap, ArrowLeftRight } from 'lucide-react'
+import { Search, Zap, ArrowLeftRight, Flame } from 'lucide-react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -94,15 +94,56 @@ async function getListings(params: SearchParams) {
   }
 }
 
+async function getEndingSoonListings() {
+  try {
+    const now = new Date()
+    const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000)
+    return await prisma.listing.findMany({
+      where: { status: 'ACTIVE', mode: 'FLASH', endsAt: { gte: now, lte: in2h } },
+      include: {
+        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+        _count: { select: { bids: true, offers: true } },
+      },
+      orderBy: { endsAt: 'asc' },
+      take: 6,
+    })
+  } catch {
+    return []
+  }
+}
+
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const activeMode = params.mode === 'swap' ? 'swap' : 'flash'
-  const { listings, total, page, totalPages } = await getListings(params)
+  const [{ listings, total, page, totalPages }, endingSoon] = await Promise.all([
+    getListings(params),
+    activeMode === 'flash' && !params.q ? getEndingSoonListings() : Promise.resolve([]),
+  ])
+  const endingSoonListings = Array.isArray(endingSoon) ? endingSoon : []
 
   const tabBase = 'flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all'
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      {/* Ending Soon — FOMO section (Flash only, no active search) */}
+      {endingSoonListings.length > 0 && (
+        <section className="mb-8 rounded-2xl p-6" style={{ background: 'linear-gradient(135deg,rgba(239,68,68,0.07),rgba(249,115,22,0.07))', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Flame className="w-5 h-5" style={{ color: '#ef4444' }} />
+            <h2 className="text-lg font-bold" style={{ color: '#ef4444' }}>🔥 Ending in the Next 2 Hours</h2>
+            <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
+              {endingSoonListings.length} left
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {endingSoonListings.map(listing => (
+              <ListingCard key={listing.id} listing={listing as any} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Mode tabs */}
       <div className="flex gap-2 mb-4 p-1.5 rounded-2xl w-fit" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <Link
@@ -142,6 +183,25 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           {total} {activeMode === 'flash' ? 'auction' : 'swap'}{total !== 1 ? 's' : ''} active
         </span>
       </div>
+
+      {/* Search bar */}
+      <form method="get" className="flex items-center rounded-xl overflow-hidden mb-6" style={{ border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)' }}>
+        <input type="hidden" name="mode" value={activeMode} />
+        <div className="flex items-center gap-2 flex-1 px-4 py-3">
+          <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+          <input
+            name="q"
+            type="text"
+            defaultValue={params.q ?? ''}
+            placeholder={activeMode === 'flash' ? 'Search auctions — laptops, phones, furniture...' : 'Search items to swap...'}
+            className="w-full bg-transparent text-sm outline-none"
+            style={{ color: 'var(--text-primary)' }}
+          />
+        </div>
+        <button type="submit" className="px-5 py-3 text-sm font-semibold text-white flex-shrink-0 gradient-teal">
+          Search
+        </button>
+      </form>
 
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="lg:w-64 flex-shrink-0">

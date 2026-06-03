@@ -31,15 +31,15 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button — small icon only */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
-        style={{ backgroundColor: 'var(--teal)', boxShadow: '0 4px 20px rgba(20,184,166,0.4)' }}
-        aria-label="Send feedback"
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-11 h-11 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+        style={{ backgroundColor: 'var(--teal)', boxShadow: '0 4px 16px rgba(20,184,166,0.35)' }}
+        aria-label="Beta feedback"
+        title="Beta Feedback"
       >
-        <MessageSquare className="w-4 h-4" />
-        Beta Feedback
+        <MessageSquare className="w-5 h-5" />
       </button>
 
       {/* Modal */}

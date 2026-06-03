@@ -116,9 +116,16 @@ const TRUST_FEATURES = [
 ]
 
 const TESTIMONIALS = [
-  { quote: 'Sold my old laptop for RM650 in 22 minutes. Even faster than Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A' },
-  { quote: 'Swapped my old glasses for a watch. Saved money buying new. So easy!', name: 'Siti R.', location: 'Selangor', initial: 'S' },
-  { quote: 'Escrow gave me peace of mind. Money only releases when item arrives. Really safe.', name: 'Razif M.', location: 'Penang', initial: 'R' },
+  { quote: 'Laptop lama aku terjual RM650 dalam masa 22 minit. Lagi laju dari Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A', stars: 5 },
+  { quote: 'Swap cermin mata lama dengan jam tangan. Jimat duit beli baru. Mudah sangat!', name: 'Siti R.', location: 'Selangor', initial: 'S', stars: 5 },
+  { quote: 'Escrow buat aku rasa selamat. Duit baru lepas bila barang sampai. Highly recommend!', name: 'Razif M.', location: 'Pulau Pinang', initial: 'R', stars: 5 },
+]
+
+const SELL_FEATURES = [
+  { emoji: '🔒', title: 'Escrow Protection', desc: 'Buyer payment is held securely. You get paid the moment your item is delivered — guaranteed.' },
+  { emoji: '✅', title: 'IC-Verified Buyers', desc: 'Only verified Malaysians can bid. No fake accounts, no ghosting.' },
+  { emoji: '📦', title: 'Auto-Shipping via EasyParcel', desc: 'Courier booking is handled for you after payment. Just pack and hand over.' },
+  { emoji: '💸', title: '15% Only on Sale', desc: 'Zero listing fee. Zero monthly fee. We only earn when you earn.' },
 ]
 
 export default async function HomePage() {
@@ -195,6 +202,33 @@ export default async function HomePage() {
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Sell on KASSIM? */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>For Sellers</p>
+            <h2 className="text-2xl font-bold mb-2">Why Sell on KASSIM?</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Better than Mudah. Safer than Facebook. Faster than Carousell.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {SELL_FEATURES.map(item => (
+              <div key={item.title} className="rounded-xl p-6 card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="text-3xl mb-3">{item.emoji}</div>
+                <h3 className="font-bold mb-2 text-sm">{item.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/sell" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white gradient-teal glow-teal hover:scale-105 transition-all">
+              List Your First Item Free
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No listing fee · 15% only when sold · Cancel anytime</p>
           </div>
         </div>
       </section>
@@ -325,13 +359,18 @@ export default async function HomePage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">What Our Users Say</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Real experiences from our community</p>
+            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>Trusted by Malaysians</p>
+            <h2 className="text-2xl font-bold mb-2">Real Stories. Real Results.</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Join thousands who've already made their first deal on KASSIM</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(t => (
               <div key={t.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-3xl font-serif mb-3" style={{ color: 'var(--teal)' }}>&ldquo;</div>
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <span key={i} className="text-yellow-400 text-sm">★</span>
+                  ))}
+                </div>
                 <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{t.quote}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full gradient-teal flex items-center justify-center text-white text-sm font-bold flex-shrink-0">

@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Analytics } from '@vercel/analytics/next'
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
+import { WhatsAppSupport } from '@/components/layout/WhatsAppSupport'
 import { PWASetup } from '@/components/pwa/PWASetup'
 import { createClient } from '@/lib/supabase/server'
 import { PushPermission } from '@/components/pwa/PushPermission'
@@ -76,6 +77,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main className="flex-1">{children}</main>
           <Footer />
           <FeedbackWidget />
+          <WhatsAppSupport />
           <Analytics />
           <PWASetup />
           {user && <PushPermission userId={user.id} />}
