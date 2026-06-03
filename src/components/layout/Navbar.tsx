@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
-import { Recycle, Heart, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
+import { Heart, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -33,13 +33,9 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center gradient-teal">
-              <Recycle className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-bold" style={{ color: 'var(--teal)' }}>KASSIM</span>
-              <p className="text-xs hidden md:block leading-none mt-0.5" style={{ color: 'var(--text-muted)' }}>Bid Fast. Swap Smart.</p>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="KASSIM" height={36} style={{ height: '36px', width: 'auto' }} />
+            <p className="text-xs hidden md:block leading-none" style={{ color: 'var(--text-muted)' }}>Bid Fast. Swap Smart.</p>
           </Link>
 
           {/* Desktop Nav */}

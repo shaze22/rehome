@@ -26,6 +26,14 @@ export const metadata: Metadata = {
   creator: 'KASSIM',
   robots: { index: true, follow: true },
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/logo-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/logo.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/logo-512.png',
+    shortcut: '/logo-512.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" rx="36" fill="#0a0a0f"/>
+
+  <!-- Lightning bolt centered -->
+  <polygon points="118,20 70,108 104,108 82,180 148,88 112,88 136,20" fill="#14b8a6"/>
+</svg>

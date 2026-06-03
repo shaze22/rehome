@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90" width="320" height="90">
+  <!-- Background -->
+  <rect width="320" height="90" rx="14" fill="#0a0a0f"/>
+
+  <!-- Lightning bolt icon -->
+  <g transform="translate(18, 8)">
+    <polygon points="24,0 11,32 21,32 15,66 42,30 29,30 38,0" fill="#14b8a6"/>
+  </g>
+
+  <!-- KASSIM wordmark -->
+  <text
+    x="74"
+    y="60"
+    font-family="'Segoe UI', 'Inter', 'SF Pro Display', Arial, sans-serif"
+    font-size="42"
+    font-weight="700"
+    letter-spacing="3"
+    fill="white"
+  >KASSIM</text>
+</svg>
