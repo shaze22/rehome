@@ -7,10 +7,10 @@ import { SellerListingCard } from '@/components/dashboard/SellerListingCard'
 import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
 import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
-import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag } from 'lucide-react'
+import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp } from 'lucide-react'
 
 async function getDashboardData(userId: string) {
-  const [user, myListings, myBids, transactions, sellerOrders, buyerOrders] = await Promise.all([
+  const [user, myListings, myBids, transactions, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.listing.findMany({
       where: { sellerId: userId },
@@ -46,6 +46,16 @@ async function getDashboardData(userId: string) {
       where: { buyerId: userId },
       orderBy: { createdAt: 'desc' },
     }),
+    // Watchlist count on user's listings
+    prisma.watchlist.count({
+      where: { listing: { sellerId: userId } },
+    }),
+    // Average review rating
+    prisma.review.aggregate({
+      where: { listing: { sellerId: userId } },
+      _avg: { rating: true },
+      _count: { rating: true },
+    }),
   ])
 
   // Attach listing titles
@@ -58,7 +68,15 @@ async function getDashboardData(userId: string) {
   const sellerOrdersWithTitle = sellerOrders.map(o => ({ ...o, listingTitle: titleMap[o.listingId] ?? o.listingId }))
   const buyerOrdersWithTitle  = buyerOrders.map(o => ({ ...o, listingTitle: titleMap[o.listingId] ?? o.listingId }))
 
-  return { user, myListings, myBids, transactions, sellerOrders: sellerOrdersWithTitle, buyerOrders: buyerOrdersWithTitle }
+  const totalViews = myListings.reduce((sum, l) => sum + (l.viewCount ?? 0), 0)
+
+  return {
+    user, myListings, myBids, transactions,
+    sellerOrders: sellerOrdersWithTitle, buyerOrders: buyerOrdersWithTitle,
+    totalViews, watchlistCount,
+    avgRating: avgRating._avg.rating ?? 0,
+    reviewCount: avgRating._count.rating,
+  }
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ payment?: string }> }) {
@@ -67,7 +85,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!user) redirect('/auth/login')
 
   const params = await searchParams
-  let { user: dbUser, myListings, myBids, transactions, sellerOrders, buyerOrders } = await getDashboardData(user.id)
+  let { user: dbUser, myListings, myBids, transactions, sellerOrders, buyerOrders, totalViews, watchlistCount, avgRating, reviewCount } = await getDashboardData(user.id)
 
   if (!dbUser) {
     dbUser = await prisma.user.create({
@@ -117,6 +135,46 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         wonAuctions={wonBids.length}
         icStatus={dbUser?.icStatus ?? 'UNVERIFIED'}
       />
+
+      {/* My Performance — seller analytics */}
+      {myListings.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <BarChart2 className="w-5 h-5" style={{ color: 'var(--teal)' }} />
+            My Performance
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[
+              {
+                icon: Eye, label: 'Total Views', color: 'var(--blue)',
+                value: totalViews.toLocaleString(),
+              },
+              {
+                icon: Heart, label: 'Watchlisted', color: 'var(--red)',
+                value: watchlistCount.toLocaleString(),
+              },
+              {
+                icon: TrendingUp, label: 'Total Earnings', color: 'var(--teal)',
+                value: `RM ${totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+              },
+              {
+                icon: Package, label: 'Active / Sold', color: 'var(--green)',
+                value: `${activeListings.length} / ${myListings.filter(l => l.status === 'SOLD').length}`,
+              },
+              {
+                icon: Star, label: `Avg Rating${reviewCount > 0 ? ` (${reviewCount})` : ''}`, color: 'var(--yellow)',
+                value: reviewCount > 0 ? avgRating.toFixed(1) + ' ★' : '—',
+              },
+            ].map(stat => (
+              <div key={stat.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
+                <p className="text-xl font-bold font-mono" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* IC Verification */}
       {dbUser?.icStatus !== 'VERIFIED' && (

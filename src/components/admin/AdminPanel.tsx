@@ -14,6 +14,7 @@ interface PendingIC {
 
 interface Listing {
   id: string; title: string; status: string; currentBid: number; createdAt: string; isFeatured: boolean
+  featuredUntil: string | null
   seller: { name: string | null; icVerified: boolean }; _count: { bids: number }
 }
 
@@ -55,6 +56,7 @@ interface Props {
 
 function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boolean }) {
   const [featured, setFeatured] = useState(listing.isFeatured)
+  const [featuredUntil, setFeaturedUntil] = useState(listing.featuredUntil)
   const [loading, setLoading] = useState(false)
 
   async function toggle() {
@@ -65,11 +67,19 @@ function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listingId: listing.id, featured: !featured }),
       })
-      if (res.ok) setFeatured(f => !f)
+      if (res.ok) {
+        const data = await res.json()
+        setFeatured(data.isFeatured)
+        setFeaturedUntil(data.featuredUntil ?? null)
+      }
     } finally {
       setLoading(false)
     }
   }
+
+  const expiryLabel = featuredUntil
+    ? `Expires: ${new Date(featuredUntil).toLocaleDateString('en-MY', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+    : null
 
   return (
     <div className="flex items-center justify-between px-4 py-3"
@@ -87,13 +97,18 @@ function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boo
             <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>⚡ FEATURED</span>
           )}
         </div>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-          {listing.seller.name ?? 'Tanpa Nama'} · {listing._count.bids} bids · RM {listing.currentBid.toFixed(0)}
-        </p>
+        <div className="flex items-center gap-3 mt-0.5">
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            {listing.seller.name ?? 'Anonymous'} · {listing._count.bids} bids · RM {listing.currentBid.toFixed(0)}
+          </p>
+          {expiryLabel && (
+            <p className="text-xs font-medium" style={{ color: '#f59e0b' }}>{expiryLabel}</p>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-3 ml-4 flex-shrink-0">
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          {new Date(listing.createdAt).toLocaleDateString('ms-MY')}
+          {new Date(listing.createdAt).toLocaleDateString('en-MY')}
         </p>
         <button
           onClick={toggle}

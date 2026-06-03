@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
+function nextFriday8pmMYT(): Date {
+  const now = new Date()
+  // MYT = UTC+8
+  const myt = new Date(now.getTime() + 8 * 3600000)
+  const day = myt.getUTCDay() // 0=Sun, 5=Fri
+  const daysUntilFriday = (5 - day + 7) % 7 || 7
+  const friday = new Date(myt)
+  friday.setUTCDate(friday.getUTCDate() + daysUntilFriday)
+  friday.setUTCHours(12, 0, 0, 0) // 20:00 MYT = 12:00 UTC
+  return friday
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -13,10 +25,14 @@ export async function POST(request: NextRequest) {
   const { listingId, featured } = await request.json()
   if (!listingId) return NextResponse.json({ error: 'listingId required' }, { status: 400 })
 
+  const data = featured
+    ? { isFeatured: true, featuredAt: new Date(), featuredUntil: nextFriday8pmMYT() }
+    : { isFeatured: false, featuredAt: null, featuredUntil: null }
+
   const listing = await prisma.listing.update({
     where: { id: listingId },
-    data: { isFeatured: !!featured },
-    select: { id: true, isFeatured: true },
+    data,
+    select: { id: true, isFeatured: true, featuredAt: true, featuredUntil: true },
   })
 
   return NextResponse.json(listing)

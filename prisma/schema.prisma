@@ -75,6 +75,8 @@ model Listing {
   aiReasoning        String?
   viewCount          Int           @default(0)
   isFeatured         Boolean       @default(false)
+  featuredAt         DateTime?
+  featuredUntil      DateTime?
   co2Saved           Float         @default(0)
   hasScratch         Boolean       @default(false)
   isFunctional       Boolean       @default(true)
