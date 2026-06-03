@@ -103,37 +103,44 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Tab navigation */}
-      <div className="flex gap-2 mb-8 p-1.5 rounded-2xl w-fit" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      {/* Mode tabs */}
+      <div className="flex gap-2 mb-4 p-1.5 rounded-2xl w-fit" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <Link
           href="/listings?mode=flash"
           className={tabBase}
           style={activeMode === 'flash'
-            ? { backgroundColor: 'var(--orange)', color: 'white' }
+            ? { background: 'linear-gradient(135deg,#ff6b35,#f59e0b)', color: 'white', boxShadow: '0 0 16px rgba(255,107,53,0.3)' }
             : { color: 'var(--text-secondary)' }}
         >
           <Zap className="w-4 h-4" />
-          Flash Auction
+          ⚡ FLASH BID
         </Link>
         <Link
           href="/listings?mode=swap"
           className={tabBase}
           style={activeMode === 'swap'
-            ? { backgroundColor: '#16a34a', color: 'white' }
+            ? { background: 'linear-gradient(135deg,#16a34a,#14b8a6)', color: 'white', boxShadow: '0 0 16px rgba(22,163,74,0.3)' }
             : { color: 'var(--text-secondary)' }}
         >
           <ArrowLeftRight className="w-4 h-4" />
-          Item Swap
+          🔄 SWAP BID
         </Link>
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">
-          {activeMode === 'flash' ? 'Active Auctions' : 'Item Swap'}
-        </h1>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {total} {activeMode === 'flash' ? 'items in auction' : 'items available to swap'} now
-        </p>
+      {/* Mode explainer strip */}
+      <div className="mb-6 px-4 py-2.5 rounded-xl text-xs" style={{
+        backgroundColor: activeMode === 'flash' ? 'rgba(255,107,53,0.07)' : 'rgba(22,163,74,0.07)',
+        border: `1px solid ${activeMode === 'flash' ? 'rgba(255,107,53,0.2)' : 'rgba(22,163,74,0.2)'}`,
+        color: 'var(--text-secondary)',
+      }}>
+        {activeMode === 'flash' ? (
+          <span>⚡ <strong style={{ color: '#ff6b35' }}>FLASH BID</strong> — Bid from RM0. Timer starts on the first bid. 30 minutes to win. Highest bid takes it.</span>
+        ) : (
+          <span>🔄 <strong style={{ color: '#16a34a' }}>SWAP BID</strong> — Offer cash or trade your item. Seller picks the best deal. 3-day window.</span>
+        )}
+        <span className="ml-3 font-semibold" style={{ color: activeMode === 'flash' ? '#ff6b35' : '#16a34a' }}>
+          {total} {activeMode === 'flash' ? 'auction' : 'swap'}{total !== 1 ? 's' : ''} active
+        </span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">

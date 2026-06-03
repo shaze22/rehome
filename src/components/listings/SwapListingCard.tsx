@@ -45,8 +45,8 @@ function useCountdown(endsAt: Date | string | null) {
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       setIsUrgent(diff < 3 * 3600000)
-      if (h >= 24) setTimeLeft(`${Math.floor(h / 24)}h ${h % 24}j`)
-      else if (h > 0) setTimeLeft(`${h}j ${m}m`)
+      if (h >= 24) setTimeLeft(`${Math.floor(h / 24)}d ${h % 24}h`)
+      else if (h > 0) setTimeLeft(`${h}h ${m}m`)
       else setTimeLeft(`${m}m`)
     }
     update()
@@ -90,10 +90,15 @@ export function SwapListingCard({ listing }: Props) {
               <ArrowLeftRight className="w-12 h-12" style={{ color: 'var(--text-muted)' }} />
             </div>
           )}
-          {/* SWAP badge */}
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1" style={{ backgroundColor: 'rgba(22,163,74,0.9)', color: 'white', backdropFilter: 'blur(4px)' }}>
-            <ArrowLeftRight className="w-3 h-3" />
-            SWAP
+          {/* 🔄 SWAP BID mode badge */}
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1" style={{ background: 'linear-gradient(135deg,#16a34a,#14b8a6)', color: 'white', backdropFilter: 'blur(4px)' }}>
+            <ArrowLeftRight className="w-2.5 h-2.5" />
+            SWAP BID
+          </div>
+          {/* Category badge */}
+          <div className="absolute top-8 left-2 px-2 py-0.5 rounded-md text-xs font-medium"
+            style={{ backgroundColor: 'rgba(10,10,15,0.75)', color: 'var(--text-secondary)', backdropFilter: 'blur(4px)' }}>
+            {CATEGORY_LABELS[listing.category] ?? listing.category}
           </div>
           {/* HOT badge */}
           {isHot && (
@@ -123,13 +128,21 @@ export function SwapListingCard({ listing }: Props) {
             </div>
           )}
 
-          {/* Wanted */}
-          <div className="mb-2 px-2 py-1.5 rounded-lg text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
+          {/* Offer types accepted */}
+          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <span className="px-1.5 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.25)' }}>
+              🔄 Item Swap
+            </span>
+            {listing.swapAcceptCash && (
+              <span className="px-1.5 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.25)' }}>
+                💰 Cash Bid
+              </span>
+            )}
+          </div>
+          {/* Wanted item */}
+          <div className="mb-2 px-2 py-1 rounded-lg text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)' }}>
             <span style={{ color: 'var(--text-muted)' }}>Wants: </span>
             <span className="font-medium" style={{ color: '#16a34a' }}>{wantedLabel}</span>
-            {listing.swapAcceptCash && (
-              <span className="ml-1" style={{ color: 'var(--text-muted)' }}>/ Cash ok</span>
-            )}
           </div>
 
           {/* CTA micro-copy */}
@@ -155,9 +168,9 @@ export function SwapListingCard({ listing }: Props) {
               {listing.seller.icVerified && (
                 <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
               )}
-              <div className={`flex items-center gap-0.5 text-xs font-mono ${isUrgent ? 'text-red-400' : ''}`} style={{ color: isUrgent ? undefined : 'var(--text-muted)' }}>
+              <div className="flex items-center gap-0.5 text-xs font-mono" style={{ color: isUrgent ? 'var(--red)' : 'var(--text-muted)' }}>
                 <Clock className="w-3 h-3" />
-                {timeLeft}
+                {timeLeft} left
               </div>
             </div>
           </div>

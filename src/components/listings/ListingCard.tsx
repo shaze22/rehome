@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, CheckCircle, Gavel, Leaf, MapPin } from 'lucide-react'
+import { Clock, CheckCircle, Gavel, Leaf, MapPin, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ListingWithSeller {
@@ -111,17 +111,24 @@ export function ListingCard({ listing }: Props) {
               🔥 ENDING SOON
             </div>
           )}
+          {/* ⚡ FLASH BID mode badge */}
+          <div className={`absolute left-2 flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-8' : 'top-2'}`}
+            style={{ background: 'linear-gradient(135deg,#ff6b35,#f59e0b)', color: 'white', backdropFilter: 'blur(4px)' }}>
+            <Zap className="w-2.5 h-2.5" />
+            FLASH BID
+          </div>
           {/* Category badge */}
-          <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-medium ${isEndingSoon ? 'top-8' : 'top-2'}`} style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)', backdropFilter: 'blur(4px)' }}>
+          <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-medium ${isEndingSoon ? 'top-14' : 'top-8'}`}
+            style={{ backgroundColor: 'rgba(10,10,15,0.75)', color: 'var(--text-secondary)', backdropFilter: 'blur(4px)' }}>
             {CATEGORY_LABELS[listing.category] ?? listing.category}
           </div>
           {/* HOT / bid count badge */}
           {bidCount >= 5 ? (
-            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-14' : 'top-8'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-20' : 'top-14'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
               🔥 {bidCount} bids
             </div>
           ) : isHot && (
-            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-14' : 'top-8'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-20' : 'top-14'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
               🔥 Hot
             </div>
           )}
