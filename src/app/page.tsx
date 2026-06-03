@@ -7,7 +7,7 @@ import { HowItWorks } from '@/components/home/HowItWorks'
 import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
-import { ArrowRight, Leaf, Zap, TrendingUp, ArrowLeftRight, Bot, CheckCircle, Lock, Flame } from 'lucide-react'
+import { ArrowRight, Leaf, Zap, ArrowLeftRight, Flame } from 'lucide-react'
 
 async function getFeaturedListings() {
   try {
@@ -84,23 +84,29 @@ async function getTrendingListings() {
 
 async function getStats() {
   try {
-    const [sold, swapDone, co2Result] = await Promise.all([
+    const now = new Date()
+    const [sold, swapDone, co2Result, activeFlash, activeSwap, salesResult, co2FullResult] = await Promise.all([
       prisma.listing.count({ where: { status: 'SOLD' } }),
       prisma.swapTransaction.count({ where: { escrowStatus: 'COMPLETED' } }),
       prisma.listing.aggregate({ where: { status: 'SOLD' }, _sum: { co2Saved: true } }),
+      prisma.listing.count({ where: { status: 'ACTIVE', mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: now } }] } }),
+      prisma.listing.count({ where: { status: 'ACTIVE', mode: 'SWAP', endsAt: { gt: now } } }),
+      prisma.transaction.aggregate({ _sum: { amount: true } }),
+      prisma.listing.aggregate({ where: { status: { in: ['SOLD', 'ACTIVE'] } }, _sum: { co2Saved: true } }),
     ])
-    return { sold, swapDone, co2: co2Result._sum.co2Saved ?? 0 }
+    return {
+      sold,
+      swapDone,
+      co2: co2Result._sum.co2Saved ?? 0,
+      activeFlash,
+      activeSwap,
+      totalSales: salesResult._sum.amount ?? 0,
+      co2Full: co2FullResult._sum.co2Saved ?? 0,
+    }
   } catch {
-    return { sold: 0, swapDone: 0, co2: 0 }
+    return { sold: 0, swapDone: 0, co2: 0, activeFlash: 0, activeSwap: 0, totalSales: 0, co2Full: 0 }
   }
 }
-
-const CREDIBILITY_STATS = [
-  { icon: Lock, label: 'Secure Escrow', desc: 'Pay only after receiving', color: 'var(--teal)' },
-  { icon: Bot, label: 'AI Pricing', desc: 'Fair price with AI', color: 'var(--purple)' },
-  { icon: CheckCircle, label: 'IC Verified', desc: 'Verified sellers', color: 'var(--green)' },
-  { icon: Zap, label: '30-Min Auctions', desc: 'Fast & secure', color: 'var(--yellow)' },
-]
 
 const TRUST_FEATURES = [
   { emoji: '🔒', title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
@@ -123,7 +129,7 @@ export default async function HomePage() {
     getTrendingListings(),
     getMegaLelongListings(),
   ])
-  const { sold: totalTransactions, swapDone, co2: totalCO2 } = stats
+  const { sold: totalTransactions, swapDone, co2: totalCO2, activeFlash, activeSwap, totalSales, co2Full } = stats
   const hasRealData = totalTransactions > 0
 
   return (
@@ -164,37 +170,46 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Stats — credibility when no real data, real stats otherwise */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
-            {hasRealData ? (
-              <>
-                {[
-                  { label: 'Items Sold', value: `${totalTransactions.toLocaleString()}+`, icon: TrendingUp, color: 'var(--teal)' },
-                  { label: 'CO₂ Saved', value: `${Math.round(totalCO2)}kg`, icon: Leaf, color: 'var(--green)' },
-                  { label: 'Swaps Completed', value: `${swapDone}+`, icon: ArrowLeftRight, color: 'var(--purple)' },
-                  { label: 'Avg. Sell Time', value: '< 30 min', icon: Zap, color: 'var(--yellow)' },
-                ].map(stat => (
-                  <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
-                    <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>{stat.value}</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <>
-                {CREDIBILITY_STATS.map(stat => (
-                  <div key={stat.label} className="rounded-xl p-4 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
-                    <p className="text-sm font-bold" style={{ color: stat.color }}>{stat.label}</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{stat.desc}</p>
-                  </div>
-                ))}
-              </>
-            )}
+          {/* Live Stats Bar */}
+          <div className="mt-12 rounded-2xl px-6 py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 divide-x-0 md:divide-x" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
+              {[
+                { emoji: '⚡', value: activeFlash, label: 'Flash Live', desc: 'auctions now', color: 'var(--orange)' },
+                { emoji: '🔄', value: activeSwap, label: 'Swaps Open', desc: 'items to swap', color: '#16a34a' },
+                { emoji: '💰', value: `RM ${new Intl.NumberFormat('en-MY').format(Math.round(totalSales))}`, label: 'In Sales', desc: 'transacted on platform', color: 'var(--teal)', raw: true },
+                { emoji: '🌱', value: `${new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg`, label: 'CO₂ Saved', desc: 'vs buying new', color: 'var(--green)', raw: true },
+              ].map(stat => (
+                <div key={stat.label} className="text-center py-1 px-3">
+                  <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>
+                    {stat.raw ? stat.value : `${stat.emoji} ${stat.value}`}
+                  </p>
+                  <p className="text-xs font-semibold mt-0.5">{stat.label}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{stat.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* CO2 Impact Card */}
+      {co2Full > 0 && (
+        <section className="px-4 sm:px-6 lg:px-8 pb-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="rounded-2xl px-8 py-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(22,163,74,0.12) 0%, rgba(20,184,166,0.12) 100%)', border: '1px solid rgba(22,163,74,0.25)' }}>
+              <p className="text-xl md:text-2xl font-bold leading-snug">
+                🌱 KASSIM users have saved{' '}
+                <span style={{ color: 'var(--green)' }}>{new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg</span>{' '}
+                of CO₂
+              </p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                — equivalent to planting{' '}
+                <span className="font-semibold" style={{ color: 'var(--green)' }}>{new Intl.NumberFormat('en-MY').format(Math.round(co2Full / 21))} trees</span> 🌳
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Why KASSIM is Safe? */}
       <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
