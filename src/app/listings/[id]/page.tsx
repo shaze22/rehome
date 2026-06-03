@@ -98,6 +98,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const dbUser = user ? await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { state: true, phone: true },
+  }) : null
+
   const relatedSlot = relatedListings.length > 0 ? (
     <section className="mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
       <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
@@ -120,6 +125,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         listing={listing as any}
         currentUserId={user?.id ?? null}
         currentUserEmail={user?.email ?? null}
+        currentUserState={dbUser?.state ?? null}
+        currentUserPhone={dbUser?.phone ?? null}
         watchlistButton={
           <WatchlistButton listingId={listing.id} currentUserId={user?.id ?? null} />
         }

@@ -89,6 +89,8 @@ interface Props {
   listing: Listing
   currentUserId: string | null
   currentUserEmail: string | null
+  currentUserState?: string | null
+  currentUserPhone?: string | null
   watchlistButton?: React.ReactNode
   relatedListingsSlot?: React.ReactNode
 }
@@ -100,11 +102,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface DCourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
 
-function DeliveryCheckout({ listingId, bidAmount, sellerState }: { listingId: string; bidAmount: number; sellerState: string }) {
+function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string }) {
   const [credit, setCredit] = useState(0)
   const [method, setMethod] = useState<'pickup' | 'courier'>('courier')
   const [postcode, setPostcode] = useState('')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(initialPhone ?? '')
   const [address, setAddress] = useState('')
   const [quotes, setQuotes] = useState<DCourierRate[] | null>(null)
   const [quotesLoading, setQuotesLoading] = useState(false)
@@ -344,7 +346,7 @@ function useCountdown(endsAt: string | null, offset = 0) {
   return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting }
 }
 
-export function ListingDetailClient({ listing: initialListing, currentUserId, currentUserEmail, watchlistButton, relatedListingsSlot }: Props) {
+export function ListingDetailClient({ listing: initialListing, currentUserId: initialUserId, currentUserEmail, currentUserState, currentUserPhone, watchlistButton, relatedListingsSlot }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
   const initialBidAmount = initialListing._count.bids === 0
@@ -355,6 +357,27 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [bidLoading, setBidLoading] = useState(false)
   const [bidSuccess, setBidSuccess] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
+  // Client-side auth fallback — handles SSR session miss
+  const [currentUserId, setCurrentUserId] = useState<string | null>(initialUserId)
+  useEffect(() => {
+    if (currentUserId) return
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user) setCurrentUserId(data.user.id)
+    }).catch(() => {})
+  }, [currentUserId])
+
+  const isSwap = initialListing.mode === 'SWAP'
+
+  // Auto-fetch delivery estimate from user's saved state (silent, no user action needed)
+  const [autoDeliveryEst, setAutoDeliveryEst] = useState<number | null>(null)
+  useEffect(() => {
+    if (!currentUserState || isSwap) return
+    fetch(`/api/listings/${initialListing.id}/delivery-quote?buyerState=${encodeURIComponent(currentUserState)}`)
+      .then(r => r.json())
+      .then((d: { cheapest?: number }) => setAutoDeliveryEst(d.cheapest ?? null))
+      .catch(() => {})
+  }, [initialListing.id, currentUserState, isSwap])
+
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
   const serverTimeOffset = useServerTimeOffset()
@@ -378,7 +401,6 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
   const [deliveryQuote, setDeliveryQuote] = useState<QuoteResult | null>(null)
   const [quoteLoading, setQuoteLoading] = useState(false)
 
-  const isSwap = listing.mode === 'SWAP'
   const isSeller = currentUserId === listing.seller.id
   const isBuyer = !!(flashTx && currentUserId === flashTx.buyerId)
 
@@ -568,7 +590,6 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
     e.preventDefault()
     setBidError('')
     if (!currentUserId) { setBidError('Please log in to bid.'); return }
-    if (!deliveryReady) { setBidError('Please choose a delivery method first.'); return }
     if (!Number.isInteger(bidAmount) || bidAmount < 0) { setBidError('Bid must be a whole number (Ringgit only).'); return }
     if (isFirstBid && bidAmount < listing.startingBid) {
       setBidError(`Minimum bid is RM ${listing.startingBid}.`); return
@@ -905,52 +926,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
             {/* Flash Bid form */}
             {!isSwap && !isEnded && !isOwnListing && (
               <form onSubmit={handleBid}>
-                {/* Step 1: Delivery method */}
-                <div className="mb-4">
-                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    Step 1: Choose delivery method
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button
-                      type="button"
-                      onClick={() => { setDeliveryMethod('pickup'); setBuyerState('') }}
-                      className="px-3 py-2.5 rounded-lg text-xs font-medium text-left transition-all"
-                      style={{
-                        backgroundColor: deliveryMethod === 'pickup' ? 'rgba(20,184,166,0.15)' : 'var(--bg-elevated)',
-                        border: deliveryMethod === 'pickup' ? '1px solid rgba(20,184,166,0.5)' : '1px solid var(--border)',
-                        color: deliveryMethod === 'pickup' ? 'var(--teal)' : 'var(--text-secondary)',
-                      }}
-                    >
-                      Self Pick-Up (Free)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryMethod('delivery')}
-                      className="px-3 py-2.5 rounded-lg text-xs font-medium text-left transition-all"
-                      style={{
-                        backgroundColor: deliveryMethod === 'delivery' ? 'rgba(79,140,255,0.15)' : 'var(--bg-elevated)',
-                        border: deliveryMethod === 'delivery' ? '1px solid rgba(79,140,255,0.5)' : '1px solid var(--border)',
-                        color: deliveryMethod === 'delivery' ? 'var(--blue)' : 'var(--text-secondary)',
-                      }}
-                    >
-                      Courier Delivery
-                    </button>
-                  </div>
-                  {deliveryMethod === 'delivery' && (
-                    <select
-                      value={buyerState}
-                      onChange={e => setBuyerState(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                      style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                    >
-                      <option value="">Select your state</option>
-                      {MALAYSIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  )}
-                </div>
-
-                {/* Step 2: Bid amount */}
-                {deliveryReady && (
+                {/* Bid amount */}
+                {(
                   <>
                     <div className="mb-3">
                       <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
@@ -977,74 +954,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                       </div>
                     </div>
 
-                    {/* Cost breakdown */}
-                    {deliveryMethod === 'delivery' && buyerState && (
-                      <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        {quoteLoading ? (
-                          <p className="text-center py-1" style={{ color: 'var(--text-muted)' }}>Getting delivery rate...</p>
-                        ) : deliveryQuote ? (
-                          <>
-                            <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                              Estimated cost if you win {deliveryQuote.source === 'easyparcel' ? '(EasyParcel)' : '(estimated rate)'}:
-                            </p>
-                            <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>Your bid</span>
-                              <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>
-                                Delivery {deliveryQuote.source === 'easyparcel' ? `(${deliveryQuote.couriers[0]?.courierName})` : ''}
-                              </span>
-                              <span className="font-mono">RM {deliveryQuote.cheapest.toFixed(2)}</span>
-                            </div>
-                            {deliveryQuote.source === 'easyparcel' && deliveryQuote.couriers.length > 1 && (
-                              <details className="mt-1">
-                                <summary className="cursor-pointer text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  View all couriers ({deliveryQuote.couriers.length})
-                                </summary>
-                                <div className="mt-1.5 space-y-1 pl-2">
-                                  {deliveryQuote.couriers.slice(0, 5).map((c, i) => (
-                                    <div key={i} className="flex justify-between" style={{ color: 'var(--text-muted)' }}>
-                                      <span>{c.courierName} · {c.serviceName}</span>
-                                      <span className="font-mono">RM {c.chargedPrice.toFixed(2)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </details>
-                            )}
-                            <div className="flex justify-between">
-                              <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
-                              <span className="font-mono">RM {platformFee.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-                              <span>Total payment</span>
-                              <span className="font-mono">RM {(bidAmount + deliveryQuote.cheapest + platformFee).toFixed(2)}</span>
-                            </div>
-                          </>
-                        ) : null}
+                    {/* Auto delivery estimate — silent, from user's saved state */}
+                    <div className="mb-3 flex items-center justify-between text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                      <div className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>Est. delivery to your address</span>
                       </div>
-                    )}
-                    {deliveryMethod === 'pickup' && (
-                      <div className="mb-3 rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                        <p className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated cost if you win:</p>
-                        <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Your bid</span>
-                          <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Delivery</span>
-                          <span className="font-mono text-green-400">Free (self pick-up)</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
-                          <span className="font-mono">RM {platformFee.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-                          <span>Total payment</span>
-                          <span className="font-mono">RM {(bidAmount + platformFee).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    )}
+                      <span className="font-mono font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        {autoDeliveryEst !== null ? `~RM ${autoDeliveryEst.toFixed(2)}` : currentUserState ? '...' : 'Set in profile'}
+                      </span>
+                    </div>
                   </>
                 )}
 
@@ -1060,17 +979,23 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                   </div>
                 )}
 
+                {bidSuccess && (
+                  <div className="mb-3 flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)' }}>
+                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                    Bid placed! You are now the highest bidder.
+                  </div>
+                )}
                 {!currentUserId ? (
-                  <Link href="/auth/login" className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
+                  <Link href={`/auth/login?next=/listings/${listing.id}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
                     Log In to Bid
                   </Link>
                 ) : (
                   <button
                     type="submit"
-                    disabled={bidLoading || isLastBidder || !deliveryReady}
+                    disabled={bidLoading || isLastBidder}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Placing bid...' : bidSuccess ? '✓ Bid Placed!' : quoteLoading ? 'Getting rate...' : !deliveryReady ? 'Choose delivery first' : isFirstBid ? `First Bid — You Might Win for Free!` : `Bid RM ${bidAmount}`}
+                    {bidLoading ? 'Placing bid...' : isFirstBid ? '⚡ Place First Bid — Could Win for Free!' : `Bid RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -1082,7 +1007,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId, cu
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
                     <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
-                    <DeliveryCheckout listingId={listing.id} bidAmount={listing.currentBid} sellerState={listing.seller.state ?? 'Kuala Lumpur'} />
+                    <DeliveryCheckout listingId={listing.id} bidAmount={listing.currentBid} sellerState={listing.seller.state ?? 'Kuala Lumpur'} initialPhone={currentUserPhone ?? undefined} />
                   </div>
                 )}
               </div>
