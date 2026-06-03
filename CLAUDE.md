@@ -535,7 +535,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `c5a5548` — Listings page labels, HowItWorks removed from homepage
+2026-06-03, commit `8885fa0` — Homepage section titles consistent with Flash Bid / Swap Bid branding
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -549,6 +549,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | Hero | New split-panel HeroBanner: Flash Bid + Swap Bid USP, rules, examples, mode CTAs |
 | Listings | ⚡ FLASH BID / 🔄 SWAP BID tabs, mode explainer strip, card badges, offer type chips |
 | Homepage | Removed HowItWorks section — hero already covers it. /how-it-works page still exists. |
+| Branding | Section headers: Friday FLASH BID Night, ⚡ FLASH BID, 🔄 SWAP BID — fully consistent |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
