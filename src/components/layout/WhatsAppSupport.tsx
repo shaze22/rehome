@@ -3,7 +3,7 @@
 export function WhatsAppSupport() {
   return (
     <a
-      href="https://wa.me/60123456789?text=Hi%20KASSIM%2C%20I%20need%20help%20with..."
+      href="https://wa.me/60189899495?text=Hi%20KASSIM%2C%20I%20need%20help%20with..."
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 left-6 z-50 flex items-center justify-center w-11 h-11 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
