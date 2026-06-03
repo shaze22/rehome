@@ -569,7 +569,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `38b09db` — Bid UX fixes: remove delivery friction, fix auth, fix success message
+2026-06-03, commit `377553d` — 5 beta tasks: onboarding, seller email, analytics, delivery dashboard, translations
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -589,6 +589,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6c | Seller phone: User.phone field + PUT /api/user/profile + ProfileEditForm in dashboard (warns if missing) + EasyParcel booking uses real phone |
 | 6d | Logo: public/logo.svg (wordmark) + logo-512.png (EasyParcel/favicon/PWA) + logo-wide.png — Navbar uses logo.svg, layout.tsx icons metadata updated |
 | 6e | Bid UX fix: remove Step 1 delivery selector, auto-estimate from profile state, client-side auth fallback, correct success message, login ?next= redirect, pre-fill phone in DeliveryCheckout |
+| 6f | Onboarding: phone+state in register form → synced via auth/callback user_metadata. Seller ship email (sendShipNowEmail) with courier+postcode+EasyParcel ID. OrderCard shows delivery info. id/zh/ar translations complete. |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
