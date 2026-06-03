@@ -206,12 +206,17 @@ getSwapSuggestions({ title, category, condition, estimatedValue })
 // confidence: 'high' | 'medium' | 'low'  (was 'tinggi'|'sederhana'|'rendah')
 ```
 
-## Courier Rates (Hardcoded + 30% Markup)
-| Zone          | Base  | With Markup |
-|---------------|-------|-------------|
-| Same state    | RM8   | RM10.40     |
-| Peninsular    | RM12  | RM15.60     |
-| East Malaysia | RM20  | RM26.00     |
+## Delivery Revenue Model
+- kassim.app takes **30% markup ON TOP** of courier base price (not a cut from it)
+- Example: courier charges RM10 → buyer pays RM13 → kassim.app pays courier RM10, keeps RM3
+- `basePrice` = what courier charges · `markup` = 30% of base · `chargedPrice` = base + markup
+- Fallback hardcoded rates (when EasyParcel + Lalamove both unavailable):
+
+| Zone          | Base  | Markup | Buyer pays |
+|---------------|-------|--------|------------|
+| Same state    | RM8   | RM2.40 | RM10.40    |
+| Peninsular    | RM12  | RM3.60 | RM15.60    |
+| East Malaysia | RM20  | RM6.00 | RM26.00    |
 
 ## Project Structure
 ```
@@ -541,7 +546,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `d4bdbbe` — Fasa 6: EasyParcel OAuth2 + 30% delivery markup enforced
+2026-06-03, commit `a576343` — DeliveryCheckout UI: postcode → courier picker → address → checkout
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -557,6 +562,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | Homepage | Removed HowItWorks section — hero already covers it. /how-it-works page still exists. |
 | Branding | Section headers: Friday FLASH BID Night, ⚡ FLASH BID, 🔄 SWAP BID — fully consistent |
 | 6 | EasyParcel OAuth2 client, 30% delivery markup enforced, checkout has delivery line item, webhook auto-books shipment, Transaction schema +10 delivery fields |
+| 6b | DeliveryCheckout UI: winner enters postcode → live EasyParcel quotes → pick courier → phone+address → checkout with delivery line item |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
@@ -565,7 +571,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
 - ✅ Fasa 1-5 complete — all 20 prompt improvements done
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
-- DeliverySelector UI pending — buyer needs UI to pick courier + enter postcode before checkout
+- ✅ DeliveryCheckout UI complete — postcode → EasyParcel quotes → courier picker → address → checkout
 - Lalamove API key needs activation by Lalamove (502 error)
 - Enable Vercel Analytics in Vercel dashboard
 - Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
