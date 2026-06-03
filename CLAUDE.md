@@ -225,7 +225,7 @@ src/
       listings/                   — Listing CRUD + delivery quote
       payment/                    — Stripe checkout + webhook
       transactions/               — Flash: confirm receipt + ship
-      admin/verify-ic|resolve-dispute
+      admin/verify-ic|resolve-dispute|feature-listing|audit-log
       cron/                       — Expire auctions
     listings/[id]/                — Listing detail (Flash + Swap + Escrow)
     sell/                         — Create listing (mode toggle + AI swap suggest)
@@ -250,9 +250,10 @@ src/
     supabase/   — Server + client Supabase
   components/
     layout/
-      Navbar.tsx          — includes LanguageSwitcher
-      Footer.tsx
+      Navbar.tsx          — includes LanguageSwitcher + ThemeToggle
+      Footer.tsx          — includes Terms + Privacy links
       LanguageSwitcher.tsx — 5-language dropdown, sets 'kassim_locale' cookie
+      ThemeToggle.tsx     — Sun/Moon toggle, persists in localStorage 'kassim_theme'
     sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest
     listings/ListingCard.tsx       — Flash card
     listings/SwapListingCard.tsx   — Swap card (green, value, wants, offer count)
@@ -282,6 +283,7 @@ next.config.ts        — withNextIntl() wrapper + image patterns
 - `20260601140000_add_referral_system`
 - `20260601150000_add_push_subscriptions`
 - `add_featured_scheduling` (2026-06-03, Supabase MCP) — Listing.featuredAt + Listing.featuredUntil
+- `create_audit_log` (2026-06-03, Supabase MCP) — AuditLog table (id, adminId, action, targetId, targetType, details, createdAt)
 
 ## Environment Variables
 ```
@@ -354,6 +356,7 @@ Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `
 | `kassim_recently_viewed` | localStorage | Recent items (max 6) |
 | `kassim_install_dismissed` | localStorage | PWA install banner dismissed |
 | `kassim_push_asked` | localStorage | Push notification asked |
+| `kassim_theme` | localStorage | UI theme: 'dark' (default) or 'light' |
 | `kassim-v1` | Service Worker cache | SW cache name |
 
 ## PWA
@@ -459,6 +462,8 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 ## All Routes
 | Route | Purpose |
 |-------|---------|
+| `/terms` | Terms of Service (English, Malaysian law, Contract Act 1950) |
+| `/privacy` | Privacy Policy (PDPA 2010 compliant) |
 | `/how-it-works` | Flash vs Swap guide + 8 FAQ accordion |
 | `/jual` | Seller acquisition landing page + fee calculator (English) |
 | `/r/[code]` | Referral landing page (English) |
@@ -471,13 +476,15 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/admin/feature-listing` | Toggle isFeatured + set featuredAt/featuredUntil (admin) |
 | `/api/cron/retry-emails` | Process email retry queue from Upstash Redis |
 | `/api/cron/expire-featured` | Auto-expire isFeatured listings |
+| `/api/admin/audit-log` | GET last 50 AuditLog entries (admin only) |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
-- `sentry.client.config.ts` — client init (NEXT_PUBLIC_SENTRY_DSN)
+- `sentry.client.config.ts` — client init + `replayIntegration` (maskAllText: false)
 - `sentry.server.config.ts` — server init
 - `sentry.edge.config.ts` — edge runtime init
 - `src/instrumentation.ts` — Next.js App Router hook: loads server/edge Sentry on `register()`
+- `src/lib/sentry-user.ts` — `setSentryUser(id, email, name)` + `clearSentryUser()`
 - **`NEXT_PUBLIC_SENTRY_DSN`** set in Vercel ✅ (2026-06-01)
 
 ## Email Queue (`src/lib/email-queue.ts`)
@@ -501,8 +508,20 @@ Shown when user has at least 1 listing:
 - Active / Sold count
 - Avg Rating (from Review table)
 
+## Audit Log (`src/lib/audit.ts`)
+- Table: `AuditLog` (Supabase, not Prisma — query via service role key)
+- `logAdminAction(adminId, action, targetId?, targetType?, details?)`
+- Called in: `verify-ic` (IC_APPROVED / IC_REJECTED), `resolve-dispute` (DISPUTE_COMPLETE / DISPUTE_CANCEL), `feature-listing` (LISTING_FEATURED / LISTING_UNFEATURED)
+- AdminPanel: "Audit Log" section loads via `/api/admin/audit-log` GET (50 latest)
+
+## Dark Mode
+- CSS: `[data-theme="light"]` in `globals.css` — light bg/text vars, teal unchanged
+- `ThemeToggle.tsx` — Sun/Moon button, `document.documentElement.dataset.theme`
+- Default: `dark`. Persists in `localStorage.kassim_theme`
+- Navbar: ThemeToggle rendered on both desktop + mobile
+
 ## Last Deployed
-2026-06-03, commit `123098b` — Fasa 4: email queue, featured scheduling, seller analytics
+2026-06-03, commit `aa6a215` — Fasa 5: T&C/Privacy, Dark Mode, Audit Log, Sentry context
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -512,15 +531,16 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 2 | Live stats bar, CO2 impact card, HowItWorks redesign (Flash vs Swap), /how-it-works FAQ |
 | 3 | Server time sync (/api/time), timer urgency levels (orange→red→pulse), ENDING SOON card, realtime fallback |
 | 4 | Email retry queue (Upstash), featured scheduling (Friday 8pm MYT), seller analytics dashboard |
+| 5 | /terms + /privacy (PDPA), Dark Mode toggle, AuditLog table + AdminPanel tab, Sentry replayIntegration |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
 - ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
+- ✅ Fasa 1-5 complete — all 20 prompt improvements done
 - Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com (optional, fallback works)
 - Lalamove API key needs activation by Lalamove (502 error)
 - Enable Vercel Analytics in Vercel dashboard
 - Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
-- Fasa 5 remaining: T&C + Privacy pages, Dark Mode toggle, Audit Log, Sentry user context
 - Beta testing 100 users → LAUNCH 🚀
