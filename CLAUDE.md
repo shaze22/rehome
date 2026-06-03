@@ -574,8 +574,10 @@ Simplified above-fold section (updated Fasa 9):
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-04, commit `144457f` — /how-it-works visual infographic + branding fix. Auto-deploy via GitHub push.
+2026-06-04, commit `0896d3a` — /how-it-works process flow grid-cols-4 fix. Force deployed via Vercel CLI (`dpl_Byg4NXgDgt46L13CEc16LyreVSSG`).
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+> **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
 
 ## Completed Fasa
 | Fasa | What |
@@ -598,7 +600,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **7** | **13 UI/UX improvements:** consumer copy, CTA above fold, search bar in hero, register 3 fields, footer logo, ThemeToggle system pref, feedback icon-only, Ending Soon section, card placeholders, Why Sell section, testimonials BM+stars, WhatsApp support button. |
 | **8** | **Branding cleanup:** em dashes replaced, Ballout→KASSIM Score, login logo fix, Flash RM0 reset, Supabase Auth URL → kassim.app. |
 | **9** | **19 UX overhaul (2026-06-04):** Simplified hero (no rule cards), homepage reorder (Flash→Swap→Trust), Navbar profile dropdown + bell, BottomNav mobile (Home/Browse/Sell/Saved/Account), max 2 card image overlays + condition label in body, WhatsApp uses seller.phone, breadcrumb history.back(), DeliveryCheckout 4-step indicator, mobile filter slide-up drawer, KASSIM Score tooltip, new user onboarding card (3 steps), password strength bars, LanguageSwitcher removed from navbar. |
-| **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid 8-step process diagram (horizontal desktop/vertical mobile), timer mechanics bar diagram, real bid scenario with payout breakdown, Swap Bid 8-step diagram, 3 offer type cards (Cash/Swap Bid/Hybrid), real swap scenario with counter-offer. KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
+| **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid + Swap Bid 8-step process diagrams (grid-cols-4 desktop, vertical mobile), timer mechanics bar diagram, real scenarios with payout breakdown, 3 offer type cards, KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
