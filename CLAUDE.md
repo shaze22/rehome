@@ -297,7 +297,8 @@ GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL=https://kassim.app   ← set in Vercel Production
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
-EASYPARCEL_API_KEY=          ← empty = hardcoded fallback; get from portal.easyparcel.com
+EASYPARCEL_CLIENT_ID=        ← ✅ set in Vercel (OAuth2)
+EASYPARCEL_CLIENT_SECRET=    ← ✅ set in Vercel (OAuth2)
 LALAMOVE_API_KEY=            ← from developers.lalamove.com
 LALAMOVE_API_SECRET=
 LALAMOVE_SANDBOX=false       ← already set in Vercel
@@ -390,11 +391,16 @@ Buyer selects "Delivery"
 → status=RELEASED
 ```
 
-## EasyParcel Integration
-- `src/lib/easyparcel.ts` — state → postcode mapping, POST EasyParcel API, hardcoded fallback
-- 5s timeout, returns `couriers[]` + `cheapest`
-- **Activate**: set `EASYPARCEL_API_KEY` in Vercel (portal.easyparcel.com)
-- Without key → hardcoded fallback (still works)
+## EasyParcel Integration (OAuth2 — Fasa 6)
+- `src/lib/easyparcel.ts` — OAuth2 `client_credentials` (EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET)
+- In-memory token cache (1 hour TTL, auto-refresh 60s before expiry)
+- `getDeliveryQuote(sellerState, buyerState, weightKg, buyerPostcode?)` — returns rates with **30% markup applied**
+- `CourierRate`: `{ id, courierName, serviceName, basePrice, chargedPrice, markup, eta? }`
+- `createEasyParcelShipment(input)` — books courier after payment confirmed
+- EasyParcel + Lalamove run in parallel (Promise.all), combined + sorted cheapest first
+- Hardcoded fallback if both APIs unavailable
+- **Revenue**: platform keeps 30% delivery markup; pays courier base price
+- Webhook auto-books EasyParcel on `checkout.session.completed` + stores `easyparcelOrderId`
 
 ## Lalamove Integration
 - `src/lib/lalamove.ts` — HMAC-SHA256 auth, state→coordinates, serviceType by weight
@@ -535,7 +541,7 @@ Note: `HowItWorks` component removed from homepage (still exists at `/how-it-wor
 - `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
 
 ## Last Deployed
-2026-06-03, commit `8885fa0` — Homepage section titles consistent with Flash Bid / Swap Bid branding
+2026-06-03, commit `d4bdbbe` — Fasa 6: EasyParcel OAuth2 + 30% delivery markup enforced
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -550,6 +556,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | Listings | ⚡ FLASH BID / 🔄 SWAP BID tabs, mode explainer strip, card badges, offer type chips |
 | Homepage | Removed HowItWorks section — hero already covers it. /how-it-works page still exists. |
 | Branding | Section headers: Friday FLASH BID Night, ⚡ FLASH BID, 🔄 SWAP BID — fully consistent |
+| 6 | EasyParcel OAuth2 client, 30% delivery markup enforced, checkout has delivery line item, webhook auto-books shipment, Transaction schema +10 delivery fields |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
@@ -557,7 +564,8 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
 - ✅ Fasa 1-5 complete — all 20 prompt improvements done
-- Set `EASYPARCEL_API_KEY` in Vercel → portal.easyparcel.com (optional, fallback works)
+- ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
+- DeliverySelector UI pending — buyer needs UI to pick courier + enter postcode before checkout
 - Lalamove API key needs activation by Lalamove (502 error)
 - Enable Vercel Analytics in Vercel dashboard
 - Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
