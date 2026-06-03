@@ -141,7 +141,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero — Flash Bid + Swap Bid USP */}
+      {/* Hero */}
       <HeroBanner />
 
       {/* Live Stats Bar */}
@@ -150,17 +150,16 @@ export default async function HomePage() {
           <div className="rounded-2xl px-6 py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { emoji: '⚡', value: activeFlash, label: 'Flash Live', desc: 'auctions now', color: 'var(--orange)' },
-                { emoji: '🔄', value: activeSwap, label: 'Swaps Open', desc: 'items to swap', color: '#16a34a' },
-                { emoji: '💰', value: `RM ${new Intl.NumberFormat('en-MY').format(Math.round(totalSales))}`, label: 'In Sales', desc: 'transacted on platform', color: 'var(--teal)', raw: true },
-                { emoji: '🌱', value: `${new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg`, label: 'CO₂ Saved', desc: 'vs buying new', color: 'var(--green)', raw: true },
+                { emoji: '⚡', value: activeFlash, label: 'Flash Live', color: 'var(--orange)' },
+                { emoji: '🔄', value: activeSwap, label: 'Swaps Open', color: '#16a34a' },
+                { emoji: '💰', value: totalSales > 0 ? `RM ${new Intl.NumberFormat('en-MY').format(Math.round(totalSales))}` : 'Growing', label: 'In Sales', color: 'var(--teal)', raw: true },
+                { emoji: '🌱', value: co2Full > 0 ? `${new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg` : 'Counting', label: 'CO₂ Saved', color: 'var(--green)', raw: true },
               ].map(stat => (
-                <div key={stat.label} className="text-center py-1 px-3">
+                <div key={stat.label} className="text-center py-1">
                   <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>
                     {stat.raw ? stat.value : `${stat.emoji} ${stat.value}`}
                   </p>
-                  <p className="text-xs font-semibold mt-0.5">{stat.label}</p>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{stat.desc}</p>
+                  <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -168,91 +167,79 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CO2 Impact Card */}
-      {co2Full > 0 && (
-        <section className="px-4 sm:px-6 lg:px-8 pb-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="rounded-2xl px-8 py-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(22,163,74,0.12) 0%, rgba(20,184,166,0.12) 100%)', border: '1px solid rgba(22,163,74,0.25)' }}>
-              <p className="text-xl md:text-2xl font-bold leading-snug">
-                🌱 KASSIM users have saved{' '}
-                <span style={{ color: 'var(--green)' }}>{new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg</span>{' '}
-                of CO₂
-              </p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                , equivalent to planting{' '}
-                <span className="font-semibold" style={{ color: 'var(--green)' }}>{new Intl.NumberFormat('en-MY').format(Math.round(co2Full / 21))} trees</span> 🌳
-              </p>
+      {/* Flash Listings */}
+      <section className="py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Zap className="w-5 h-5" style={{ color: 'var(--orange)' }} />
+                <span style={{ color: '#ff6b35' }}>⚡ FLASH BID</span>
+              </h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bid from RM0. Timer starts on first bid. 30 min to win.</p>
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Why KASSIM is Safe? */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">Why KASSIM is Safe?</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Built to protect buyers and sellers across Malaysia</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {TRUST_FEATURES.map(item => (
-              <div key={item.title} className="rounded-xl p-6 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-3xl mb-3">{item.emoji}</div>
-                <h3 className="font-bold mb-2 text-sm">{item.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Sell on KASSIM? */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>For Sellers</p>
-            <h2 className="text-2xl font-bold mb-2">Why Sell on KASSIM?</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Better than Mudah. Safer than Facebook. Faster than Carousell.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {SELL_FEATURES.map(item => (
-              <div key={item.title} className="rounded-xl p-6 card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-3xl mb-3">{item.emoji}</div>
-                <h3 className="font-bold mb-2 text-sm">{item.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/sell" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white gradient-teal glow-teal hover:scale-105 transition-all">
-              List Your First Item Free
-              <ArrowRight className="w-4 h-4" />
+            <Link href="/listings?mode=flash" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: 'var(--teal)' }}>
+              View All <ArrowRight className="w-4 h-4" />
             </Link>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No listing fee · 15% only when sold · Cancel anytime</p>
           </div>
+          {flashListings.length === 0 ? (
+            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="font-medium mb-2">No active auctions yet</p>
+              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Start Selling</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {flashListings.map(listing => (
+                <ListingCard key={listing.id} listing={listing as any} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Waste Counter — only show when there's real data */}
-      {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
-
-      {/* Recently Viewed — client component, reads localStorage */}
-      <RecentlyViewed />
-
-      {/* Category Grid */}
-      <CategoryGrid />
+      {/* Swap Listings */}
+      <section className="py-10 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
+                <span style={{ color: '#16a34a' }}>🔄 SWAP BID</span>
+              </h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Offer cash or trade your item. Seller picks the best deal. 3-day window.</p>
+            </div>
+            <Link href="/listings?mode=swap" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: '#16a34a' }}>
+              View All <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          {swapListings.length === 0 ? (
+            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
+              <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+              <p className="font-medium mb-2">No swap listings yet</p>
+              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>List Your Item</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {swapListings.map(listing => (
+                <SwapListingCard key={listing.id} listing={listing as any} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Trending This Week */}
       {trendingListings.length >= 2 && (
-        <section className="py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+        <section className="py-10 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-400" />
-                  Trending This Week 🔥
+                  Trending This Week
                 </h2>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Most popular items in the last 7 days</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Most viewed in the last 7 days</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -268,9 +255,9 @@ export default async function HomePage() {
 
       {/* Friday Mega Auction */}
       {megaListings.length > 0 && (
-        <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <section className="py-10 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h2 className="text-2xl font-bold" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -278,7 +265,7 @@ export default async function HomePage() {
                   </h2>
                   <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: '#ef4444', color: 'white' }}>FEATURED</span>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Curated Flash Bid listings every Friday night</p>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Curated listings every Friday night</p>
               </div>
               <MegaLelongCountdown />
             </div>
@@ -293,85 +280,59 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Flash Listings */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Zap className="w-5 h-5" style={{ color: 'var(--orange)' }} />
-                <span style={{ color: '#ff6b35' }}>⚡ FLASH BID</span>
-              </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Bid from RM0 · Timer starts on first bid · 30 min to win</p>
-            </div>
-            <Link href="/listings?mode=flash" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: 'var(--teal)' }}>
-              View All <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          {flashListings.length === 0 ? (
-            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">No active auctions yet</p>
-              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Start Selling</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {flashListings.map(listing => (
-                <ListingCard key={listing.id} listing={listing as any} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Recently Viewed */}
+      <RecentlyViewed />
 
-      {/* Swap Listings */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
-                <span style={{ color: '#16a34a' }}>🔄 SWAP BID</span>
-              </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Offer cash or swap your item · Seller picks the best deal · 3-day window</p>
-            </div>
-            <Link href="/listings?mode=swap" className="flex items-center gap-1.5 text-sm font-medium hover:underline" style={{ color: '#16a34a' }}>
-              View All <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          {swapListings.length === 0 ? (
-            <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
-              <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">No swap offers yet</p>
-              <Link href="/jual" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>List Your Item</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {swapListings.map(listing => (
-                <SwapListingCard key={listing.id} listing={listing as any} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Category Grid */}
+      <CategoryGrid />
 
-      {/* Testimonials */}
+      {/* Why KASSIM is Safe — combined trust + sell value */}
       <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>Trusted by Malaysians</p>
-            <h2 className="text-2xl font-bold mb-2">Real Stories. Real Results.</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Join thousands who've already made their first deal on KASSIM</p>
+            <h2 className="text-2xl font-bold mb-2">Why Malaysians Choose KASSIM</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Better than Mudah. Safer than Facebook Marketplace. Faster than Carousell.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...TRUST_FEATURES, ...SELL_FEATURES].slice(0, 4).map(item => (
+              <div key={item.title} className="rounded-xl p-6 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="text-3xl mb-3">{item.emoji}</div>
+                <h3 className="font-bold mb-2 text-sm">{item.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link href="/sell" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white gradient-teal glow-teal hover:scale-105 transition-all">
+              List Your First Item Free
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No listing fee · 15% only when sold</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Waste Counter */}
+      {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
+
+      {/* Testimonials — beta tester stories */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>Beta Tester Stories</p>
+            <h2 className="text-2xl font-bold mb-2">What Our Early Users Say</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>From Malaysians who tested KASSIM before launch</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(t => (
               <div key={t.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="flex gap-0.5 mb-3">
+                <div className="flex items-center gap-1 mb-3">
                   {Array.from({ length: t.stars }).map((_, i) => (
                     <span key={i} className="text-yellow-400 text-sm">★</span>
                   ))}
+                  <span className="ml-2 text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)' }}>Beta Tester</span>
                 </div>
-                <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{t.quote}</p>
+                <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full gradient-teal flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                     {t.initial}
@@ -386,7 +347,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   )
 }

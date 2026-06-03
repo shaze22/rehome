@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { ListingsFilters } from '@/components/listings/ListingsFilters'
+import { MobileFilterDrawer } from '@/components/listings/MobileFilterDrawer'
 import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { Search, Zap, ArrowLeftRight, Flame } from 'lucide-react'
 import Link from 'next/link'
@@ -203,9 +204,24 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         </button>
       </form>
 
+      {/* Mobile filter button + desktop aside */}
+      <div className="mb-4 lg:hidden flex items-center gap-3">
+        <MobileFilterDrawer
+          currentParams={params as Record<string, string | undefined>}
+          activeFilterCount={[params.category, params.state, params.sort && params.sort !== 'createdAt' ? params.sort : '', params.q].filter(Boolean).length}
+        />
+        {params.q && (
+          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Results for &ldquo;<strong>{params.q}</strong>&rdquo;
+          </span>
+        )}
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="lg:w-64 flex-shrink-0">
-          <ListingsFilters currentParams={params as Record<string, string | undefined>} />
+        <aside className="hidden lg:block lg:w-64 flex-shrink-0">
+          <div className="sticky top-20">
+            <ListingsFilters currentParams={params as Record<string, string | undefined>} />
+          </div>
         </aside>
 
         <div className="flex-1">

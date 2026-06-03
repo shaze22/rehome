@@ -102,6 +102,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const activeListings = myListings.filter(l => l.status === 'ACTIVE')
   const wonBids = myBids.filter(b => b.listing.currentBidder === user.id && b.listing.status !== 'ACTIVE')
 
+  const isNewUser = myListings.length === 0 && myBids.length === 0
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {params.payment === 'success' && (
@@ -114,18 +116,42 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
+          <h1 className="text-3xl font-bold mb-1">My Dashboard</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Welcome, <span style={{ color: 'var(--teal)' }}>{dbUser?.name ?? user.email}</span>
+            Welcome back, <span style={{ color: 'var(--teal)' }}>{dbUser?.name ?? user.email}</span>
           </p>
         </div>
         <Link
           href="/sell"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-white gradient-teal"
         >
-          <Plus className="w-4 h-4" /> Sell Item
+          <Plus className="w-4 h-4" /> List Item
         </Link>
       </div>
+
+      {/* New user onboarding */}
+      {isNewUser && (
+        <div className="mb-8 rounded-2xl p-6" style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.07),rgba(22,163,74,0.07))', border: '1px solid rgba(20,184,166,0.25)' }}>
+          <h2 className="text-lg font-bold mb-4">Welcome to KASSIM! Here&apos;s how to get started:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { step: '1', emoji: '📸', title: 'List Your First Item', desc: 'Take photos, set a price, and go live in under 3 minutes.', href: '/sell', cta: 'Start Selling' },
+              { step: '2', emoji: '🔍', title: 'Browse Auctions', desc: 'Find pre-loved items from Malaysians near you. Bid from RM0.', href: '/listings', cta: 'Browse Now' },
+              { step: '3', emoji: '✅', title: 'Verify Your IC', desc: 'Get a trust badge that makes buyers 3x more likely to bid on your items.', href: '/dashboard', cta: 'Verify Below' },
+            ].map(item => (
+              <Link key={item.step} href={item.href} className="flex flex-col gap-2 p-4 rounded-xl transition-all hover:scale-[1.02]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white gradient-teal">{item.step}</span>
+                  <span className="text-lg">{item.emoji}</span>
+                </div>
+                <p className="font-semibold text-sm">{item.title}</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
+                <span className="text-xs font-medium mt-auto" style={{ color: 'var(--teal)' }}>{item.cta} →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <DashboardStats
@@ -160,7 +186,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               },
               {
                 icon: Package, label: 'Active / Sold', color: 'var(--green)',
-                value: `${activeListings.length} / ${myListings.filter(l => l.status === 'SOLD').length}`,
+                value: `${activeListings.length} / ${myListings.filter((l: { status: string }) => l.status === 'SOLD').length}`,
               },
               {
                 icon: Star, label: `Avg Rating${reviewCount > 0 ? ` (${reviewCount})` : ''}`, color: 'var(--yellow)',

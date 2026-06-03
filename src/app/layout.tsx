@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { Analytics } from '@vercel/analytics/next'
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
 import { WhatsAppSupport } from '@/components/layout/WhatsAppSupport'
@@ -74,8 +75,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          {/* pb-16 md:pb-0 gives clearance for mobile bottom nav */}
+          <main className="flex-1 pb-16 md:pb-0">{children}</main>
           <Footer />
+          <BottomNav />
           <FeedbackWidget />
           <WhatsAppSupport />
           <Analytics />

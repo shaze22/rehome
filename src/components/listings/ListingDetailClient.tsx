@@ -42,6 +42,7 @@ interface Bid {
 interface Seller {
   id: string
   name: string | null
+  phone?: string | null
   rehomeScore: number
   icVerified: boolean
   state: string | null
@@ -112,6 +113,14 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
   const [quotesLoading, setQuotesLoading] = useState(false)
   const [selected, setSelected] = useState<DCourierRate | null>(null)
 
+  const step = method === 'pickup' ? 3
+    : !postcode || postcode.length < 5 ? 1
+    : !selected ? 2
+    : !phone || phone.length < 10 || !address || address.length < 10 ? 3
+    : 4
+
+  const STEPS = ['Delivery Method', 'Postcode', 'Courier', 'Your Details']
+
   useEffect(() => {
     fetch('/api/referral').then(r => r.json()).then(d => setCredit(d.creditBalance ?? 0)).catch(() => {})
   }, [])
@@ -157,6 +166,27 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
 
   return (
     <div className="space-y-3">
+      {/* Step indicator (courier only) */}
+      {method === 'courier' && (
+        <div className="flex items-center gap-1 mb-1">
+          {STEPS.map((label, i) => (
+            <div key={label} className="flex items-center gap-1 flex-1">
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                  backgroundColor: i + 1 <= step ? 'var(--teal)' : 'var(--bg-elevated)',
+                  color: i + 1 <= step ? 'white' : 'var(--text-muted)',
+                  border: i + 1 === step ? '2px solid var(--teal)' : '2px solid transparent',
+                }}>
+                  {i + 1 < step ? '✓' : i + 1}
+                </div>
+                <span className="text-xs mt-0.5 text-center leading-none" style={{ color: i + 1 === step ? 'var(--teal)' : 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
+              </div>
+              {i < STEPS.length - 1 && <div className="h-0.5 flex-1 mb-3 rounded" style={{ backgroundColor: i + 1 < step ? 'var(--teal)' : 'var(--border)' }} />}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Method toggle */}
       <div className="grid grid-cols-2 gap-2">
         {(['pickup', 'courier'] as const).map(m => (
@@ -623,9 +653,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
+      {/* Breadcrumb — uses history.back() to preserve filter state */}
       <nav className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        <Link href="/listings" className="hover:text-teal transition-colors">Listings</Link>
+        <button onClick={() => window.history.back()} className="hover:text-teal transition-colors">Listings</button>
         <span className="mx-2">›</span>
         <span style={{ color: 'var(--text-primary)' }}>{CATEGORY_LABELS[listing.category]}</span>
       </nav>
@@ -661,7 +691,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
           {listing.photos.length > 1 && (
             <div className="flex gap-2">
               {listing.photos.map((photo, i) => (
-                <button key={i} onClick={() => setPhotoIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden relative flex-shrink-0 ${i === photoIdx ? 'ring-2' : 'opacity-60'}`} style={{ ringColor: 'var(--teal)' } as React.CSSProperties}>
+                <button key={i} onClick={() => setPhotoIdx(i)} className="w-16 h-16 rounded-lg overflow-hidden relative flex-shrink-0 transition-all" style={{ opacity: i === photoIdx ? 1 : 0.5, border: i === photoIdx ? '2px solid var(--teal)' : '2px solid transparent' }}>
                   <Image src={photo} alt={`Photo ${i + 1}`} fill className="object-cover" />
                 </button>
               ))}
@@ -931,7 +961,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   <>
                     <div className="mb-3">
                       <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                        Step 2: Enter bid amount (RM, whole number)
+                        Your bid amount (RM, whole number)
                       </p>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -1067,10 +1097,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                       {listing.seller.state}
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Replies &lt; 24h
-                  </span>
+                  <span>Member since {new Date(listing.seller.createdAt).toLocaleDateString('en-MY', { year: 'numeric', month: 'short' })}</span>
                   {listing.seller._count && listing.seller._count.listings > 1 && (
                     <span style={{ color: 'var(--text-muted)' }}>{listing.seller._count.listings} active listings</span>
                   )}
@@ -1103,10 +1130,10 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               )}
             </div>
 
-            {/* WhatsApp Seller — logged in + not own listing */}
-            {currentUserId && !isOwnListing && (
+            {/* WhatsApp Seller — only when seller has a phone number */}
+            {currentUserId && !isOwnListing && listing.seller.phone && (
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Hi, I'm interested in ${listing.title} on KASSIM: https://kassim.app/listings/${listing.id}`)}`}
+                href={`https://wa.me/60${listing.seller.phone.replace(/^0/, '')}?text=${encodeURIComponent(`Hi ${listing.seller.name ?? ''}, I'm interested in your listing on KASSIM: ${listing.title}\nhttps://kassim.app/listings/${listing.id}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full mt-3 py-2.5 rounded-xl text-sm font-medium"
@@ -1114,6 +1141,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               >
                 💬 WhatsApp {listing.seller.name ?? 'Seller'}
               </a>
+            )}
+            {currentUserId && !isOwnListing && !listing.seller.phone && (
+              <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
+                Contact seller via chat below
+              </p>
             )}
           </div>
         </div>

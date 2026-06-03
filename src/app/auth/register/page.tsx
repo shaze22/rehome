@@ -5,6 +5,22 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 
+function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
+  if (!pw) return { score: 0, label: '', color: '' }
+  let score = 0
+  if (pw.length >= 8) score++
+  if (/[A-Z]/.test(pw)) score++
+  if (/[0-9]/.test(pw)) score++
+  if (/[^A-Za-z0-9]/.test(pw)) score++
+  const levels = [
+    { score: 1, label: 'Weak', color: 'var(--red)' },
+    { score: 2, label: 'Fair', color: 'var(--orange)' },
+    { score: 3, label: 'Good', color: 'var(--yellow)' },
+    { score: 4, label: 'Strong', color: 'var(--green)' },
+  ]
+  return levels[score - 1] ?? { score: 0, label: 'Too short', color: 'var(--red)' }
+}
+
 export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -123,6 +139,20 @@ export default function RegisterPage() {
                   className="w-full pl-10 pr-3 py-3 rounded-xl text-sm outline-none"
                   style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               </div>
+              {/* Password strength indicator */}
+              {password.length > 0 && (() => {
+                const strength = getPasswordStrength(password)
+                return (
+                  <div className="mt-2">
+                    <div className="flex gap-1 mb-1">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="flex-1 h-1.5 rounded-full transition-all" style={{ backgroundColor: i <= strength.score ? strength.color : 'var(--bg-elevated)' }} />
+                      ))}
+                    </div>
+                    <p className="text-xs" style={{ color: strength.color }}>{strength.label}</p>
+                  </div>
+                )
+              })()}
             </div>
 
             <label className="flex items-start gap-2.5 cursor-pointer">

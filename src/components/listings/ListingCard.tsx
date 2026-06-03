@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, CheckCircle, Leaf, MapPin, Zap } from 'lucide-react'
+import { Clock, CheckCircle, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ListingWithSeller {
@@ -38,7 +38,7 @@ function useCountdown(endsAt: Date | string | null) {
 
   useEffect(() => {
     if (!endsAt) {
-      setTimeLeft('🎯 No bids yet! Could be yours for FREE!')
+      setTimeLeft('')
       setIsUrgent(false)
       setIsEndingSoon(false)
       return
@@ -78,17 +78,24 @@ const CATEGORY_PLACEHOLDERS: Record<string, { emoji: string; bg: string }> = {
   OTHERS: { emoji: '📦', bg: 'linear-gradient(135deg,#1f2937,#374151)' },
 }
 
+const CONDITION_LABEL: Record<number, { label: string; color: string }> = {
+  10: { label: 'Like New', color: 'var(--green)' },
+  9: { label: 'Excellent', color: 'var(--green)' },
+  8: { label: 'Very Good', color: 'var(--green)' },
+  7: { label: 'Good', color: 'var(--teal)' },
+  6: { label: 'Fair', color: 'var(--yellow)' },
+  5: { label: 'Fair', color: 'var(--yellow)' },
+  4: { label: 'Used', color: 'var(--orange)' },
+  3: { label: 'Worn', color: 'var(--orange)' },
+  2: { label: 'Poor', color: 'var(--red)' },
+  1: { label: 'For Parts', color: 'var(--red)' },
+}
+
 export function ListingCard({ listing }: Props) {
   const { timeLeft, isUrgent, isEndingSoon } = useCountdown(listing.endsAt ?? null)
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
   const bidCount = listing._count?.bids ?? 0
-  const isHot = (listing.viewCount ?? 0) >= 20 || bidCount >= 3
-  const isWaitingLong = !listing.endsAt && listing.createdAt
-    ? (Date.now() - new Date(listing.createdAt).getTime()) > 7 * 24 * 60 * 60 * 1000
-    : false
-  const daysWaiting = listing.createdAt
-    ? Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / 86400000)
-    : 0
+  const condInfo = CONDITION_LABEL[listing.condition] ?? { label: `${listing.condition}/10`, color: 'var(--text-muted)' }
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
@@ -100,7 +107,7 @@ export function ListingCard({ listing }: Props) {
           boxShadow: isEndingSoon ? '0 0 16px rgba(239,68,68,0.15)' : undefined,
         }}
       >
-        {/* Image */}
+        {/* Image — max 2 overlays: ENDING SOON banner + FLASH BID badge */}
         <div className="relative aspect-square bg-[var(--bg-elevated)] overflow-hidden">
           {listing.photos[0] ? (
             <Image
@@ -117,79 +124,73 @@ export function ListingCard({ listing }: Props) {
               <span className="text-xs font-medium text-white opacity-70">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
             </div>
           )}
-          {/* ENDING SOON full-width banner */}
+
+          {/* ENDING SOON banner — top of image */}
           {isEndingSoon && (
-            <div className="absolute top-0 left-0 right-0 z-10 py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.9)', color: 'white' }}>
+            <div className="absolute top-0 left-0 right-0 z-10 py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.92)', color: 'white' }}>
               🔥 ENDING SOON
             </div>
           )}
-          {/* ⚡ FLASH BID mode badge */}
-          <div className={`absolute left-2 flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-8' : 'top-2'}`}
+
+          {/* FLASH BID badge — bottom left */}
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold"
             style={{ background: 'linear-gradient(135deg,#ff6b35,#f59e0b)', color: 'white', backdropFilter: 'blur(4px)' }}>
             <Zap className="w-2.5 h-2.5" />
             FLASH BID
           </div>
-          {/* Category badge */}
-          <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-medium ${isEndingSoon ? 'top-14' : 'top-8'}`}
-            style={{ backgroundColor: 'rgba(10,10,15,0.75)', color: 'var(--text-secondary)', backdropFilter: 'blur(4px)' }}>
-            {CATEGORY_LABELS[listing.category] ?? listing.category}
-          </div>
-          {/* HOT / bid count badge */}
-          {bidCount >= 5 ? (
-            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-20' : 'top-14'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
+
+          {/* Bid count — bottom right, only when bids exist */}
+          {bidCount >= 2 && (
+            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-xs font-bold"
+              style={{ background: 'rgba(10,10,15,0.8)', color: 'white', backdropFilter: 'blur(4px)' }}>
               🔥 {bidCount} bids
             </div>
-          ) : isHot && (
-            <div className={`absolute left-2 px-2 py-0.5 rounded-md text-xs font-bold ${isEndingSoon ? 'top-20' : 'top-14'}`} style={{ background: 'linear-gradient(135deg,#f97316,#ef4444)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 Hot
-            </div>
           )}
-          {/* Condition badge */}
-          <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono" style={{ backgroundColor: 'rgba(10,10,15,0.8)', color: listing.condition >= 7 ? 'var(--green)' : listing.condition >= 4 ? 'var(--yellow)' : 'var(--orange)', backdropFilter: 'blur(4px)' }}>
-            {listing.condition}
-          </div>
         </div>
 
         {/* Content */}
         <div className="p-3">
-          <h3 className="font-medium text-sm line-clamp-2 mb-2" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="font-medium text-sm line-clamp-2 mb-1.5" style={{ color: 'var(--text-primary)' }}>
             {listing.title}
           </h3>
 
+          {/* Condition + category row */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: `${condInfo.color}18`, color: condInfo.color, border: `1px solid ${condInfo.color}30` }}>
+              {condInfo.label}
+            </span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              {CATEGORY_LABELS[listing.category] ?? listing.category}
+            </span>
+          </div>
+
           {/* Bid info */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-end justify-between mb-2">
             <div>
               <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>
-                {bidCount === 0 ? 'Be the first bidder' : 'Current bid'}
+                {bidCount === 0 ? 'No bids yet — be first!' : 'Current bid'}
               </p>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--teal)' }}>
-                {bidCount === 0 && listing.startingBid === 0 ? 'Starting at RM 0' : `RM ${bid.toFixed(0)}`}
+                {bidCount === 0 && listing.startingBid === 0 ? 'RM 0 — FREE if only bidder' : `RM ${bid.toFixed(0)}`}
               </p>
             </div>
-            <div className="text-right">
-              {isWaitingLong ? (
-                <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Waiting {daysWaiting} days
-                </p>
-              ) : !listing.endsAt ? (
-                <p className="text-xs font-mono text-right" style={{ color: 'var(--text-muted)', maxWidth: '120px' }}>
+            <div className="text-right text-xs">
+              {listing.endsAt ? (
+                <span className={`font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-muted)' }}>
+                  <Clock className="w-3 h-3 inline mr-0.5" />
                   {timeLeft}
-                </p>
+                </span>
               ) : (
-                <p className={`text-sm font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-primary)' }}>
-                  <Clock className="w-3 h-3 inline mr-1" />
-                  {timeLeft}
-                </p>
+                <span style={{ color: 'var(--text-muted)' }}>Waiting for bid</span>
               )}
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <MapPin className="w-3 h-3" />
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
               {listing.state}
-            </div>
+            </span>
             <div className="flex items-center gap-2">
               {(listing.viewCount ?? 0) > 10 && (
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -197,13 +198,9 @@ export function ListingCard({ listing }: Props) {
                 </span>
               )}
               {listing.seller.icVerified && (
-                <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
-              )}
-              {listing.co2Saved > 0 && (
-                <div className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--green)' }}>
-                  <Leaf className="w-3 h-3" />
-                  {listing.co2Saved}kg
-                </div>
+                <span title="IC Verified Seller">
+                  <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
+                </span>
               )}
             </div>
           </div>
