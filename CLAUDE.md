@@ -551,25 +551,34 @@ Shown when user has at least 1 listing:
 ## Dark Mode
 - CSS: `[data-theme="light"]` in `globals.css` — light bg/text vars, teal unchanged
 - `ThemeToggle.tsx` — Sun/Moon button, `document.documentElement.dataset.theme`
-- Default: `dark`. Persists in `localStorage.kassim_theme`
+- Default: **system preference** (`prefers-color-scheme`). Falls back to dark if no preference. Persists override in `localStorage.kassim_theme`
 - Navbar: ThemeToggle rendered on both desktop + mobile
 
 ## HeroBanner (`src/components/home/HeroBanner.tsx`)
-Split-panel hero on homepage replacing generic hero. Two panels:
+Above-the-fold section at top:
+- Badge: "Malaysia's #1 Pre-Loved Marketplace"
+- H1: "Turn Old Stuff Into Cash — or Find a Bargain"
+- Subline: "30-min flash auctions · Item swaps · 100% secure escrow · Delivery included"
+- Two CTA buttons: **Browse Auctions** (orange gradient) + **Sell My Item** (teal)
+- **Search bar**: form → `/listings?q=...`, placeholder varies by mode
+
+Below fold — split-panel "Choose your mode":
 - **⚡ FLASH BID** (orange): RM0 start, +RM1 min increment, 30min from first bid, sole bidder wins at RM0, real example scenario
 - **🔄 SWAP BID** (green): cash bid OR item swap, seller decides, AI-priced, 3-day window, real example scenario
 Bottom CTA: "List Your Item Free · 15% only on sale"
 Note: `HowItWorks` component removed from homepage (still exists at `/how-it-works`)
 
-## Listings Page USP Labels (`src/app/listings/page.tsx`)
-- Tabs renamed: ⚡ FLASH BID / 🔄 SWAP BID with gradient active state + glow
+## Listings Page (`src/app/listings/page.tsx`)
+- **Ending Soon section** (Flash only, no active search): `getEndingSoonListings()` — Flash listings with `endsAt < now + 2h`, max 6, sorted ASC. Red FOMO banner at top.
+- **Search bar**: prominent `<form method="get">` above filters. Preserves `mode` param.
+- Tabs: ⚡ FLASH BID / 🔄 SWAP BID with gradient active state + glow
 - Mode explainer strip below tabs: one-liner rule + active count
 - `ListingCard`: ⚡ FLASH BID gradient badge (orange→yellow) top-left on every Flash card
-- `SwapListingCard`: 🔄 SWAP BID gradient badge (green→teal), offer type chips (🔄 Item Swap / 💰 Cash Bid)
-- `SwapListingCard`: fixed time display bug (j → d/h), added "left" suffix
+- `SwapListingCard`: 🔄 SWAP BID gradient badge (green→teal), offer type chips
+- **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-03, commit `377553d` — 5 beta tasks: onboarding, seller email, analytics, delivery dashboard, translations
+2026-06-03, commit `a6e90c9` — All 13 UI/UX critique improvements (Fasa 7)
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 ## Completed Fasa (2026-06-03 session)
@@ -590,16 +599,17 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | 6d | Logo: public/logo.svg (wordmark) + logo-512.png (EasyParcel/favicon/PWA) + logo-wide.png — Navbar uses logo.svg, layout.tsx icons metadata updated |
 | 6e | Bid UX fix: remove Step 1 delivery selector, auto-estimate from profile state, client-side auth fallback, correct success message, login ?next= redirect, pre-fill phone in DeliveryCheckout |
 | 6f | Onboarding: phone+state in register form → synced via auth/callback user_metadata. Seller ship email (sendShipNowEmail) with courier+postcode+EasyParcel ID. OrderCard shows delivery info. id/zh/ar translations complete. |
+| **7** | **13 UI/UX improvements:** consumer copy (remove "circular economy"), CTA above fold + search bar in hero, register → 3 fields only (removed phone+state JIT), footer logo.svg, Impact removed from nav (moved to footer), ThemeToggle detects system pref, FeedbackWidget → icon-only button, Ending Soon section in listings, prominent search bar in listings, category gradient placeholders in cards, Why Sell on KASSIM? section, testimonials rewritten in BM + star ratings, WhatsApp floating support button (bottom-left). |
 
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
 - ✅ Friday Mega Auction: 5 listings featured (MacBook Air M2, LV Beg, Air Fryer, Basikal, Apple Watch)
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
-- ✅ Fasa 1-5 complete — all 20 prompt improvements done
+- ✅ Fasa 1-7 complete — all improvements done
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
 - ✅ DeliveryCheckout UI complete — postcode → EasyParcel quotes → courier picker → address → checkout
-- Lalamove API key needs activation by Lalamove (502 error)
-- Enable Vercel Analytics in Vercel dashboard
-- Fill in `messages/id.json`, `messages/zh.json`, `messages/ar.json` translations
+- ✅ id/zh/ar translations complete
+- **Update WhatsApp number** in `src/components/layout/WhatsAppSupport.tsx` (currently placeholder `60123456789`)
+- EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
