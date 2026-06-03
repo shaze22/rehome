@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { logAdminAction } from '@/lib/audit'
 
 const Schema = z.object({
   userId: z.string().min(1),
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
       icVerified: approve,
     },
   })
+
+  void logAdminAction(user.id, approve ? 'IC_APPROVED' : 'IC_REJECTED', userId, 'User')
 
   return NextResponse.json({ success: true })
 }

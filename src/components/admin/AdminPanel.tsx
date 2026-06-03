@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Shield, Users, Package, TrendingUp, CheckCircle, XCircle, Eye,
-  MessageCircle, Star, Gavel, DollarSign, ArrowLeftRight, AlertCircle, Loader2
+  MessageCircle, Star, Gavel, DollarSign, ArrowLeftRight, AlertCircle, Loader2, ClipboardList
 } from 'lucide-react'
 
 interface PendingIC {
@@ -127,11 +127,37 @@ function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boo
   )
 }
 
+interface AuditEntry {
+  id: string; adminId: string; action: string
+  targetId: string | null; targetType: string | null
+  details: Record<string, unknown> | null; createdAt: string
+}
+
 export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, stats }: Props) {
   const [verifying, setVerifying] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(pendingICs)
   const [localDisputes, setLocalDisputes] = useState(disputedSwaps)
   const [resolving, setResolving] = useState<string | null>(null)
+  const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditLoaded, setAuditLoaded] = useState(false)
+
+  async function loadAuditLog() {
+    if (auditLoaded) return
+    setAuditLoading(true)
+    try {
+      const res = await fetch('/api/admin/audit-log')
+      if (res.ok) {
+        const data = await res.json()
+        setAuditLogs(data.logs ?? [])
+        setAuditLoaded(true)
+      }
+    } finally {
+      setAuditLoading(false)
+    }
+  }
+
+  useEffect(() => { void loadAuditLog() }, [])
 
   async function handleResolveDispute(txId: string, resolution: 'complete' | 'cancel') {
     setResolving(txId)
@@ -378,6 +404,76 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Audit Log */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <ClipboardList className="w-5 h-5" style={{ color: 'var(--blue)' }} />
+            Audit Log
+          </h2>
+          <button
+            onClick={loadAuditLog}
+            disabled={auditLoading}
+            className="text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 disabled:opacity-50"
+            style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+          >
+            {auditLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+            Refresh
+          </button>
+        </div>
+        {auditLogs.length === 0 && !auditLoading ? (
+          <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <ClipboardList className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No admin actions recorded yet.</p>
+          </div>
+        ) : (
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            {auditLoading && auditLogs.length === 0 ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--teal)' }} />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                      {['Time', 'Action', 'Target', 'Type'].map(h => (
+                        <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.map((log, i) => {
+                      const actionColor = log.action.includes('APPROVED') || log.action.includes('COMPLETE') || log.action.includes('FEATURED')
+                        ? 'var(--green)'
+                        : log.action.includes('REJECTED') || log.action.includes('CANCEL')
+                          ? 'var(--red)'
+                          : 'var(--blue)'
+                      return (
+                        <tr key={log.id} style={{ backgroundColor: 'var(--bg-card)', borderBottom: i < auditLogs.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                          <td className="px-4 py-2.5 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+                            {new Date(log.createdAt).toLocaleString('en-MY', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span className="text-xs font-mono font-semibold" style={{ color: actionColor }}>{log.action}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+                            {log.targetId ? log.targetId.slice(0, 8) + '…' : '—'}
+                          </td>
+                          <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {log.targetType ?? '—'}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

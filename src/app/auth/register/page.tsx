@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -18,6 +19,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+    if (!agreed) { setError('You must agree to the Terms & Privacy Policy.'); return }
     setLoading(true)
     const { error } = await createClient().auth.signUp({
       email,
@@ -138,6 +140,21 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
+
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={e => setAgreed(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-teal flex-shrink-0"
+              />
+              <span className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                I agree to the{' '}
+                <a href="/terms" target="_blank" className="underline hover:no-underline" style={{ color: 'var(--teal)' }}>Terms of Service</a>
+                {' '}and{' '}
+                <a href="/privacy" target="_blank" className="underline hover:no-underline" style={{ color: 'var(--teal)' }}>Privacy Policy</a>
+              </span>
+            </label>
 
             {error && (
               <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>

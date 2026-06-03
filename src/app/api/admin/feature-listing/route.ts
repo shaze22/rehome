@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { logAdminAction } from '@/lib/audit'
 
 function nextFriday8pmMYT(): Date {
   const now = new Date()
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     data,
     select: { id: true, isFeatured: true, featuredAt: true, featuredUntil: true },
   })
+
+  void logAdminAction(user.id, featured ? 'LISTING_FEATURED' : 'LISTING_UNFEATURED', listingId, 'Listing')
 
   return NextResponse.json(listing)
 }

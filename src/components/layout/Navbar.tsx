@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Recycle, Heart, User as UserIcon, Menu, X, Plus, LayoutDashboard } from 'lucide-react'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { ThemeToggle } from './ThemeToggle'
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -91,11 +92,13 @@ export function Navbar() {
                 </Link>
               </div>
             )}
+            <ThemeToggle />
             <LanguageSwitcher />
           </div>
 
           {/* Language Switcher + Mobile menu button */}
           <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
             <LanguageSwitcher />
           </div>
           <button

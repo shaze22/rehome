@@ -72,9 +72,11 @@ export function Footer() {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
             © 2026 KASSIM. All rights reserved. Built for a greener Malaysia.
           </p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            15% platform fee · Secure escrow · IC verified
-          </p>
+          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/terms" className="hover:underline" style={{ color: 'var(--text-muted)' }}>Terms</Link>
+            <Link href="/privacy" className="hover:underline" style={{ color: 'var(--text-muted)' }}>Privacy</Link>
+            <span>15% platform fee · Secure escrow</span>
+          </div>
         </div>
       </div>
     </footer>
