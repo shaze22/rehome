@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'How It Works',
-  description: 'Learn how KASSIM Flash Auctions and Item Swaps work — step-by-step with real examples.',
+  description: 'Learn how KASSIM Flash Bid and Swap Bid work — step-by-step with real examples.',
 }
 
 /* ─── reusable atoms ─────────────────────────────────────────────────────── */
@@ -48,9 +48,9 @@ function RuleCard({ emoji, title, desc, color }: { emoji: string; title: string;
 }
 
 const FAQ = [
-  { q: 'Is KASSIM safe? What if the seller doesn\'t ship?', a: 'All Flash Auction payments go into escrow — your money never touches the seller until you confirm receipt. For Swaps, the escrow tracks both shipments before marking the deal complete. No confirmation = no release.' },
-  { q: 'What are the fees?', a: 'Flash Auctions: 15% platform fee on the final winning bid. A RM0 winning bid costs RM0. Item Swaps: completely free — no listing fee, no platform cut. No subscription ever.' },
-  { q: 'What if nobody bids on my Flash Auction?', a: 'Nothing bad happens. Your listing stays active indefinitely until someone places the first bid. No countdown, no pressure. You can withdraw any time before the first bid at no cost.' },
+  { q: 'Is KASSIM safe? What if the seller doesn\'t ship?', a: 'All Flash Bid payments go into escrow — your money never touches the seller until you confirm receipt. For Swap Bid, the escrow tracks both shipments before marking the deal complete. No confirmation = no release.' },
+  { q: 'What are the fees?', a: 'Flash Bid: 15% platform fee on the final winning bid. A RM0 winning bid costs RM0. Swap Bid: completely free — no listing fee, no platform cut. No subscription ever.' },
+  { q: 'What if nobody bids on my Flash Bid?', a: 'Nothing bad happens. Your listing stays active indefinitely until someone places the first bid. No countdown, no pressure. You can withdraw any time before the first bid at no cost.' },
   { q: 'Can I swap items across different states?', a: 'Yes. Seller and buyer each ship their items via any courier. KASSIM supports all of Peninsular Malaysia and East Malaysia. Escrow releases only after both parties confirm receipt.' },
   { q: 'What is IC Verification and why does it matter?', a: 'Sellers who upload their MyKad photo and pass admin review receive a blue "IC Verified" badge. Verified sellers get significantly more bids — buyers trust a real identity. Takes 1-2 business days.' },
   { q: 'What is KASSIM Score?', a: 'Every user starts at 50. Score increases with successful transactions, good reviews, and fast response. It decreases when disputes are raised against you. A higher score means more trust from buyers and sellers.' },
@@ -289,7 +289,7 @@ export default function HowItWorksPage() {
         <Link href="/listings?mode=flash"
           className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-bold text-white"
           style={{ background: `linear-gradient(135deg,${orange},#f59e0b)`, boxShadow: `0 4px 20px ${orange}35` }}>
-          Browse Flash Auctions <ArrowRight className="w-4 h-4" />
+          Browse Flash Bid Listings <ArrowRight className="w-4 h-4" />
         </Link>
       </section>
 
@@ -332,7 +332,7 @@ export default function HowItWorksPage() {
           <div className="sm:hidden space-y-0">
             {[
               { n: 1, emoji: '📝', label: 'List Item + State What You Want', desc: 'Specify a specific item, a category, or "Open to all offers". Set AI-suggested value.' },
-              { n: 2, emoji: '📬', label: 'Offers Start Arriving', desc: 'Buyers send Cash, Item Swap, or Hybrid offers. Multiple can be open simultaneously.' },
+              { n: 2, emoji: '📬', label: 'Offers Start Arriving', desc: 'Buyers send Cash, Swap Bid, or Hybrid offers. Multiple can be open simultaneously.' },
               { n: 3, emoji: '💬', label: 'Review & Counter (up to 3 rounds)', desc: 'AI shows SwapMatch% score to help evaluate. Counter-offer to negotiate the best deal.' },
               { n: 4, emoji: '🤝', label: 'Accept the Best Offer', desc: 'All other offers are auto-rejected. Listing becomes SOLD.' },
               { n: 5, emoji: '🔒', label: 'Escrow Activates', desc: 'Both parties are locked in. Neither can back out without admin review.' },
@@ -369,7 +369,7 @@ export default function HowItWorksPage() {
             </div>
             <div className="p-4 rounded-xl text-center" style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.12),rgba(20,184,166,0.06))', border: '1px solid rgba(20,184,166,0.3)' }}>
               <p className="text-2xl mb-2">🔄</p>
-              <p className="font-bold text-sm mb-1" style={{ color: 'var(--teal)' }}>Item Swap</p>
+              <p className="font-bold text-sm mb-1" style={{ color: 'var(--teal)' }}>Swap Bid</p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Buyer offers their item. No money changes hands. Pure trade.</p>
               <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-muted)' }}>Always available</p>
             </div>
@@ -397,7 +397,7 @@ export default function HowItWorksPage() {
             <div className="p-3 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
                 <p className="font-semibold">Offer #1 — Farah</p>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)' }}>🔄 Item Swap</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)' }}>🔄 Swap Bid</span>
               </div>
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Offers: Sony WH-1000XM5 earphones (est. value RM280)</p>
               <div className="mt-2 ml-3 pl-3 border-l-2 space-y-1.5" style={{ borderColor: `${green}40` }}>
