@@ -123,23 +123,32 @@ export default function HowItWorksPage() {
         <div className="rounded-2xl p-5 sm:p-6 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${orange}25` }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
 
-          {/* Desktop: horizontal. Mobile: vertical */}
-          <div className="hidden sm:flex items-start gap-1 overflow-x-auto pb-2">
-            <StepBubble n={1} emoji="📸" label="List Item" sub="RM0 start ok" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={2} emoji="🟢" label="Goes Live" sub="No timer yet" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={3} emoji="⚡" label="First Bid" sub="30:00 starts" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={4} emoji="🔥" label="Counter Bids" sub="+5min / +2.5min" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={5} emoji="🏆" label="Timer Ends" sub="Highest wins" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={6} emoji="💳" label="Buyer Pays" sub="Escrow holds" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={7} emoji="📦" label="You Ship" sub="Any courier" color={orange} />
-            <Arrow color={orange} />
-            <StepBubble n={8} emoji="💸" label="You Get Paid" sub="After confirm" color={orange} />
+          {/* Desktop: 2-row grid (4+4). Mobile: vertical */}
+          <div className="hidden sm:block space-y-2">
+            {/* Row 1: steps 1-4 */}
+            <div className="flex items-start gap-1">
+              <StepBubble n={1} emoji="📸" label="List Item" sub="RM0 start ok" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={2} emoji="🟢" label="Goes Live" sub="No timer yet" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={3} emoji="⚡" label="First Bid" sub="30:00 starts" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={4} emoji="🔥" label="Counter Bids" sub="+5min / +2.5min" color={orange} />
+            </div>
+            {/* Connector line row 1→2 */}
+            <div className="flex justify-end pr-8">
+              <div className="w-px h-6" style={{ backgroundColor: `${orange}40` }} />
+            </div>
+            {/* Row 2: steps 5-8 (right to left for snake pattern) */}
+            <div className="flex items-start gap-1 flex-row-reverse">
+              <StepBubble n={5} emoji="🏆" label="Timer Ends" sub="Highest wins" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={6} emoji="💳" label="Buyer Pays" sub="Escrow holds" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={7} emoji="📦" label="You Ship" sub="Any courier" color={orange} />
+              <Arrow color={orange} />
+              <StepBubble n={8} emoji="💸" label="You Get Paid" sub="After confirm" color={orange} />
+            </div>
           </div>
 
           {/* Mobile vertical */}
@@ -309,23 +318,32 @@ export default function HowItWorksPage() {
         <div className="rounded-2xl p-5 sm:p-6 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${green}25` }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
 
-          {/* Desktop */}
-          <div className="hidden sm:flex items-start gap-1 overflow-x-auto pb-2">
-            <StepBubble n={1} emoji="📝" label="List + State Wants" sub="Item or open" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={2} emoji="📬" label="Offers Arrive" sub="Cash/Swap/Hybrid" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={3} emoji="💬" label="Counter (≤3x)" sub="Negotiate" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={4} emoji="🤝" label="You Accept" sub="Best offer" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={5} emoji="🔒" label="Escrow Active" sub="Locked in" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={6} emoji="📦" label="Both Ship" sub="Track items" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={7} emoji="✅" label="Both Confirm" sub="Receipt ok" color={green} />
-            <Arrow color={green} />
-            <StepBubble n={8} emoji="🌟" label="Complete!" sub="SwapScore ++" color={green} />
+          {/* Desktop: 2-row grid (4+4) */}
+          <div className="hidden sm:block space-y-2">
+            {/* Row 1: steps 1-4 */}
+            <div className="flex items-start gap-1">
+              <StepBubble n={1} emoji="📝" label="List + State Wants" sub="Item or open" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={2} emoji="📬" label="Offers Arrive" sub="Cash/Swap/Hybrid" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={3} emoji="💬" label="Counter (≤3x)" sub="Negotiate" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={4} emoji="🤝" label="You Accept" sub="Best offer" color={green} />
+            </div>
+            {/* Connector */}
+            <div className="flex justify-end pr-8">
+              <div className="w-px h-6" style={{ backgroundColor: `${green}40` }} />
+            </div>
+            {/* Row 2: steps 5-8 (snake) */}
+            <div className="flex items-start gap-1 flex-row-reverse">
+              <StepBubble n={5} emoji="🔒" label="Escrow Active" sub="Locked in" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={6} emoji="📦" label="Both Ship" sub="Track items" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={7} emoji="✅" label="Both Confirm" sub="Receipt ok" color={green} />
+              <Arrow color={green} />
+              <StepBubble n={8} emoji="🌟" label="Complete!" sub="SwapScore ++" color={green} />
+            </div>
           </div>
 
           {/* Mobile */}
