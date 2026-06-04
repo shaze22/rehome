@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendPaymentReceivedEmail, sendShipNowEmail } from '@/lib/resend'
+import { sendPaymentReceivedEmail, sendShipNowEmail, sendEasyParcelFailureEmail } from '@/lib/resend'
 import { createEasyParcelShipment } from '@/lib/easyparcel'
 
 export async function POST(request: NextRequest) {
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
         : []),
     ])
 
-    // Auto-book EasyParcel shipment if delivery was selected via platform
+    // Auto-book EasyParcel shipment (fire-and-forget — does not block webhook response)
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {
       const sellerUser = listing.seller
       const sellerState = sellerUser?.state ?? 'Kuala Lumpur'
-      const sellerPostcode = sellerState === 'Kuala Lumpur' ? '50000' : '50000' // seller postcode from profile (best effort)
+      const sellerPostcode = '50000' // best-effort; EasyParcel uses postcode for zone calc
 
-      void createEasyParcelShipment({
+      createEasyParcelShipment({
         fromName: sellerUser?.name ?? 'KASSIM Seller',
         fromPhone: sellerUser?.phone ?? '0123456789',
         fromAddress: sellerState,
@@ -105,12 +105,22 @@ export async function POST(request: NextRequest) {
         declaredValue: Math.round(dBase),
       }).then(async (orderId) => {
         if (orderId) {
-          await prisma.transaction.update({
-            where: { listingId },
-            data: { easyparcelOrderId: orderId },
-          })
+          await prisma.transaction.update({ where: { listingId }, data: { easyparcelOrderId: orderId } })
+        } else {
+          // Booking returned no orderId — treat as failure
+          console.error('[webhook] EasyParcel returned no orderId for listingId:', listingId)
+          const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+          if (seller?.email) {
+            await sendEasyParcelFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, 'No order ID returned from EasyParcel')
+          }
         }
-      }).catch(err => console.error('[webhook] EasyParcel booking error:', err))
+      }).catch(async (err: Error) => {
+        console.error('[webhook] EasyParcel booking error:', err.message)
+        const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+        if (seller?.email) {
+          await sendEasyParcelFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Unknown error')
+        }
+      })
     }
 
     // Notify seller — payment received + ship instructions
