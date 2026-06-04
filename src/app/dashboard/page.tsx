@@ -8,7 +8,7 @@ import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
 import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
 import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
-import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp } from 'lucide-react'
+import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck } from 'lucide-react'
 
 async function getDashboardData(userId: string) {
   const [user, myListings, myBids, transactions, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
@@ -101,6 +101,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const totalEarnings = transactions.reduce((sum, t) => sum + t.sellerPayout, 0)
   const activeListings = myListings.filter(l => l.status === 'ACTIVE')
   const wonBids = myBids.filter(b => b.listing.currentBidder === user.id && b.listing.status !== 'ACTIVE')
+  const unpaidWins = wonBids.filter(b => b.listing.status === 'ENDED')
 
   const isNewUser = myListings.length === 0 && myBids.length === 0
 
@@ -110,6 +111,42 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
           <CheckCircle className="w-5 h-5" />
           Payment successful! Your item will be shipped shortly.
+        </div>
+      )}
+
+      {/* Urgent: unpaid wins */}
+      {unpaidWins.length > 0 && (
+        <div className="mb-6 rounded-2xl overflow-hidden" style={{ border: '2px solid var(--orange)', boxShadow: '0 0 24px rgba(255,107,53,0.2)' }}>
+          <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(255,107,53,0.12)' }}>
+            <Zap className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--orange)' }} />
+            <p className="font-bold text-sm" style={{ color: 'var(--orange)' }}>You won {unpaidWins.length === 1 ? 'an auction' : `${unpaidWins.length} auctions`}! Complete your purchase.</p>
+          </div>
+          <div className="divide-y divide-[var(--border)]">
+            {unpaidWins.map(bid => (
+              <div key={bid.id} className="px-5 py-4 flex items-center justify-between gap-4" style={{ backgroundColor: 'var(--bg-card)' }}>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{bid.listing.title}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Winning bid: <span className="font-mono font-bold" style={{ color: 'var(--orange)' }}>RM {bid.amount}</span></p>
+                </div>
+                <Link href={`/listings/${bid.listingId}`} className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white animate-pulse" style={{ backgroundColor: 'var(--orange)' }}>
+                  Pay Now
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Urgent: seller needs to ship */}
+      {sellerOrders.length > 0 && (
+        <div className="mb-6 rounded-2xl overflow-hidden" style={{ border: '2px solid var(--teal)', boxShadow: '0 0 24px rgba(20,184,166,0.15)' }}>
+          <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(20,184,166,0.1)' }}>
+            <Truck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--teal)' }} />
+            <p className="font-bold text-sm" style={{ color: 'var(--teal)' }}>Action required: Ship {sellerOrders.length === 1 ? 'your item' : `${sellerOrders.length} items`} to the buyer.</p>
+          </div>
+          <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Buyer has paid. Pack your item and enter the tracking number below in Orders.</p>
+          </div>
         </div>
       )}
 
@@ -162,6 +199,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         wonAuctions={wonBids.length}
         icStatus={dbUser?.icStatus ?? 'UNVERIFIED'}
       />
+
+      {/* Referral Program — shown prominently above listings */}
+      <div className="mt-8">
+        <ReferralSection />
+      </div>
 
       {/* My Performance — seller analytics */}
       {myListings.length > 0 && (
@@ -339,8 +381,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      {/* Referral Program */}
-      <ReferralSection />
     </div>
   )
 }

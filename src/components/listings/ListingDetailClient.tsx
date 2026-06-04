@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
   AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
-  Package, Truck, Trash2
+  Package, Truck, Trash2, Link2, Copy
 } from 'lucide-react'
 import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { trackRecentlyViewed } from '@/components/home/RecentlyViewed'
@@ -379,6 +379,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const { timeLeft, urgencyLevel, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt, serverTimeOffset)
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [offerSubmitted, setOfferSubmitted] = useState(false)
+  const [copied, setCopied] = useState(false)
   const searchParams = useSearchParams()
   const justPaid = searchParams.get('payment') === 'success'
 
@@ -733,6 +734,19 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               >
                 <Share2 className="w-3.5 h-3.5" /> WhatsApp
               </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href)
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={{ backgroundColor: copied ? 'rgba(0,217,165,0.15)' : 'var(--bg-surface)', color: copied ? 'var(--green)' : 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                title="Copy link"
+              >
+                {copied ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
             </div>
             {/* View count + interest indicator */}
             <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -975,9 +989,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 )}
 
                 {bidSuccess && (
-                  <div className="mb-3 flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)' }}>
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                    Bid placed! You are now the highest bidder.
+                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(20,184,166,0.3)' }}>
+                    <div className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)' }}>
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                      Bid placed! You are now the highest bidder.
+                    </div>
+                    <button
+                      onClick={() => {
+                        const text = `I just bid on *${listing.title}* on KASSIM! Auction ends in 30 mins. Jump in!\n\n${window.location.href}`
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium"
+                      style={{ backgroundColor: '#25D36622', color: '#25D366' }}
+                    >
+                      <Share2 className="w-3 h-3" /> Tell your friends before someone outbids you!
+                    </button>
                   </div>
                 )}
                 {!currentUserId ? (
