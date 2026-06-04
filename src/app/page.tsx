@@ -191,8 +191,8 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {flashListings.map(listing => (
-                <ListingCard key={listing.id} listing={listing as any} />
+              {flashListings.map((listing, i) => (
+                <ListingCard key={listing.id} listing={listing as any} priority={i === 0} />
               ))}
             </div>
           )}
@@ -222,8 +222,8 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {swapListings.map(listing => (
-                <SwapListingCard key={listing.id} listing={listing as any} />
+              {swapListings.map((listing, i) => (
+                <SwapListingCard key={listing.id} listing={listing as any} priority={i === 0} />
               ))}
             </div>
           )}

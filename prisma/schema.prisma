@@ -91,6 +91,10 @@ model Listing {
   @@index([sellerId])
   @@index([category])
   @@index([mode, status])
+  @@index([isFeatured, status])
+  @@index([status, updatedAt])
+  @@index([viewCount])
+  @@index([createdAt])
 }
 
 model Bid {

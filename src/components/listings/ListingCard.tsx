@@ -29,6 +29,7 @@ interface ListingWithSeller {
 
 interface Props {
   listing: ListingWithSeller
+  priority?: boolean
 }
 
 function useCountdown(endsAt: Date | string | null) {
@@ -91,7 +92,7 @@ const CONDITION_LABEL: Record<number, { label: string; color: string }> = {
   1: { label: 'For Parts', color: 'var(--red)' },
 }
 
-export function ListingCard({ listing }: Props) {
+export function ListingCard({ listing, priority = false }: Props) {
   const { timeLeft, isUrgent, isEndingSoon } = useCountdown(listing.endsAt ?? null)
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
   const bidCount = listing._count?.bids ?? 0
@@ -116,6 +117,7 @@ export function ListingCard({ listing }: Props) {
               fill
               className="object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              priority={priority}
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2"

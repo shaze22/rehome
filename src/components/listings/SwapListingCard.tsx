@@ -31,6 +31,7 @@ interface SwapListing {
 
 interface Props {
   listing: SwapListing
+  priority?: boolean
 }
 
 function useCountdown(endsAt: Date | string | null) {
@@ -85,7 +86,7 @@ const CONDITION_LABEL: Record<number, { label: string; color: string }> = {
   1: { label: 'For Parts', color: 'var(--red)' },
 }
 
-export function SwapListingCard({ listing }: Props) {
+export function SwapListingCard({ listing, priority = false }: Props) {
   const { timeLeft, isUrgent } = useCountdown(listing.endsAt ?? null)
   const offerCount = listing._count?.offers ?? 0
   const condInfo = CONDITION_LABEL[listing.condition] ?? { label: `${listing.condition}/10`, color: 'var(--text-muted)' }
@@ -107,6 +108,7 @@ export function SwapListingCard({ listing }: Props) {
               fill
               className="object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              priority={priority}
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2"
