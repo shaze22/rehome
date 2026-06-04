@@ -34,7 +34,7 @@ export function HeroBanner() {
             style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', boxShadow: '0 4px 20px rgba(255,107,53,0.35)' }}
           >
             <Zap className="w-4 h-4" />
-            Browse Auctions
+            Browse Flash Bid
           </Link>
           <Link
             href="/sell"
@@ -48,7 +48,7 @@ export function HeroBanner() {
             style={{ border: '1px solid rgba(22,163,74,0.4)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.06)' }}
           >
             <ArrowLeftRight className="w-4 h-4" />
-            Browse Swaps
+            Browse Swap Bid
           </Link>
         </div>
 

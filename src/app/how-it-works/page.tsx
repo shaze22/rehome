@@ -90,7 +90,7 @@ export default function HowItWorksPage() {
             <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Sole bidder wins even at RM0 — item fully cleared</span></li>
             <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Buyer pays bid only. <strong>Seller pays 15% fee</strong> from proceeds</span></li>
           </ul>
-          <p className="text-xs mt-3 font-medium" style={{ color: orange }}>Best for: Clear your item fast, cash in hand same day</p>
+          <p className="text-xs mt-3 font-medium" style={{ color: orange }}>Best for: Clear your space fast. Cash earned is a bonus.</p>
         </div>
         <div className="rounded-2xl p-5" style={{ background: `linear-gradient(135deg,${green}10,${green}05)`, border: `1px solid ${green}30` }}>
           <div className="flex items-center gap-2 mb-3">
