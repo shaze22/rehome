@@ -580,7 +580,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-04, commit `0dea410` — UX fixes: Pay Now banner, ship urgency, copy link, post-bid share, referral above fold. Test users created. Force deployed via Vercel CLI.
+2026-06-04, commit `7b877c9` — EasyParcel webhook failure handling: notify seller + admin via email on booking failure. DKIM setup for kassim.app in Resend. RESEND_API_KEY rotated in Vercel. Force deployed via Vercel CLI.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -610,6 +610,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **11** | **Rule corrections (2026-06-04):** Flash starting bid locked to RM0 (mandatory). Timer fixed 30min, no extensions. Buyer pays bid only, seller pays 15%. Self-pickup removed — all delivery via KASSIM platform (webhook auto-sets DELIVERY). how-it-works examples and rules corrected. |
 | **12** | **Copy + perf fixes (2026-06-04):** "Browse Flash Bid" / "Browse Swap Bid" button labels. How-it-works Flash "Best for" text fixed (no overpromise). next/font replaces Google Fonts @import. Homepage 5 query groups cached 60s (unstable_cache). getSession() in layout (no network). loading.tsx skeleton. priority prop on first card images. 4 new DB indexes. |
 | **13** | **UX + viral fixes (2026-06-04):** "Pay Now" orange banner in dashboard for unpaid Flash Bid wins. "Ship Now" teal alert for seller ESCROWED orders. Copy Link button on listing detail (clipboard + "Copied!" feedback). Post-bid WhatsApp share prompt ("Tell friends before someone outbids you!"). Referral section moved above My Listings. Test users created (testseller@kassim.app, testbuyer@kassim.app). |
+| **14** | **Reliability fixes (2026-06-04):** EasyParcel webhook failure handling — on booking error, seller gets "book manually" email + admin gets alert email with listing ID + error. sendEasyParcelFailureEmail() added to resend.ts. kassim.app DKIM added to Resend (domain ID: d887ba9e). RESEND_API_KEY rotated in Vercel. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -671,5 +672,9 @@ Admin panel: https://kassim.app/admin
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
 - ✅ All 15 active Flash listings reset to RM0
 - ✅ Test users created (testseller + testbuyer @kassim.app)
+- ✅ kassim.app DKIM added to Resend (domain ID: d887ba9e-900c-439e-be03-4f8dfd674cbd, region: ap-northeast-1) — DNS records added, pending verification
+- ✅ RESEND_API_KEY rotated in Vercel (2026-06-04)
+- ✅ EasyParcel webhook failure — seller + admin email notification on booking error
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
+- kassim.app DKIM verification pending (DNS propagation) — check resend.com/domains
 - Beta testing 100 users → LAUNCH 🚀
