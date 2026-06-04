@@ -555,7 +555,7 @@ Shown when user has at least 1 listing:
 Simplified above-fold section (updated Fasa 9):
 - Badge: "Malaysia's #1 Pre-Loved Marketplace"
 - H1: "Turn Old Stuff Into Cash or Find a Bargain"
-- 3 CTAs: **Browse Auctions** (orange) + **Sell My Item** (teal) + **Browse Swaps** (green outline)
+- 3 CTAs: **Browse Flash Bid** (orange) + **Sell My Item** (teal) + **Browse Swap Bid** (green outline)
 - **Search bar**: `<form action="/listings" method="get">`
 - 4 trust micro-indicators: 🔒 Escrow, ✅ IC Verified, 📦 Auto Delivery, 0% Free to List
 - "New here? Learn how..." link → `/how-it-works`
@@ -570,8 +570,17 @@ Simplified above-fold section (updated Fasa 9):
 - `SwapListingCard`: 🔄 SWAP BID gradient badge (green→teal), offer type chips
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
+## Performance Architecture
+- **Fonts**: `next/font/google` (Inter + JetBrains Mono) in `layout.tsx` — eliminates render-blocking Google Fonts @import
+- **Homepage cache**: all 5 DB query functions wrapped in `unstable_cache` with `revalidate: 60` (60s TTL)
+- **Layout auth**: `getSession()` instead of `getUser()` — reads cookie locally, no Supabase network call per page
+- **Loading skeleton**: `src/app/loading.tsx` — instant shell shown while page data loads
+- **LCP images**: `priority={i === 0}` on first ListingCard and SwapListingCard in homepage grids
+- **DB indexes added** (2026-06-04, Supabase MCP): `isFeatured+status`, `status+updatedAt`, `viewCount`, `createdAt`
+- **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
+
 ## Last Deployed
-2026-06-04, commit `c8f1e59` — Flash Bid rules fix, fee structure, remove self-pickup. Force deployed via Vercel CLI (`dpl_BBabD1NXYG3Sdf7eSsf214kGsPXe`).
+2026-06-04, commit `ba5b9a8` — perf: next/font, homepage cache 60s, priority images, 4 DB indexes, button copy fixes. Force deployed via Vercel CLI.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -599,6 +608,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **9** | **19 UX overhaul (2026-06-04):** Simplified hero (no rule cards), homepage reorder (Flash→Swap→Trust), Navbar profile dropdown + bell, BottomNav mobile (Home/Browse/Sell/Saved/Account), max 2 card image overlays + condition label in body, WhatsApp uses seller.phone, breadcrumb history.back(), DeliveryCheckout 4-step indicator, mobile filter slide-up drawer, KASSIM Score tooltip, new user onboarding card (3 steps), password strength bars, LanguageSwitcher removed from navbar. |
 | **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid + Swap Bid 8-step process diagrams (grid-cols-4 desktop, vertical mobile), timer mechanics bar diagram, real scenarios with payout breakdown, 3 offer type cards, KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
 | **11** | **Rule corrections (2026-06-04):** Flash starting bid locked to RM0 (mandatory). Timer fixed 30min, no extensions. Buyer pays bid only, seller pays 15%. Self-pickup removed — all delivery via KASSIM platform (webhook auto-sets DELIVERY). how-it-works examples and rules corrected. |
+| **12** | **Copy + perf fixes (2026-06-04):** "Browse Flash Bid" / "Browse Swap Bid" button labels. How-it-works Flash "Best for" text fixed (no overpromise). next/font replaces Google Fonts @import. Homepage 5 query groups cached 60s (unstable_cache). getSession() in layout (no network). loading.tsx skeleton. priority prop on first card images. 4 new DB indexes. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
