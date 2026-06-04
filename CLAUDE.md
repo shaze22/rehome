@@ -580,7 +580,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-04, commit `ba5b9a8` — perf: next/font, homepage cache 60s, priority images, 4 DB indexes, button copy fixes. Force deployed via Vercel CLI.
+2026-06-04, commit `0dea410` — UX fixes: Pay Now banner, ship urgency, copy link, post-bid share, referral above fold. Test users created. Force deployed via Vercel CLI.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -609,6 +609,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid + Swap Bid 8-step process diagrams (grid-cols-4 desktop, vertical mobile), timer mechanics bar diagram, real scenarios with payout breakdown, 3 offer type cards, KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
 | **11** | **Rule corrections (2026-06-04):** Flash starting bid locked to RM0 (mandatory). Timer fixed 30min, no extensions. Buyer pays bid only, seller pays 15%. Self-pickup removed — all delivery via KASSIM platform (webhook auto-sets DELIVERY). how-it-works examples and rules corrected. |
 | **12** | **Copy + perf fixes (2026-06-04):** "Browse Flash Bid" / "Browse Swap Bid" button labels. How-it-works Flash "Best for" text fixed (no overpromise). next/font replaces Google Fonts @import. Homepage 5 query groups cached 60s (unstable_cache). getSession() in layout (no network). loading.tsx skeleton. priority prop on first card images. 4 new DB indexes. |
+| **13** | **UX + viral fixes (2026-06-04):** "Pay Now" orange banner in dashboard for unpaid Flash Bid wins. "Ship Now" teal alert for seller ESCROWED orders. Copy Link button on listing detail (clipboard + "Copied!" feedback). Post-bid WhatsApp share prompt ("Tell friends before someone outbids you!"). Referral section moved above My Listings. Test users created (testseller@kassim.app, testbuyer@kassim.app). |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -650,14 +651,25 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - Shown only when seller.phone exists
 - Falls back to "Contact via chat below" message
 
+## Test Accounts
+| Role | Email | Password |
+|------|-------|----------|
+| Test Seller | testseller@kassim.app | KassimTest2026! |
+| Test Buyer | testbuyer@kassim.app | KassimTest2026! |
+| Admin | syedshazni@gmail.com | (own password) |
+| Admin | syedshazni@todak.com | (own password) |
+
+Admin panel: https://kassim.app/admin
+
 ## Pending (Manual Actions — Not Code)
 - ✅ kassim.app + www.kassim.app connected to Vercel (DNS A records set)
 - ✅ Supabase RLS: all 12 tables enabled with policies (2026-06-01)
 - ✅ Supabase Auth Site URL → https://kassim.app (2026-06-03)
 - ✅ Friday Mega Auction: 5 listings featured
 - ✅ Sentry: fully live — `instrumentation.ts` + `NEXT_PUBLIC_SENTRY_DSN` set in Vercel
-- ✅ Fasa 1-9 complete
+- ✅ Fasa 1-13 complete
 - ✅ EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET set in Vercel (OAuth2)
 - ✅ All 15 active Flash listings reset to RM0
+- ✅ Test users created (testseller + testbuyer @kassim.app)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
