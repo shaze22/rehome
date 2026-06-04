@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -11,6 +12,20 @@ import { createClient } from '@/lib/supabase/server'
 import { PushPermission } from '@/components/pwa/PushPermission'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-mono',
+})
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
 const SITE_NAME = 'KASSIM'
@@ -61,12 +76,14 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession reads from cookie locally — no network round-trip to Supabase
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
   const locale = await getLocale()
   const messages = await getMessages()
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className="h-full">
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={`h-full ${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/api/pwa-icon?size=192" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

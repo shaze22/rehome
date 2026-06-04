@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { WasteCounter } from '@/components/home/WasteCounter'
@@ -9,7 +10,7 @@ import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
 import { HeroBanner } from '@/components/home/HeroBanner'
 import { ArrowRight, Zap, ArrowLeftRight, Flame } from 'lucide-react'
 
-async function getFeaturedListings() {
+const getFeaturedListings = unstable_cache(async () => {
   try {
     return await prisma.listing.findMany({
       where: { status: 'ACTIVE', mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
@@ -20,9 +21,9 @@ async function getFeaturedListings() {
   } catch {
     return []
   }
-}
+}, ['featured-flash'], { revalidate: 60 })
 
-async function getFeaturedSwapListings() {
+const getFeaturedSwapListings = unstable_cache(async () => {
   try {
     return await prisma.listing.findMany({
       where: { status: 'ACTIVE', mode: 'SWAP', endsAt: { gt: new Date() } },
@@ -33,9 +34,9 @@ async function getFeaturedSwapListings() {
   } catch {
     return []
   }
-}
+}, ['featured-swap'], { revalidate: 60 })
 
-async function getMegaLelongListings() {
+const getMegaLelongListings = unstable_cache(async () => {
   try {
     return await prisma.listing.findMany({
       where: {
@@ -56,9 +57,9 @@ async function getMegaLelongListings() {
   } catch {
     return []
   }
-}
+}, ['mega-lelong'], { revalidate: 60 })
 
-async function getTrendingListings() {
+const getTrendingListings = unstable_cache(async () => {
   try {
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     return await prisma.listing.findMany({
@@ -80,9 +81,9 @@ async function getTrendingListings() {
   } catch {
     return []
   }
-}
+}, ['trending'], { revalidate: 60 })
 
-async function getStats() {
+const getStats = unstable_cache(async () => {
   try {
     const now = new Date()
     const [sold, swapDone, co2Result, activeFlash, activeSwap, salesResult, co2FullResult] = await Promise.all([
@@ -106,7 +107,7 @@ async function getStats() {
   } catch {
     return { sold: 0, swapDone: 0, co2: 0, activeFlash: 0, activeSwap: 0, totalSales: 0, co2Full: 0 }
   }
-}
+}, ['homepage-stats'], { revalidate: 60 })
 
 const TRUST_FEATURES = [
   { emoji: '🔒', title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
