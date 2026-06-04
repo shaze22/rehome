@@ -26,20 +26,19 @@ Malaysian circular economy auction platform. Two modes:
 - Read `node_modules/next/dist/docs/` before writing new code
 
 ## Flash Bidding Rules (CRITICAL)
-1. **Bid must be whole integer (RM)** — no decimals, no cents
-2. **Minimum increment: +RM1** from current bid
-3. **RM0 bid valid** — first bidder can win for free
+1. **Starting bid is ALWAYS RM0** — mandatory, seller cannot change this. SellForm shows info box, not input.
+2. **Bid must be whole integer (RM)** — no decimals, no cents
+3. **Minimum increment: +RM1** from current bid
 4. **Timer starts ONLY on first bid** — `endsAt = null` until first bid
-5. **No timer before first bid** — listing stays active indefinitely
-6. **User cannot bid on own listing**
-7. **Platform fee: 15%** of final bid (RM0 bid = RM0 fee)
+5. **Timer is FIXED 30 minutes** — counter bids do NOT extend timer. No +5min/+2.5min extensions.
+6. **No timer before first bid** — listing stays active indefinitely
+7. **User cannot bid on own listing**
+8. **Fee: buyer pays bid amount only. Seller pays 15% from proceeds.** (RM0 bid = RM0 fee)
 
 ## Timer Logic (Flash)
 ```
-First bid      → endsAt = now + 15 min, firstBidAt = now
-Counter bid 1  → +5 min (hard cap: firstBidAt + 30 min)
-Counter bid 2+ → +2.5 min each (same hard cap)
-Hard cap       → auction cannot exceed 30 min from first bid
+First bid   → endsAt = now + 30 min (FIXED), firstBidAt = now
+Counter bid → endsAt unchanged — no extension
 ```
 
 ## Swap Bid Rules
@@ -383,33 +382,31 @@ Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `
 - Login link: `/auth/login?next=/listings/[id]` (returns to listing after login)
 
 **Post-win (auction ended, user won):**
-- `DeliveryCheckout` component: pick courier OR self pickup
+- `DeliveryCheckout` component: **courier only** (self-pickup removed)
 - Pre-populates phone from `currentUserPhone` (saved in profile)
+- Buyer enters postcode → sees EasyParcel rates → selects courier → enters phone + address → Stripe checkout
 - Checkout URL includes all delivery params → Stripe line items → webhook books EasyParcel
 
-## Flash: Self-Pickup Flow
+## Flash: Delivery Flow (Self-Pickup Removed)
 After Stripe payment, buyer redirects to listing page (`?payment=success`).
+Webhook auto-sets `pickupMethod = 'DELIVERY'` on Transaction creation.
 
 **APIs:**
 - `GET  /api/transactions/[listingId]` — fetch flash tx (buyer/seller only)
-- `POST /api/transactions/[listingId]/set-pickup` — `{ method: 'DELIVERY'|'PICKUP' }`
-- `POST /api/transactions/[listingId]/pickup-confirm` — seller confirms pickup → RELEASED
-
-**PICKUP flow:**
-```
-Buyer pays → redirect to listing?payment=success
-→ buyer clicks "Self Pickup"
-→ arrange via chat → seller clicks "Confirm Buyer Has Picked Up"
-→ Transaction.sellerPickupConfirmed=true, status=RELEASED, rehomeScore+5
-```
+- `POST /api/transactions/[listingId]/ship` — seller enters tracking number
+- `POST /api/transactions/[listingId]/confirm` — buyer confirms receipt → RELEASED
 
 **DELIVERY flow:**
 ```
-Buyer selects "Delivery"
+Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
+→ webhook: Transaction created, pickupMethod=DELIVERY, EasyParcel auto-booked
+→ redirect to listing?payment=success
 → seller enters tracking → POST /api/transactions/[id]/ship
 → buyer clicks "Confirm Received" → POST /api/transactions/[id]/confirm
 → status=RELEASED
 ```
+
+> **Note:** `set-pickup` and `pickup-confirm` APIs still exist in codebase but are no longer called from UI.
 
 ## EasyParcel Integration (OAuth2 — Fasa 6)
 - `src/lib/easyparcel.ts` — OAuth2 `client_credentials` (EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET)
@@ -574,7 +571,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
 ## Last Deployed
-2026-06-04, commit `0896d3a` — /how-it-works process flow grid-cols-4 fix. Force deployed via Vercel CLI (`dpl_Byg4NXgDgt46L13CEc16LyreVSSG`).
+2026-06-04, commit `c8f1e59` — Flash Bid rules fix, fee structure, remove self-pickup. Force deployed via Vercel CLI (`dpl_BBabD1NXYG3Sdf7eSsf214kGsPXe`).
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -601,6 +598,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **8** | **Branding cleanup:** em dashes replaced, Ballout→KASSIM Score, login logo fix, Flash RM0 reset, Supabase Auth URL → kassim.app. |
 | **9** | **19 UX overhaul (2026-06-04):** Simplified hero (no rule cards), homepage reorder (Flash→Swap→Trust), Navbar profile dropdown + bell, BottomNav mobile (Home/Browse/Sell/Saved/Account), max 2 card image overlays + condition label in body, WhatsApp uses seller.phone, breadcrumb history.back(), DeliveryCheckout 4-step indicator, mobile filter slide-up drawer, KASSIM Score tooltip, new user onboarding card (3 steps), password strength bars, LanguageSwitcher removed from navbar. |
 | **10** | **/how-it-works visual infographic (2026-06-04):** Quick Compare cards, Flash Bid + Swap Bid 8-step process diagrams (grid-cols-4 desktop, vertical mobile), timer mechanics bar diagram, real scenarios with payout breakdown, 3 offer type cards, KASSIM Shield escrow explainer. All "Flash Auction"→"Flash Bid", "Item Swap"→"Swap Bid". |
+| **11** | **Rule corrections (2026-06-04):** Flash starting bid locked to RM0 (mandatory). Timer fixed 30min, no extensions. Buyer pays bid only, seller pays 15%. Self-pickup removed — all delivery via KASSIM platform (webhook auto-sets DELIVERY). how-it-works examples and rules corrected. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -634,8 +632,8 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - Drawer: slide-up from bottom, backdrop click to close, auto-close on filter change (300ms delay)
 
 ### DeliveryCheckout Steps
-4-step progress indicator (courier mode only): Method → Postcode → Courier → Your Details
-`step` computed from state: pickup = jump to 3, courier progresses through all 4
+3-step progress indicator (courier only, no pickup option): Postcode → Courier → Your Details → Pay
+`step` computed from postcode/selected/phone+address state. No pickup toggle.
 
 ### WhatsApp Seller
 - Uses `seller.phone` — formatted as `wa.me/60${phone.replace(/^0/, '')}`
