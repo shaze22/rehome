@@ -85,12 +85,12 @@ export default function HowItWorksPage() {
             <span className="font-black text-lg" style={{ color: orange }}>⚡ FLASH BID</span>
           </div>
           <ul className="space-y-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Bid from <strong>RM0</strong> — sole bidder wins for free</span></li>
-            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Timer only starts on <strong>first bid</strong></span></li>
-            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span><strong>30 minutes</strong> to win from first bid</span></li>
-            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span><strong>15% fee</strong> on final bid (RM0 bid = RM0 fee)</span></li>
+            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Starting bid is always <strong>RM0</strong> — mandatory</span></li>
+            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Timer starts on first bid, <strong>fixed 30 minutes</strong> — no extensions</span></li>
+            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Sole bidder wins even at RM0 — item fully cleared</span></li>
+            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: orange }} /><span>Buyer pays bid only. <strong>Seller pays 15% fee</strong> from proceeds</span></li>
           </ul>
-          <p className="text-xs mt-3 font-medium" style={{ color: orange }}>Best for: Sell fast, get cash</p>
+          <p className="text-xs mt-3 font-medium" style={{ color: orange }}>Best for: Clear your item fast, cash in hand same day</p>
         </div>
         <div className="rounded-2xl p-5" style={{ background: `linear-gradient(135deg,${green}10,${green}05)`, border: `1px solid ${green}30` }}>
           <div className="flex items-center gap-2 mb-3">
@@ -101,7 +101,7 @@ export default function HowItWorksPage() {
             <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: green }} /><span>Offer <strong>cash, your item, or both</strong></span></li>
             <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: green }} /><span><strong>72-hour</strong> offer window</span></li>
             <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: green }} /><span>Counter-offer up to <strong>3 rounds</strong></span></li>
-            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: green }} /><span><strong>Free</strong> — no platform fee</span></li>
+            <li className="flex gap-2"><CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: green }} /><span>Pure item swap: <strong>free</strong>. Cash sale: <strong>15% fee</strong> from seller</span></li>
           </ul>
           <p className="text-xs mt-3 font-medium" style={{ color: green }}>Best for: Trade without spending cash</p>
         </div>
@@ -121,7 +121,8 @@ export default function HowItWorksPage() {
 
         {/* Process diagram */}
         <div className="rounded-2xl p-5 sm:p-6 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${orange}25` }}>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Process Flow</p>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>Starting bid is always <strong style={{ color: orange }}>RM0</strong>. Timer is fixed at <strong style={{ color: orange }}>30 minutes</strong> from the first bid — no extensions.</p>
 
           {/* Desktop: 4-column grid, 2 rows. Mobile: vertical */}
           <div className="hidden sm:grid grid-cols-4 gap-3">
@@ -181,37 +182,22 @@ export default function HowItWorksPage() {
         <div className="rounded-2xl p-5 mb-5" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${orange}25` }}>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Timer Mechanics</p>
           <div className="relative h-12 rounded-xl overflow-hidden mb-3" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-            {/* Base 30min bar */}
-            <div className="absolute left-0 top-0 h-full flex items-center justify-center text-xs font-bold text-white rounded-xl"
-              style={{ width: '60%', background: `linear-gradient(90deg,${orange},#f59e0b)` }}>
-              First bid → 30:00
-            </div>
-            {/* +5min extension */}
-            <div className="absolute top-0 h-full flex items-center justify-center text-xs font-bold text-white"
-              style={{ left: '60%', width: '20%', backgroundColor: '#f97316', borderLeft: '2px dashed white' }}>
-              +5:00
-            </div>
-            {/* +2.5min extensions */}
-            <div className="absolute top-0 h-full flex items-center justify-center text-xs font-bold text-white rounded-r-xl"
-              style={{ left: '80%', width: '20%', backgroundColor: '#ea580c', borderLeft: '2px dashed white' }}>
-              +2:30…
+            <div className="absolute left-0 top-0 h-full w-full flex items-center justify-center text-sm font-bold text-white rounded-xl"
+              style={{ background: `linear-gradient(90deg,${orange},#f59e0b)` }}>
+              First bid starts timer → 30:00 → ENDS
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-xs text-center">
+          <div className="grid grid-cols-2 gap-2 text-xs text-center">
             <div className="p-2 rounded-lg" style={{ backgroundColor: `${orange}12` }}>
-              <p className="font-bold" style={{ color: orange }}>First bid</p>
-              <p style={{ color: 'var(--text-muted)' }}>Starts 30:00 timer</p>
+              <p className="font-bold" style={{ color: orange }}>First bid placed</p>
+              <p style={{ color: 'var(--text-muted)' }}>30-minute countdown starts</p>
             </div>
-            <div className="p-2 rounded-lg" style={{ backgroundColor: '#f9741612' }}>
-              <p className="font-bold text-orange-500">1st counter</p>
-              <p style={{ color: 'var(--text-muted)' }}>Adds +5 minutes</p>
-            </div>
-            <div className="p-2 rounded-lg" style={{ backgroundColor: '#ea580c12' }}>
-              <p className="font-bold text-orange-700">2nd+ counter</p>
-              <p style={{ color: 'var(--text-muted)' }}>Adds +2.5 minutes</p>
+            <div className="p-2 rounded-lg" style={{ backgroundColor: `${orange}12` }}>
+              <p className="font-bold" style={{ color: orange }}>Counter bids</p>
+              <p style={{ color: 'var(--text-muted)' }}>Do NOT extend the timer</p>
             </div>
           </div>
-          <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)' }}>Hard cap: auction cannot exceed <strong>30 minutes</strong> from first bid, regardless of counter bids.</p>
+          <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)' }}>Timer is fixed at 30 minutes. No extensions. Highest bid when time is up wins.</p>
         </div>
 
         {/* Real scenario */}
@@ -270,26 +256,31 @@ export default function HowItWorksPage() {
             </div>
           </div>
           {/* Payout breakdown */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <div className="p-3 rounded-xl text-xs" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <p style={{ color: 'var(--text-muted)' }}>Ahmad pays</p>
               <p className="font-bold text-base mt-0.5">RM310</p>
-              <p style={{ color: 'var(--text-muted)' }}>+ 15% fee (RM46.50) = <strong>RM356.50</strong> total</p>
+              <p style={{ color: 'var(--text-muted)' }}>Winning bid only</p>
+            </div>
+            <div className="p-3 rounded-xl text-xs" style={{ backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p style={{ color: 'var(--text-muted)' }}>Platform fee</p>
+              <p className="font-bold text-base mt-0.5" style={{ color: 'var(--red)' }}>RM46.50</p>
+              <p style={{ color: 'var(--text-muted)' }}>15% from seller</p>
             </div>
             <div className="p-3 rounded-xl text-xs" style={{ backgroundColor: `${orange}08`, border: `1px solid ${orange}25` }}>
               <p style={{ color: 'var(--text-muted)' }}>Hafiz receives</p>
               <p className="font-bold text-base mt-0.5" style={{ color: orange }}>RM263.50</p>
-              <p style={{ color: 'var(--text-muted)' }}>RM310 − 15% (RM46.50)</p>
+              <p style={{ color: 'var(--text-muted)' }}>RM310 − 15%</p>
             </div>
           </div>
         </div>
 
         {/* Key rules */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-          <RuleCard emoji="🎯" title="RM0 starting bid is valid" desc="If you're the sole bidder at RM0, you win the item for free. The seller accepted RM0 as starting price." color={orange} />
-          <RuleCard emoji="⏱" title="No timer before first bid" desc="Your listing stays active indefinitely. No pressure to promote quickly — it lives until someone bids." color={orange} />
-          <RuleCard emoji="🔢" title="Bids must be whole numbers" desc="RM1 minimum increment. You cannot bid RM1.50 — only whole ringgit amounts." color={orange} />
-          <RuleCard emoji="💳" title="15% fee on final bid only" desc="No listing fee, no monthly fee. KASSIM only earns when you earn. RM0 win = RM0 fee." color={orange} />
+          <RuleCard emoji="🏷️" title="Starting bid is always RM0" desc="Sellers cannot set a starting price. The idea is simple: you want to clear space, you accept any amount — even RM0." color={orange} />
+          <RuleCard emoji="⏱" title="Fixed 30-minute timer, no extensions" desc="Once the first bid is placed, the countdown is fixed at 30 minutes. Counter bids do NOT add extra time." color={orange} />
+          <RuleCard emoji="🔢" title="Bids must be whole numbers, +RM1 minimum" desc="Each counter bid must be at least RM1 higher than the current bid. No decimals." color={orange} />
+          <RuleCard emoji="💳" title="Buyer pays bid. Seller pays 15% fee." desc="The winning buyer pays only their bid amount plus delivery. 15% platform fee is deducted from the seller's payout." color={orange} />
         </div>
 
         <Link href="/listings?mode=flash"
@@ -440,7 +431,7 @@ export default function HowItWorksPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
           <RuleCard emoji="🤖" title="AI SwapMatch Score" desc="When reviewing offers, KASSIM AI shows a match percentage based on your stated wants and the offered item's value. Helps you pick the best deal." color={green} />
           <RuleCard emoji="3️⃣" title="Max 3 counter rounds" desc="Each offer allows up to 3 counter-offer rounds. After 3, you must Accept or Reject — no more negotiation." color={green} />
-          <RuleCard emoji="🚫" title="Only one offer active per user" desc="Each buyer can only have one pending or countered offer per listing at a time. Keeps negotiations clean." color={green} />
+          <RuleCard emoji="💰" title="Fee: 15% on cash sales, free on pure swaps" desc="If a cash offer is accepted, seller pays 15% platform fee from proceeds. Pure item-for-item swaps have no fee." color={green} />
           <RuleCard emoji="🌟" title="SwapScore grows with each deal" desc="4.0 base → +0.1 per completed swap → max 5.0. Reach 5 swaps for Swap Verified badge, shown on every listing." color={green} />
         </div>
 

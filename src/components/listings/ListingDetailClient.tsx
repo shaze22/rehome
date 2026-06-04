@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
   AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
-  Package, Home, Truck, Trash2
+  Package, Truck, Trash2
 } from 'lucide-react'
 import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { trackRecentlyViewed } from '@/components/home/RecentlyViewed'
@@ -105,7 +105,6 @@ interface DCourierRate { id: string; courierName: string; serviceName: string; b
 
 function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string }) {
   const [credit, setCredit] = useState(0)
-  const [method, setMethod] = useState<'pickup' | 'courier'>('courier')
   const [postcode, setPostcode] = useState('')
   const [phone, setPhone] = useState(initialPhone ?? '')
   const [address, setAddress] = useState('')
@@ -113,20 +112,19 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
   const [quotesLoading, setQuotesLoading] = useState(false)
   const [selected, setSelected] = useState<DCourierRate | null>(null)
 
-  const step = method === 'pickup' ? 3
-    : !postcode || postcode.length < 5 ? 1
+  const step = !postcode || postcode.length < 5 ? 1
     : !selected ? 2
     : !phone || phone.length < 10 || !address || address.length < 10 ? 3
     : 4
 
-  const STEPS = ['Delivery Method', 'Postcode', 'Courier', 'Your Details']
+  const STEPS = ['Postcode', 'Courier', 'Your Details', 'Pay']
 
   useEffect(() => {
     fetch('/api/referral').then(r => r.json()).then(d => setCredit(d.creditBalance ?? 0)).catch(() => {})
   }, [])
 
   useEffect(() => {
-    if (method !== 'courier' || postcode.length !== 5 || !/^\d{5}$/.test(postcode)) {
+    if (postcode.length !== 5 || !/^\d{5}$/.test(postcode)) {
       setQuotes(null); setSelected(null); return
     }
     setQuotesLoading(true)
@@ -142,17 +140,17 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
         .finally(() => setQuotesLoading(false))
     }, 500)
     return () => clearTimeout(t)
-  }, [postcode, method, listingId, sellerState])
+  }, [postcode, listingId, sellerState])
 
-  const platformFee = Math.round(bidAmount * 0.15 * 100) / 100
   const discount = Math.min(credit, Math.max(0, bidAmount - 1))
-  const deliveryFee = method === 'courier' ? (selected?.chargedPrice ?? 0) : 0
-  const total = bidAmount - discount + platformFee + deliveryFee
+  const deliveryFee = selected?.chargedPrice ?? 0
+  // Buyer pays: bid amount + delivery only. Platform fee (15%) is deducted from seller's payout, not charged to buyer.
+  const total = bidAmount - discount + deliveryFee
 
-  const ready = method === 'pickup' || (method === 'courier' && selected !== null && phone.length >= 10 && address.length >= 10)
+  const ready = selected !== null && phone.length >= 10 && address.length >= 10
 
   const checkoutParams = new URLSearchParams({ listingId })
-  if (method === 'courier' && selected) {
+  if (selected) {
     checkoutParams.set('deliveryFee', selected.chargedPrice.toString())
     checkoutParams.set('deliveryBase', selected.basePrice.toString())
     checkoutParams.set('deliveryMarkup', selected.markup.toString())
@@ -166,50 +164,31 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
 
   return (
     <div className="space-y-3">
-      {/* Step indicator (courier only) */}
-      {method === 'courier' && (
-        <div className="flex items-center gap-1 mb-1">
-          {STEPS.map((label, i) => (
-            <div key={label} className="flex items-center gap-1 flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                  backgroundColor: i + 1 <= step ? 'var(--teal)' : 'var(--bg-elevated)',
-                  color: i + 1 <= step ? 'white' : 'var(--text-muted)',
-                  border: i + 1 === step ? '2px solid var(--teal)' : '2px solid transparent',
-                }}>
-                  {i + 1 < step ? '✓' : i + 1}
-                </div>
-                <span className="text-xs mt-0.5 text-center leading-none" style={{ color: i + 1 === step ? 'var(--teal)' : 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
+      {/* Step indicator */}
+      <div className="flex items-center gap-1 mb-1">
+        {STEPS.map((label, i) => (
+          <div key={label} className="flex items-center gap-1 flex-1">
+            <div className="flex flex-col items-center flex-1">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                backgroundColor: i + 1 <= step ? 'var(--teal)' : 'var(--bg-elevated)',
+                color: i + 1 <= step ? 'white' : 'var(--text-muted)',
+                border: i + 1 === step ? '2px solid var(--teal)' : '2px solid transparent',
+              }}>
+                {i + 1 < step ? '✓' : i + 1}
               </div>
-              {i < STEPS.length - 1 && <div className="h-0.5 flex-1 mb-3 rounded" style={{ backgroundColor: i + 1 < step ? 'var(--teal)' : 'var(--border)' }} />}
+              <span className="text-xs mt-0.5 text-center leading-none" style={{ color: i + 1 === step ? 'var(--teal)' : 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Method toggle */}
-      <div className="grid grid-cols-2 gap-2">
-        {(['pickup', 'courier'] as const).map(m => (
-          <button key={m} type="button" onClick={() => { setMethod(m); setSelected(null); setQuotes(null) }}
-            className="px-3 py-2.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              backgroundColor: method === m ? (m === 'pickup' ? 'rgba(20,184,166,0.15)' : 'rgba(79,140,255,0.15)') : 'var(--bg-elevated)',
-              border: method === m ? (m === 'pickup' ? '1px solid rgba(20,184,166,0.5)' : '1px solid rgba(79,140,255,0.5)') : '1px solid var(--border)',
-              color: method === m ? (m === 'pickup' ? 'var(--teal)' : 'var(--blue)') : 'var(--text-secondary)',
-            }}>
-            {m === 'pickup' ? '🤝 Self Pick-Up (Free)' : '📦 Courier Delivery'}
-          </button>
+            {i < STEPS.length - 1 && <div className="h-0.5 flex-1 mb-3 rounded" style={{ backgroundColor: i + 1 < step ? 'var(--teal)' : 'var(--border)' }} />}
+          </div>
         ))}
       </div>
 
-      {method === 'pickup' && (
-        <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
-          Arrange pick-up directly with the seller via the chat below.
-        </p>
-      )}
+      {/* Delivery header */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(79,140,255,0.08)', border: '1px solid rgba(79,140,255,0.2)', color: 'var(--text-secondary)' }}>
+        📦 <span>All orders delivered via KASSIM platform. Enter your postcode to see courier rates.</span>
+      </div>
 
-      {method === 'courier' && (
-        <div className="space-y-2">
+      <div className="space-y-2">
           {/* Postcode */}
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Your postcode</label>
@@ -276,13 +255,12 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
             />
           </div>
         </div>
-      )}
 
       {/* Payment summary */}
-      {(method === 'pickup' || selected) && (
+      {selected && (
         <div className="rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-muted)' }}>Item bid</span>
+            <span style={{ color: 'var(--text-muted)' }}>Winning bid</span>
             <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
           </div>
           {discount > 0 && (
@@ -292,25 +270,14 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
             </div>
           )}
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-muted)' }}>Platform fee (15%)</span>
-            <span className="font-mono">RM {platformFee.toFixed(2)}</span>
+            <span style={{ color: 'var(--text-muted)' }}>Delivery ({selected.courierName})</span>
+            <span className="font-mono">RM {deliveryFee.toFixed(2)}</span>
           </div>
-          {deliveryFee > 0 && (
-            <div className="flex justify-between">
-              <span style={{ color: 'var(--text-muted)' }}>Delivery ({selected?.courierName})</span>
-              <span className="font-mono">RM {deliveryFee.toFixed(2)}</span>
-            </div>
-          )}
-          {method === 'pickup' && (
-            <div className="flex justify-between">
-              <span style={{ color: 'var(--text-muted)' }}>Delivery</span>
-              <span className="font-mono" style={{ color: 'var(--green)' }}>Free</span>
-            </div>
-          )}
           <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-            <span>Total</span>
+            <span>Total you pay</span>
             <span className="font-mono">RM {total.toFixed(2)}</span>
           </div>
+          <p className="text-xs pt-1" style={{ color: 'var(--text-muted)' }}>15% platform fee is deducted from the seller's payout, not charged to you.</p>
         </div>
       )}
 
@@ -318,9 +285,7 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
         href={ready ? `/api/payment/checkout?${checkoutParams.toString()}` : '#'}
         className={`block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal ${!ready ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        {!ready
-          ? method === 'courier' ? 'Fill in delivery details' : 'Proceed to Payment'
-          : `Proceed to Payment: RM ${total.toFixed(2)}`}
+        {!ready ? 'Fill in delivery details' : `Proceed to Payment: RM ${total.toFixed(2)}`}
       </Link>
     </div>
   )
@@ -1178,86 +1143,14 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             Transaction Status
           </h2>
 
-          {justPaid && !flashTx.pickupMethod && isBuyer && (
+          {justPaid && isBuyer && (
             <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
-              Payment successful! Please choose your collection method below.
+              Payment successful! Your courier has been booked. Waiting for seller to ship.
             </div>
           )}
 
-          {/* Pickup method selection — buyer only, before chosen */}
-          {!flashTx.pickupMethod && isBuyer && (
-            <div className="rounded-xl p-5 mb-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <p className="text-sm font-semibold mb-3">Choose Collection Method</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleSetPickup('PICKUP')}
-                  disabled={pickupSaving}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-teal-400"
-                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
-                >
-                  <Home className="w-6 h-6" style={{ color: 'var(--teal)' }} />
-                  <span className="text-sm font-semibold">Self Pick-Up</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Free · Arrange directly with seller</span>
-                </button>
-                <button
-                  onClick={() => handleSetPickup('DELIVERY')}
-                  disabled={pickupSaving}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:border-blue-400"
-                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg-elevated)' }}
-                >
-                  <Truck className="w-6 h-6" style={{ color: 'var(--blue)' }} />
-                  <span className="text-sm font-semibold">Postal Delivery</span>
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Seller will enter tracking number</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Pickup mode — PICKUP */}
-          {flashTx.pickupMethod === 'PICKUP' && (
-            <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
-                <Home className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-                <span className="text-sm font-semibold">Self Pick-Up</span>
-                {flashTx.sellerPickupConfirmed ? (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>Completed</span>
-                ) : (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', color: 'var(--yellow)' }}>Waiting</span>
-                )}
-              </div>
-              {flashTx.sellerPickupConfirmed ? (
-                <div className="text-center py-4">
-                  <CheckCircle className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--green)' }} />
-                  <p className="font-semibold" style={{ color: 'var(--green)' }}>Transaction Completed</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Seller has confirmed pick-up. Payment released.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    Contact the seller via chat to arrange time and place for pick-up.
-                    {listing.seller.state && ` Seller location: ${listing.seller.state}.`}
-                  </p>
-                  {isBuyer && (
-                    <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(251,191,36,0.08)', color: 'var(--yellow)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                      Payment will be released to the seller once they confirm you have collected the item.
-                    </p>
-                  )}
-                  {isSeller && !flashTx.sellerPickupConfirmed && (
-                    <button
-                      onClick={handlePickupConfirm}
-                      disabled={pickupConfirming}
-                      className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50"
-                    >
-                      {pickupConfirming ? 'Confirming...' : 'Confirm Buyer Has Picked Up'}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Delivery mode — DELIVERY */}
-          {flashTx.pickupMethod === 'DELIVERY' && (
+          {/* Delivery mode — all orders use platform delivery */}
+          {(flashTx.pickupMethod === 'DELIVERY' || !flashTx.pickupMethod) && (
             <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
                 <Truck className="w-4 h-4" style={{ color: 'var(--blue)' }} />
@@ -1331,13 +1224,6 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             </div>
           )}
 
-          {/* No pickup method yet — seller sees waiting message */}
-          {!flashTx.pickupMethod && isSeller && (
-            <div className="rounded-xl p-5 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Clock className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Waiting for buyer to choose collection method...</p>
-            </div>
-          )}
         </div>
       )}
 

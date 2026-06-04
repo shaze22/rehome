@@ -67,18 +67,16 @@ export async function POST(request: NextRequest) {
           sellerPayout: parseFloat(sellerPayout),
           stripePaymentId: session.payment_intent as string,
           status: 'ESCROWED',
-          // Delivery
-          ...(dFee > 0 ? {
-            deliveryFee: dFee,
-            deliveryBase: dBase,
-            deliveryMarkup: dMarkup,
-            courierName: courierName || null,
-            courierService: courierService || null,
-            courierServiceId: courierServiceId || null,
-            buyerPostcode: buyerPostcode || null,
-            buyerPhone: buyerPhone || null,
-            buyerAddress: buyerAddress || null,
-          } : {}),
+          pickupMethod: 'DELIVERY', // self-pickup removed — all orders use platform delivery
+          deliveryFee: dFee,
+          deliveryBase: dBase,
+          deliveryMarkup: dMarkup,
+          courierName: courierName || null,
+          courierService: courierService || null,
+          courierServiceId: courierServiceId || null,
+          buyerPostcode: buyerPostcode || null,
+          buyerPhone: buyerPhone || null,
+          buyerAddress: buyerAddress || null,
         },
       }),
       ...(creditAmount > 0

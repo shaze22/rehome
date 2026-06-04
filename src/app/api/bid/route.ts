@@ -11,11 +11,8 @@ const BidSchema = z.object({
   amount: z.number().int('Bid must be a whole number').min(0, 'Bid cannot be negative'),
 })
 
-// Progressive timer constants (milliseconds)
-const PHASE1_MS = 15 * 60 * 1000   // first bid: 15 min
-const PHASE2_MS = 5 * 60 * 1000    // counter bid #1: +5 min
-const PHASE3_MS = 2.5 * 60 * 1000  // counter bid #2+: +2.5 min
-const HARD_CAP_MS = 30 * 60 * 1000 // maximum 30 min from first bid
+// Flash Bid: fixed 30-minute window from first bid, no extensions
+const FLASH_DURATION_MS = 30 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -87,20 +84,17 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Calculate new endsAt based on auction phase
+  // Timer: first bid starts fixed 30-min window, counter bids do NOT extend timer
   let newEndsAt: Date
   let firstBidAt = listing.firstBidAt
 
   if (bidCount === 0) {
-    // Phase 1: first bid — start 15-minute countdown
+    // First bid — start fixed 30-minute countdown
     firstBidAt = now
-    newEndsAt = new Date(now.getTime() + PHASE1_MS)
+    newEndsAt = new Date(now.getTime() + FLASH_DURATION_MS)
   } else {
-    // firstBidAt must exist at this point
-    const hardCap = new Date(firstBidAt!.getTime() + HARD_CAP_MS)
-    const extensionMs = bidCount === 1 ? PHASE2_MS : PHASE3_MS
-    const extended = new Date(listing.endsAt!.getTime() + extensionMs)
-    newEndsAt = extended > hardCap ? hardCap : extended
+    // Counter bids — keep the existing endsAt unchanged
+    newEndsAt = listing.endsAt!
   }
 
   const [bid] = await prisma.$transaction([
@@ -177,6 +171,6 @@ export async function POST(request: NextRequest) {
     success: true,
     bid: { ...bid, createdAt: bid.createdAt.toISOString() },
     newEndsAt: newEndsAt.toISOString(),
-    phase: bidCount === 0 ? 1 : bidCount === 1 ? 2 : 3,
+    phase: bidCount === 0 ? 1 : 2,
   })
 }

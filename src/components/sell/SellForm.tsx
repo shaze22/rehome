@@ -533,15 +533,12 @@ export function SellForm({ userId }: Props) {
         )}
 
         {mode === 'FLASH' && (
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Starting Bid (RM, 0 = no minimum price) *
-            </label>
-            <input
-              type="number" required min={0} step={1} value={startingBid} onChange={e => setStartingBid(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
-              style={inputStyle}
-            />
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.25)' }}>
+            <span className="text-2xl font-black font-mono" style={{ color: '#ff6b35' }}>RM 0</span>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: '#ff6b35' }}>Starting bid is always RM0</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>You want to clear your item. Anyone who bids wins — even at RM0 if they are the only bidder.</p>
+            </div>
           </div>
         )}
       </section>
