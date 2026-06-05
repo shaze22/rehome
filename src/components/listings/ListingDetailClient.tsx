@@ -183,10 +183,12 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: {
         ))}
       </div>
 
-      {/* Delivery header */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(79,140,255,0.08)', border: '1px solid rgba(79,140,255,0.2)', color: 'var(--text-secondary)' }}>
-        📦 <span>All orders delivered via KASSIM platform. Enter your postcode to see courier rates.</span>
-      </div>
+      {/* Delivery header — only shown when postcode not yet entered */}
+      {step === 1 && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(79,140,255,0.08)', border: '1px solid rgba(79,140,255,0.2)', color: 'var(--text-secondary)' }}>
+          📦 <span>All orders via KASSIM platform. Enter your postcode to see courier rates.</span>
+        </div>
+      )}
 
       <div className="space-y-2">
           {/* Postcode */}
@@ -307,7 +309,7 @@ type UrgencyLevel = 0 | 1 | 2 | 3
 function useCountdown(endsAt: string | null, offset = 0) {
   const [timeLeft, setTimeLeft] = useState('')
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(0)
-  const [isEnded, setIsEnded] = useState(false)
+  const [isEnded, setIsEnded] = useState(() => !!endsAt && new Date(endsAt).getTime() < Date.now())
   const [isWaiting, setIsWaiting] = useState(!endsAt)
 
   useEffect(() => {
@@ -860,7 +862,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             {/* Current bid */}
             <div className="mb-4">
               <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
-                {listing.currentBid > 0 ? 'Highest Bid' : 'Starting Bid'}
+                {(listing.status === 'ENDED' || listing.status === 'SOLD') && listing.currentBidder
+                  ? 'Winning Bid'
+                  : listing.currentBid > 0 ? 'Highest Bid' : 'Starting Bid'}
               </p>
               <p className="text-4xl font-bold font-mono" style={{ color: 'var(--teal)' }}>
                 RM {currentBidDisplay.toFixed(0)}
@@ -1088,7 +1092,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                       {listing.seller.state}
                     </span>
                   )}
-                  <span>Member since {new Date(listing.seller.createdAt).toLocaleDateString('en-MY', { year: 'numeric', month: 'short' })}</span>
+                  <span suppressHydrationWarning>Member since {new Date(listing.seller.createdAt).toLocaleDateString('en-MY', { year: 'numeric', month: 'short' })}</span>
                   {listing.seller._count && listing.seller._count.listings > 1 && (
                     <span style={{ color: 'var(--text-muted)' }}>{listing.seller._count.listings} active listings</span>
                   )}
@@ -1111,7 +1115,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               )}
               {listing.mode === 'FLASH' && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  ⚡ Flash: 30 Min Only
+                  {listing.endsAt === null ? '⚡ Timer starts on first bid' : '⚡ Flash: 30 Min Only'}
                 </span>
               )}
               {listing.mode === 'SWAP' && (
@@ -1279,7 +1283,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     </div>
                     <div>
                       <p className="text-sm font-medium">{bid.bidder.name ?? 'Anonymous User'}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }} suppressHydrationWarning>
                         {new Date(bid.createdAt).toLocaleString('ms-MY')}
                       </p>
                     </div>
