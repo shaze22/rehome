@@ -309,12 +309,13 @@ type UrgencyLevel = 0 | 1 | 2 | 3
 function useCountdown(endsAt: string | null, offset = 0) {
   const [timeLeft, setTimeLeft] = useState('')
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(0)
-  const [isEnded, setIsEnded] = useState(() => !!endsAt && new Date(endsAt).getTime() < Date.now())
+  const [isEnded, setIsEnded] = useState(false)
   const [isWaiting, setIsWaiting] = useState(!endsAt)
 
   useEffect(() => {
     if (!endsAt) {
       setIsWaiting(true)
+      setIsEnded(false)
       setTimeLeft('Waiting for first bidder...')
       return
     }
@@ -322,6 +323,7 @@ function useCountdown(endsAt: string | null, offset = 0) {
     function update() {
       const diff = new Date(endsAt as string).getTime() - (Date.now() + offset)
       if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); return }
+      setIsEnded(false) // reset if endsAt changed to future (e.g. after first bid realtime update)
       const d = Math.floor(diff / 86400000)
       const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
@@ -378,7 +380,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
   const serverTimeOffset = useServerTimeOffset()
-  const { timeLeft, urgencyLevel, isUrgent, isEnded, isWaiting } = useCountdown(listing.endsAt, serverTimeOffset)
+  const { timeLeft, urgencyLevel, isUrgent, isEnded: countdownEnded, isWaiting } = useCountdown(listing.endsAt, serverTimeOffset)
+  const isEnded = countdownEnded || listing.status === 'ENDED' || listing.status === 'SOLD'
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [offerSubmitted, setOfferSubmitted] = useState(false)
   const [copied, setCopied] = useState(false)
