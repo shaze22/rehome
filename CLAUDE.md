@@ -580,7 +580,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-04, commit `7b877c9` — EasyParcel webhook failure handling: notify seller + admin via email on booking failure. DKIM setup for kassim.app in Resend. RESEND_API_KEY rotated in Vercel. Force deployed via Vercel CLI.
+2026-06-05, commit `1c6982f` — Fasa 15: hydration error fix (isEnded init + suppressHydrationWarning on locale dates), Winning Bid label on ended auctions, Flash badge "Timer starts on first bid" pre-bid, DeliveryCheckout hint hides after postcode entered.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -611,6 +611,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **12** | **Copy + perf fixes (2026-06-04):** "Browse Flash Bid" / "Browse Swap Bid" button labels. How-it-works Flash "Best for" text fixed (no overpromise). next/font replaces Google Fonts @import. Homepage 5 query groups cached 60s (unstable_cache). getSession() in layout (no network). loading.tsx skeleton. priority prop on first card images. 4 new DB indexes. |
 | **13** | **UX + viral fixes (2026-06-04):** "Pay Now" orange banner in dashboard for unpaid Flash Bid wins. "Ship Now" teal alert for seller ESCROWED orders. Copy Link button on listing detail (clipboard + "Copied!" feedback). Post-bid WhatsApp share prompt ("Tell friends before someone outbids you!"). Referral section moved above My Listings. Test users created (testseller@kassim.app, testbuyer@kassim.app). |
 | **14** | **Reliability fixes (2026-06-04):** EasyParcel webhook failure handling — on booking error, seller gets "book manually" email + admin gets alert email with listing ID + error. sendEasyParcelFailureEmail() added to resend.ts. kassim.app DKIM added to Resend (domain ID: d887ba9e). RESEND_API_KEY rotated in Vercel. |
+| **15** | **Bug fixes (2026-06-05):** React hydration error #418 fixed — `isEnded` now initialises from `endsAt` comparison (no more bid form flicker on ended auctions), `suppressHydrationWarning` on `toLocaleString('ms-MY')` and `toLocaleDateString('en-MY')` elements. "Winning Bid" label shows correctly on ended auctions (was "Starting Bid"). Flash trust badge: "Timer starts on first bid" when `endsAt=null`, "30 Min Only" once timer running. DeliveryCheckout postcode hint hides after step 1. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
