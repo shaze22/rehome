@@ -390,6 +390,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const searchParams = useSearchParams()
   const justPaid = searchParams.get('payment') === 'success'
   const paymentCancelled = searchParams.get('payment') === 'cancelled'
+  const paymentAmountTooLow = searchParams.get('payment') === 'amount_too_low'
 
   const [flashTx, setFlashTx] = useState<FlashTransaction | null>(null)
   const [txLoading, setTxLoading] = useState(false)
@@ -1041,6 +1042,11 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     {paymentCancelled && (
                       <div className="mb-3 px-3 py-2.5 rounded-xl text-xs font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--yellow)' }}>
                         Payment was not completed. Complete checkout below to secure your item. You have 24 hours.
+                      </div>
+                    )}
+                    {paymentAmountTooLow && (
+                      <div className="mb-3 px-3 py-2.5 rounded-xl text-xs font-medium" style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--red)' }}>
+                        Payment amount is below the minimum RM 1.00. Please contact support via WhatsApp.
                       </div>
                     )}
                     <DeliveryCheckout

@@ -72,6 +72,12 @@ export async function GET(request: NextRequest) {
   const creditToUse = Math.min(creditAvailable, Math.max(0, listing.currentBid - 1))
   const chargeAmount = listing.currentBid - creditToUse
 
+  // FPX minimum is RM 1.00 — enforce before creating Stripe session
+  const totalCents = Math.round(chargeAmount * 100) + Math.round(serverDeliveryFee * 100)
+  if (totalCents < 100) {
+    return NextResponse.redirect(new URL(`/listings/${listingId}?payment=amount_too_low`, request.url))
+  }
+
   const { platformFee, sellerPayout } = calculateFees(chargeAmount)
 
   const lineItems = []
