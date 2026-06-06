@@ -15,7 +15,7 @@ export default async function AdminPage() {
     pendingICs, recentListings,
     totalUsers, activeListings, soldListings, endedListings,
     volumeResult, totalBids, totalMessages, avgRatingResult,
-    recentUsers, topSellers, disputedSwaps, allUsers,
+    recentUsers, topSellers, disputedSwaps, allUsers, pendingPayouts,
   ] = await Promise.all([
     prisma.user.findMany({
       where: { icStatus: 'PENDING' },
@@ -64,11 +64,25 @@ export default async function AdminPage() {
       orderBy: { updatedAt: 'desc' },
       take: 50,
     }),
+    prisma.transaction.findMany({
+      where: { status: 'RELEASED', sellerPaid: false },
+      orderBy: { updatedAt: 'desc' },
+    }),
   ])
 
   const totalVolume = volumeResult._sum.amount ?? 0
   const totalRevenue = volumeResult._sum.platformFee ?? 0
   const avgRating = avgRatingResult._avg.rating ?? 0
+
+  // Enrich pending payouts with listing + seller + buyer info
+  const enrichedPayouts = await Promise.all(pendingPayouts.map(async tx => {
+    const [listing, seller, buyer] = await Promise.all([
+      prisma.listing.findUnique({ where: { id: tx.listingId }, select: { id: true, title: true } }),
+      prisma.user.findUnique({ where: { id: tx.sellerId }, select: { id: true, name: true, email: true } }),
+      prisma.user.findUnique({ where: { id: tx.buyerId }, select: { id: true, name: true, email: true } }),
+    ])
+    return { ...tx, listing, seller, buyer }
+  }))
 
   return (
     <AdminPanel
@@ -77,6 +91,7 @@ export default async function AdminPage() {
       recentUsers={recentUsers as any}
       allUsers={allUsers as any}
       disputedSwaps={disputedSwaps as any}
+      pendingPayouts={enrichedPayouts as any}
       stats={{
         totalUsers, activeListings, soldListings, endedListings,
         totalVolume, totalRevenue, totalBids, totalMessages,

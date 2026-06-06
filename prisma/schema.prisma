@@ -137,6 +137,9 @@ model Transaction {
   buyerPostcode         String?
   buyerPhone            String?
   buyerAddress          String?
+  sellerPaid            Boolean           @default(false)
+  sellerPaidAt          DateTime?
+  payoutNote            String?
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 }

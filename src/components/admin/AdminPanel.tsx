@@ -45,12 +45,25 @@ interface BetaUser {
   createdAt: string; _count: { listings: number }
 }
 
+interface PendingPayout {
+  id: string
+  listingId: string
+  sellerPayout: number
+  amount: number
+  courierName: string | null
+  updatedAt: string
+  listing: { id: string; title: string }
+  seller: { id: string; name: string | null; email: string }
+  buyer: { id: string; name: string | null; email: string }
+}
+
 interface Props {
   pendingICs: PendingIC[]
   recentListings: Listing[]
   recentUsers: RecentUser[]
   allUsers: BetaUser[]
   disputedSwaps: DisputedSwap[]
+  pendingPayouts: PendingPayout[]
   stats: Stats
 }
 
@@ -127,16 +140,85 @@ function FeaturedListingRow({ listing, isLast }: { listing: Listing; isLast: boo
   )
 }
 
+function PayoutRow({ payout, onPaid }: { payout: PendingPayout; onPaid: (id: string) => void }) {
+  const [loading, setLoading] = useState(false)
+  const [note, setNote] = useState('')
+  const [showNote, setShowNote] = useState(false)
+
+  async function markPaid() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/mark-payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: payout.id, note: note || undefined }),
+      })
+      if (res.ok) onPaid(payout.id)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <Link href={`/listings/${payout.listingId}`} className="text-sm font-medium hover:underline line-clamp-1">
+            {payout.listing.title}
+          </Link>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            Seller: <strong>{payout.seller.name ?? 'Unknown'}</strong> ({payout.seller.email})
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Buyer paid: RM {payout.amount.toFixed(2)} · Payout to seller: <strong style={{ color: 'var(--teal)' }}>RM {payout.sellerPayout.toFixed(2)}</strong>
+            {payout.courierName && ` · ${payout.courierName}`}
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Released: {new Date(payout.updatedAt).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </p>
+          {showNote && (
+            <input
+              className="mt-2 w-full text-xs px-2 py-1 rounded"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              placeholder="Bank transfer ref / note (optional)"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+            />
+          )}
+        </div>
+        <div className="flex flex-col gap-1 flex-shrink-0">
+          <button
+            onClick={() => setShowNote(v => !v)}
+            className="text-xs px-2 py-1 rounded"
+            style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+          >
+            {showNote ? 'Hide' : '+ Note'}
+          </button>
+          <button
+            onClick={markPaid}
+            disabled={loading}
+            className="text-xs px-3 py-1.5 rounded font-medium"
+            style={{ backgroundColor: 'rgba(0,217,165,0.15)', color: 'var(--teal)', border: '1px solid rgba(0,217,165,0.3)' }}
+          >
+            {loading ? '...' : 'Mark Paid'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface AuditEntry {
   id: string; adminId: string; action: string
   targetId: string | null; targetType: string | null
   details: Record<string, unknown> | null; createdAt: string
 }
 
-export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, stats }: Props) {
+export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, pendingPayouts, stats }: Props) {
   const [verifying, setVerifying] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(pendingICs)
   const [localDisputes, setLocalDisputes] = useState(disputedSwaps)
+  const [localPayouts, setLocalPayouts] = useState(pendingPayouts)
   const [resolving, setResolving] = useState<string | null>(null)
   const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([])
   const [auditLoading, setAuditLoading] = useState(false)
@@ -295,6 +377,25 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
             <FeaturedListingRow key={listing.id} listing={listing} isLast={i === recentListings.length - 1} />
           ))}
         </div>
+      </div>
+
+      {/* Pending Seller Payouts */}
+      <div className="mt-8 rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(0,217,165,0.3)' }}>
+        <div className="flex items-center gap-2 px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+          <DollarSign className="w-5 h-5" style={{ color: 'var(--teal)' }} />
+          <h2 className="text-lg font-semibold">Pending Seller Payouts ({localPayouts.length})</h2>
+        </div>
+        {localPayouts.length === 0 ? (
+          <p className="px-6 py-4 text-sm" style={{ color: 'var(--text-muted)' }}>No pending payouts.</p>
+        ) : (
+          localPayouts.map(p => (
+            <PayoutRow
+              key={p.id}
+              payout={p}
+              onPaid={id => setLocalPayouts(prev => prev.filter(x => x.id !== id))}
+            />
+          ))
+        )}
       </div>
 
       {/* Disputed Swap Transactions */}
