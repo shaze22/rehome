@@ -93,9 +93,16 @@ export async function sendAuctionExpiredSellerEmail(
 }
 
 export async function sendPaymentReceivedEmail(to: string, name: string, listingTitle: string, payout: number) {
-  await safeSend(to, `Payment received for "${listingTitle}"`, baseTemplate(
-    'Payment Received',
-    `<p>Hi ${name},</p><p>Payment of <strong style="color:#00d9a5">RM ${payout}</strong> for "<strong>${listingTitle}</strong>" has been processed.</p>`,
+  await safeSend(to, `Payout confirmed for "${listingTitle}"`, baseTemplate(
+    'Buyer Has Confirmed Receipt',
+    `<p>Hi ${name},</p>
+     <p>Great news! The buyer has confirmed they received "<strong>${listingTitle}</strong>".</p>
+     <p style="background:#1e293b;padding:16px;border-radius:8px;text-align:center">
+       <span style="color:#94a3b8;font-size:12px">Your payout</span><br>
+       <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">RM ${payout.toFixed(2)}</span>
+     </p>
+     <p style="color:#94a3b8;font-size:13px">Your payout will be transferred to your bank account within <strong style="color:#e2e8f0">7 working days</strong>. No action needed from your side.</p>
+     <p style="color:#94a3b8;font-size:13px">If you have any questions, contact us via WhatsApp at +60189899495.</p>`,
     'View Dashboard', `${BASE}/dashboard`
   ))
 }
