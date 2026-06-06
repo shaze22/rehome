@@ -730,7 +730,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               <h1 className="text-2xl font-bold mb-1">{listing.title}</h1>
               <button
                 onClick={() => {
-                  const url = window.location.href
+                  const url = `https://kassim.app/listings/${listing.id}`
                   const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
                   const text = isSwap
                     ? `I found *${listing.title}* on KASSIM - swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap? ${url}`
@@ -745,7 +745,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               </button>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href)
+                  navigator.clipboard.writeText(`https://kassim.app/listings/${listing.id}`)
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2000)
                 }}
@@ -1007,7 +1007,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     </div>
                     <button
                       onClick={() => {
-                        const text = `I just bid on *${listing.title}* on KASSIM! Auction ends in 30 mins. Jump in!\n\n${window.location.href}`
+                        const text = `I just bid on *${listing.title}* on KASSIM! Auction ends in 30 mins. Jump in!\n\nhttps://kassim.app/listings/${listing.id}`
                         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
                       }}
                       className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium"

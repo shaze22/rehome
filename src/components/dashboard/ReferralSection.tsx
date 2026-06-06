@@ -23,8 +23,7 @@ export function ReferralSection() {
 
   if (!data) return null
 
-  const BASE = typeof window !== 'undefined' ? window.location.origin : 'https://kassim.app'
-  const referralLink = data.referralCode ? `${BASE}/r/${data.referralCode}` : null
+  const referralLink = data.referralCode ? `https://kassim.app/r/${data.referralCode}` : null
 
   async function copyLink() {
     if (!referralLink) return
