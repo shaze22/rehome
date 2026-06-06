@@ -300,6 +300,7 @@ DATABASE_URL, DIRECT_URL
 STRIPE_SECRET_KEY            ← ✅ LIVE mode (sk_live_...) set in Vercel
 STRIPE_WEBHOOK_SECRET        ← ✅ LIVE webhook we_1TfCHICGekCA1beqFy1dpImz (checkout.session.completed → kassim.app/api/payment/webhook)
 NEXT_PUBLIC_STRIPE_PUBLIC_KEY ← ✅ LIVE mode (pk_live_...) set in Vercel
+# Stripe payment methods: ['card', 'fpx'] — FPX enabled 2026-06-06
 RESEND_API_KEY               ← ✅ rotated (Fasa 13), DKIM verified 2026-06-06
 GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL=https://kassim.app   ← set in Vercel Production
@@ -597,7 +598,7 @@ Simplified above-fold section (updated Fasa 20):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-06, commit `3e738be` — Fasa 20: Suspense streaming + 2-col mobile grid + card compactness + hero CTA layout. Also: /impact page fully translated to English (f19d0f5).
+2026-06-06, commit `9c4c040` — FPX payment method enabled (card + fpx), customer_email added, webhook payment_status guard.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -632,6 +633,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **19** | **17 comprehensive fixes (2026-06-06):** (1) Bid race condition — SELECT FOR UPDATE in $transaction. (2) Delivery fee — server-side recalc, client params ignored. (3) Seller postcode — STATE_POSTCODE[] map, not hardcoded. (4) Auto-relist — unpaid wins reset to ACTIVE after 24h + seller email. (5) Flash 14-day expiry — ACTIVE+no-bid listings expire after 14 days. (6) Admin naming bug — allUsers/disputedSwaps properly wired. (7) N+1 fix — enrichedPayouts via single raw SQL JOIN. (8) Dashboard limits — take:100 listings, take:50 orders. (9) View count — fire-and-forget outside Promise.all. (10) Remove fake testimonials. (11) Seller profile link — ListingCard + SwapListingCard. (12) Cancel listing — POST /api/listings/[id]/cancel + SellerListingCard button. (13) Dashboard — show all listings (no slice). (14) User.postcode + User.savedAddress fields + ProfileEditForm UI. (15) Buyer ship email — sendBuyerShippedEmail on seller mark shipped. (16) sendAuctionRelistedEmail new function. (17) Profile API updated for postcode + savedAddress. |
 | **Impact** | **/impact page fully translated to English (2026-06-06):** Title, all stat labels, CO2 methodology section, category names (Perabot→Furniture etc.), badges section. Badge display: English name primary, Malay (nameMs) as subtitle. |
 | **20** | **Perf streaming + Mobile overhaul (2026-06-06):** (1) Suspense streaming — HeroBanner renders instantly, HomeContent async component wrapped in Suspense. (2) Mobile grid — all listing grids changed to grid-cols-2 (homepage, listings page, watchlist, loadings). (3) Card compactness — smaller padding/text on mobile, verbose text hidden (sm:block), footer condensed, image sizes="50vw". (4) Hero CTA — Flash Bid + Sell Now side-by-side on mobile, Swap below. (5) Section spacing — py-6 sm:py-10. (6) Section headers — removed duplicate Lucide icons, text-xl sm:text-2xl. (7) Stats — text-lg sm:text-2xl. (8) Why KASSIM — 2-col on mobile, desc hidden on mobile. (9) SwapListingCard — Wants/chips hidden mobile, timer always visible. |
+| **FPX** | **FPX payment method enabled (2026-06-06):** checkout/route.ts: payment_method_types=['card','fpx'] + customer_email for pre-fill. webhook/route.ts: payment_status guard (skip if not 'paid' — handles FPX async confirmation edge case). |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -703,5 +705,6 @@ Admin panel: https://kassim.app/admin
 - ✅ Fasa 19: 17 comprehensive fixes deployed (b0fa098, 2026-06-06)
 - ✅ /impact page fully translated to English (f19d0f5, 2026-06-06)
 - ✅ Fasa 20: Suspense streaming + 2-col mobile + card compactness (3e738be, 2026-06-06)
+- ✅ FPX enabled: payment_method_types=['card','fpx'], customer_email, webhook payment_status guard (9c4c040, 2026-06-06)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
