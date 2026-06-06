@@ -423,12 +423,13 @@ Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
 | File | Size | Use |
 |------|------|-----|
 | `public/logo.svg` | 320×90 | Navbar (used via `<img>`) |
-| `public/logo-square.svg` | 200×200 | Source SVG icon |
-| `public/logo-512.png` | 512×512 | EasyParcel, favicon, PWA icon |
+| `public/logo-square.svg` | 200×200 | **Primary favicon (SVG)** + PWA icon source |
+| `public/logo-512.png` | 512×512 | Favicon PNG fallback, apple-touch-icon |
 | `public/logo-wide.png` | 640×180 | Email, marketing |
 
 Live URLs: `https://kassim.app/logo-512.png`, `https://kassim.app/logo.svg`
-Design: teal (#14b8a6) lightning bolt + "KASSIM" bold white, dark (#0a0a0f) background
+Design: teal (#14b8a6) lightning bolt on dark (#0a0a0f) background
+Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.png` (PNG fallback)
 
 ## Lalamove Integration
 - **REMOVED** (2026-06-03) — EasyParcel sudah cukup untuk parcel delivery
