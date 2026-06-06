@@ -4,7 +4,7 @@ import { BADGES } from '@/lib/badges'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Impak Alam',
+  title: 'Environmental Impact',
   description: 'See the real impact of KASSIM: CO₂ saved, trees equivalent, and water conserved from pre-loved item transactions in Malaysia.',
 }
 
@@ -64,24 +64,24 @@ export default async function ImpactPage() {
           {
             icon: Leaf,
             value: `${Math.round(stats.totalCO2).toLocaleString()}kg`,
-            label: 'CO₂ Diselamatkan',
-            sublabel: 'berbanding membeli baru',
+            label: 'CO₂ Saved',
+            sublabel: 'vs buying new',
             color: 'var(--green)',
             border: 'rgba(0,217,165,0.2)',
           },
           {
             icon: TreePine,
             value: stats.trees.toLocaleString(),
-            label: 'Pokok Bersamaan',
-            sublabel: 'CO₂ diserap setiap tahun',
+            label: 'Tree Equivalent',
+            sublabel: 'CO₂ absorbed per year',
             color: 'var(--teal)',
             border: 'rgba(20,184,166,0.2)',
           },
           {
             icon: Droplets,
             value: `${stats.water.toLocaleString()}L`,
-            label: 'Air Dijimatkan',
-            sublabel: 'daripada pengeluaran baharu',
+            label: 'Water Saved',
+            sublabel: 'from new production',
             color: 'var(--blue)',
             border: 'rgba(79,140,255,0.2)',
           },
@@ -100,10 +100,10 @@ export default async function ImpactPage() {
       {/* Platform stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
-          { label: 'Item Dijual', value: stats.soldCount.toLocaleString(), icon: Recycle, color: 'var(--teal)' },
-          { label: 'Pengguna', value: stats.totalUsers.toLocaleString(), icon: Users, color: 'var(--purple)' },
+          { label: 'Items Sold', value: stats.soldCount.toLocaleString(), icon: Recycle, color: 'var(--teal)' },
+          { label: 'Users', value: stats.totalUsers.toLocaleString(), icon: Users, color: 'var(--purple)' },
           { label: 'Platform Fee', value: '15%', icon: TrendingUp, color: 'var(--yellow)' },
-          { label: 'Lencana', value: BADGES.length.toString(), icon: Award, color: 'var(--orange)' },
+          { label: 'Badges', value: BADGES.length.toString(), icon: Award, color: 'var(--orange)' },
         ].map(s => (
           <div key={s.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <s.icon className="w-5 h-5 mx-auto mb-2" style={{ color: s.color }} />
@@ -115,9 +115,9 @@ export default async function ImpactPage() {
 
       {/* Badges */}
       <div className="mb-16">
-        <h2 className="text-2xl font-bold mb-2 text-center">Lencana Impak</h2>
+        <h2 className="text-2xl font-bold mb-2 text-center">Impact Badges</h2>
         <p className="text-sm text-center mb-8" style={{ color: 'var(--text-secondary)' }}>
-          Kumpul lencana dengan menjual, membeli, dan menyumbang kepada ekosistem pekeliling
+          Earn badges by selling, buying, and contributing to the circular economy
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {BADGES.map(badge => (
@@ -127,8 +127,8 @@ export default async function ImpactPage() {
                   {badge.emoji}
                 </div>
                 <div>
-                  <p className="font-semibold">{badge.nameMs}</p>
-                  <p className="text-xs" style={{ color: badge.color }}>{badge.name}</p>
+                  <p className="font-semibold">{badge.name}</p>
+                  <p className="text-xs" style={{ color: badge.color }}>{badge.nameMs}</p>
                 </div>
               </div>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{badge.description}</p>
@@ -142,19 +142,19 @@ export default async function ImpactPage() {
 
       {/* CO2 Methodology */}
       <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-xl font-bold mb-4">Kaedah Pengiraan CO₂</h2>
+        <h2 className="text-xl font-bold mb-4">CO₂ Calculation Method</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-          Kami menganggar CO₂ diselamatkan berdasarkan jejak karbon pengeluaran kategori barangan baru berbanding pembelian barangan terpakai:
+          We estimate CO₂ saved based on the carbon footprint of manufacturing new goods versus buying pre-loved items:
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { cat: 'Perabot', co2: '40kg' },
-            { cat: 'Elektronik', co2: '15kg' },
-            { cat: 'Fesyen', co2: '5kg' },
-            { cat: 'Buku', co2: '2kg' },
-            { cat: 'Sukan', co2: '8kg' },
-            { cat: 'Dapur', co2: '10kg' },
-            { cat: 'Lain-lain', co2: '12kg' },
+            { cat: 'Furniture', co2: '40kg' },
+            { cat: 'Electronics', co2: '15kg' },
+            { cat: 'Fashion', co2: '5kg' },
+            { cat: 'Books', co2: '2kg' },
+            { cat: 'Sports', co2: '8kg' },
+            { cat: 'Kitchen', co2: '10kg' },
+            { cat: 'Others', co2: '12kg' },
           ].map(item => (
             <div key={item.cat} className="rounded-lg p-3 text-center" style={{ backgroundColor: 'var(--bg-elevated)' }}>
               <p className="text-sm font-medium">{item.cat}</p>
@@ -164,7 +164,7 @@ export default async function ImpactPage() {
           ))}
         </div>
         <p className="text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
-          * Pengiraan berasaskan kajian Life Cycle Assessment (LCA) untuk barangan pengguna. Angka adalah anggaran dan mungkin berbeza mengikut jenama, bahan, dan jarak penghantaran.
+          * Estimates based on Life Cycle Assessment (LCA) studies for consumer goods. Figures are approximate and may vary by brand, material, and shipping distance.
         </p>
       </div>
     </div>
