@@ -599,7 +599,7 @@ Simplified above-fold section (updated Fasa 20):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-06, commit `deaf9dd` — payment cancel banner, DeliveryCheckout pre-fill, missed payment email (sendPaymentWindowExpiredEmail).
+2026-06-06, commit `293fafa` — new user onboarding redirect to /sell, FPX minimum RM 1 guard.
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -709,5 +709,7 @@ Admin panel: https://kassim.app/admin
 - ✅ Fasa 20: Suspense streaming + 2-col mobile + card compactness (3e738be, 2026-06-06)
 - ✅ FPX enabled: payment_method_types=['card','fpx'], customer_email, webhook payment_status guard (9c4c040, 2026-06-06)
 - ✅ Beta UX fixes: payment cancel banner, DeliveryCheckout pre-fill, sendPaymentWindowExpiredEmail (deaf9dd, 2026-06-06)
+- ✅ Onboarding redirect: new users after auth go to /sell?welcome=1 (293fafa, 2026-06-06)
+- ✅ FPX minimum guard: checkout rejects total < RM 1 with ?payment=amount_too_low (293fafa, 2026-06-06)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
