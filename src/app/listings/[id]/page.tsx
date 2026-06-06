@@ -101,7 +101,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const dbUser = user ? await prisma.user.findUnique({
     where: { id: user.id },
-    select: { state: true, phone: true },
+    select: { state: true, phone: true, postcode: true, savedAddress: true },
   }) : null
 
   const relatedSlot = relatedListings.length > 0 ? (
@@ -128,6 +128,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         currentUserEmail={user?.email ?? null}
         currentUserState={dbUser?.state ?? null}
         currentUserPhone={dbUser?.phone ?? null}
+        currentUserPostcode={dbUser?.postcode ?? null}
+        currentUserSavedAddress={dbUser?.savedAddress ?? null}
         watchlistButton={
           <WatchlistButton listingId={listing.id} currentUserId={user?.id ?? null} />
         }

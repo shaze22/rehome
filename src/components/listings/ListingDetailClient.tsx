@@ -92,6 +92,8 @@ interface Props {
   currentUserEmail: string | null
   currentUserState?: string | null
   currentUserPhone?: string | null
+  currentUserPostcode?: string | null
+  currentUserSavedAddress?: string | null
   watchlistButton?: React.ReactNode
   relatedListingsSlot?: React.ReactNode
 }
@@ -103,11 +105,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface DCourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
 
-function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string }) {
+function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, initialPostcode, initialAddress }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string; initialPostcode?: string; initialAddress?: string }) {
   const [credit, setCredit] = useState(0)
-  const [postcode, setPostcode] = useState('')
+  const [postcode, setPostcode] = useState(initialPostcode ?? '')
   const [phone, setPhone] = useState(initialPhone ?? '')
-  const [address, setAddress] = useState('')
+  const [address, setAddress] = useState(initialAddress ?? '')
   const [quotes, setQuotes] = useState<DCourierRate[] | null>(null)
   const [quotesLoading, setQuotesLoading] = useState(false)
   const [selected, setSelected] = useState<DCourierRate | null>(null)
@@ -345,7 +347,7 @@ function useCountdown(endsAt: string | null, offset = 0) {
   return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting }
 }
 
-export function ListingDetailClient({ listing: initialListing, currentUserId: initialUserId, currentUserEmail, currentUserState, currentUserPhone, watchlistButton, relatedListingsSlot }: Props) {
+export function ListingDetailClient({ listing: initialListing, currentUserId: initialUserId, currentUserEmail, currentUserState, currentUserPhone, currentUserPostcode, currentUserSavedAddress, watchlistButton, relatedListingsSlot }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
   const initialBidAmount = initialListing._count.bids === 0
@@ -387,6 +389,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const [copied, setCopied] = useState(false)
   const searchParams = useSearchParams()
   const justPaid = searchParams.get('payment') === 'success'
+  const paymentCancelled = searchParams.get('payment') === 'cancelled'
 
   const [flashTx, setFlashTx] = useState<FlashTransaction | null>(null)
   const [txLoading, setTxLoading] = useState(false)
@@ -1035,7 +1038,19 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
                     <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
-                    <DeliveryCheckout listingId={listing.id} bidAmount={listing.currentBid} sellerState={listing.seller.state ?? 'Kuala Lumpur'} initialPhone={currentUserPhone ?? undefined} />
+                    {paymentCancelled && (
+                      <div className="mb-3 px-3 py-2.5 rounded-xl text-xs font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--yellow)' }}>
+                        Payment was not completed. Complete checkout below to secure your item. You have 24 hours.
+                      </div>
+                    )}
+                    <DeliveryCheckout
+                      listingId={listing.id}
+                      bidAmount={listing.currentBid}
+                      sellerState={listing.seller.state ?? 'Kuala Lumpur'}
+                      initialPhone={currentUserPhone ?? undefined}
+                      initialPostcode={currentUserPostcode ?? undefined}
+                      initialAddress={currentUserSavedAddress ?? undefined}
+                    />
                   </div>
                 )}
               </div>

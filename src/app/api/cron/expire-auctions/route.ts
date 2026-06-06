@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendAuctionWonEmail, sendAuctionExpiredSellerEmail, sendAuctionRelistedEmail } from '@/lib/resend'
+import { sendAuctionWonEmail, sendAuctionExpiredSellerEmail, sendAuctionRelistedEmail, sendPaymentWindowExpiredEmail } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,14 +63,23 @@ export async function GET(request: NextRequest) {
     try {
       const existingTx = await prisma.transaction.findUnique({ where: { listingId: listing.id } })
       if (!existingTx) {
+        const formerWinnerId = listing.currentBidder!
         // No payment — reset to ACTIVE so new bids can come in
         await prisma.listing.update({
           where: { id: listing.id },
           data: { status: 'ACTIVE', currentBid: 0, currentBidder: null, endsAt: null, firstBidAt: null },
         })
-        if (listing.seller.email) {
-          await sendAuctionRelistedEmail(listing.seller.email, listing.seller.name ?? 'Penjual', listing.title, listing.id).catch(() => {})
-        }
+        const [formerWinner] = await Promise.all([
+          prisma.user.findUnique({ where: { id: formerWinnerId }, select: { email: true, name: true } }),
+        ])
+        await Promise.all([
+          listing.seller.email
+            ? sendAuctionRelistedEmail(listing.seller.email, listing.seller.name ?? 'Penjual', listing.title, listing.id).catch(() => {})
+            : Promise.resolve(),
+          formerWinner?.email
+            ? sendPaymentWindowExpiredEmail(formerWinner.email, formerWinner.name ?? 'Penawar', listing.title, listing.id).catch(() => {})
+            : Promise.resolve(),
+        ])
         processed++
       }
     } catch (err) {

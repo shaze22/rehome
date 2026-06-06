@@ -216,6 +216,19 @@ export async function sendAuctionRelistedEmail(to: string, name: string, listing
   ))
 }
 
+export async function sendPaymentWindowExpiredEmail(to: string, name: string, listingTitle: string, listingId: string) {
+  await safeSend(to, `Payment window expired — ${listingTitle}`, baseTemplate(
+    'Your Winning Bid Has Expired',
+    `<p>Hi ${name},</p>
+     <p>Your winning bid for "<strong>${listingTitle}</strong>" was not paid within 24 hours.</p>
+     <p style="background:#1e293b;padding:12px;border-radius:8px;color:#fca5a5;font-size:13px">
+       The listing has been re-opened for new bids. You are no longer the winner.
+     </p>
+     <p style="color:#94a3b8;font-size:13px">If this was a mistake, you can place a new bid on the listing. Contact support via WhatsApp at +60189899495 if you need help.</p>`,
+    'View Listing', `${BASE}/listings/${listingId}`
+  ))
+}
+
 export async function sendSwapDisputeEmail(to: string, listingTitle: string, disputerName: string, reason: string, listingId: string) {
   await safeSend(to, `[Admin] Dispute filed: "${listingTitle}"`, baseTemplate(
     '⚠️ Dispute Filed',

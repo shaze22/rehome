@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       buyerAddress: buyerAddress.slice(0, 490),
     },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=success`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=cancelled`,
   })
 
   return NextResponse.redirect(session.url!)
