@@ -24,6 +24,8 @@ model User {
   swapVerified    Boolean     @default(false)
   referralCode    String?     @unique
   creditBalance   Float       @default(0)
+  postcode        String?
+  savedAddress    String?
   referrals         Referral[]         @relation("ReferrerReferrals")
   referredBy        Referral?          @relation("ReferredUser")
   pushSubscriptions PushSubscription[]

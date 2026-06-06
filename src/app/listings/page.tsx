@@ -80,7 +80,7 @@ async function getListings(params: SearchParams) {
       prisma.listing.findMany({
         where,
         include: {
-          seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+          seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
           _count: { select: { bids: true, offers: true } },
         },
         orderBy,

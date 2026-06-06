@@ -73,9 +73,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const listing = await getListing(id)
   if (!listing) notFound()
 
-  // Non-blocking view count increment + fetch related listings in parallel
-  const [, relatedListings, supabase] = await Promise.all([
-    prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => null),
+  // Fire-and-forget view count — don't let DB write block page render
+  prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => null)
+
+  const [relatedListings, supabase] = await Promise.all([
     prisma.listing.findMany({
       where: {
         id: { not: listing.id },
@@ -87,7 +88,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           : { endsAt: { gt: new Date() } }),
       },
       include: {
-        seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
+        seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } },
         _count: { select: { bids: true, offers: true } },
       },
       orderBy: { viewCount: 'desc' },

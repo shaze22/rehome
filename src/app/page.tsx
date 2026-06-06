@@ -14,7 +14,7 @@ const getFeaturedListings = unstable_cache(async () => {
   try {
     return await prisma.listing.findMany({
       where: { status: 'ACTIVE', mode: 'FLASH', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
-      include: { seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
+      include: { seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
       orderBy: { createdAt: 'desc' },
       take: 4,
     })
@@ -27,7 +27,7 @@ const getFeaturedSwapListings = unstable_cache(async () => {
   try {
     return await prisma.listing.findMany({
       where: { status: 'ACTIVE', mode: 'SWAP', endsAt: { gt: new Date() } },
-      include: { seller: { select: { name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
+      include: { seller: { select: { id: true, name: true, rehomeScore: true, icVerified: true, swapScore: true, swapVerified: true } }, _count: { select: { bids: true, offers: true } } },
       orderBy: { createdAt: 'desc' },
       take: 4,
     })
@@ -114,12 +114,6 @@ const TRUST_FEATURES = [
   { emoji: '🤖', title: 'AI Pricing', desc: 'AI price suggestions based on current market. Sell at a fair and accurate price.' },
   { emoji: '✅', title: 'IC Verified', desc: 'Sellers who verify their IC get a trust badge. You know who you\'re dealing with.' },
   { emoji: '⚡', title: '30-Min Auctions', desc: 'Fast 30-minute auctions. Bid, win, pay. Done in one day.' },
-]
-
-const TESTIMONIALS = [
-  { quote: 'Laptop lama aku terjual RM650 dalam masa 22 minit. Lagi laju dari Carousell!', name: 'Ahmad F.', location: 'Kuala Lumpur', initial: 'A', stars: 5 },
-  { quote: 'Swap cermin mata lama dengan jam tangan. Jimat duit beli baru. Mudah sangat!', name: 'Siti R.', location: 'Selangor', initial: 'S', stars: 5 },
-  { quote: 'Escrow buat aku rasa selamat. Duit baru lepas bila barang sampai. Highly recommend!', name: 'Razif M.', location: 'Pulau Pinang', initial: 'R', stars: 5 },
 ]
 
 const SELL_FEATURES = [
@@ -316,38 +310,6 @@ export default async function HomePage() {
       {/* Waste Counter */}
       {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
 
-      {/* Testimonials — beta tester stories */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>Beta Tester Stories</p>
-            <h2 className="text-2xl font-bold mb-2">What Our Early Users Say</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>From Malaysians who tested KASSIM before launch</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map(t => (
-              <div key={t.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-1 mb-3">
-                  {Array.from({ length: t.stars }).map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-sm">★</span>
-                  ))}
-                  <span className="ml-2 text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)' }}>Beta Tester</span>
-                </div>
-                <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full gradient-teal flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                    {t.initial}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">{t.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.location}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

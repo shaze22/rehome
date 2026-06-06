@@ -7,6 +7,8 @@ const Schema = z.object({
   name: z.string().min(2).max(80).optional(),
   phone: z.string().regex(/^(\+?6?01)[0-46-9]-?[0-9]{7,8}$/, 'Invalid Malaysian phone number').optional(),
   state: z.string().optional(),
+  postcode: z.string().regex(/^\d{5}$/, 'Postcode must be 5 digits').optional().or(z.literal('')),
+  savedAddress: z.string().max(500).optional(),
 })
 
 export async function PUT(request: NextRequest) {
@@ -21,15 +23,17 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: issues[0]?.message ?? 'Invalid input.' }, { status: 400 })
   }
 
-  const { name, phone, state } = parsed.data
+  const { name, phone, state, postcode, savedAddress } = parsed.data
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
       ...(name !== undefined ? { name } : {}),
       ...(phone !== undefined ? { phone } : {}),
       ...(state !== undefined ? { state } : {}),
+      ...(postcode !== undefined ? { postcode: postcode || null } : {}),
+      ...(savedAddress !== undefined ? { savedAddress: savedAddress || null } : {}),
     },
-    select: { id: true, name: true, phone: true, state: true },
+    select: { id: true, name: true, phone: true, state: true, postcode: true, savedAddress: true },
   })
 
   return NextResponse.json({ success: true, user: updated })

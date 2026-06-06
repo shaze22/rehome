@@ -11,8 +11,13 @@ const BidSchema = z.object({
   amount: z.number().int('Bid must be a whole number').min(0, 'Bid cannot be negative'),
 })
 
-// Flash Bid: fixed 30-minute window from first bid, no extensions
 const FLASH_DURATION_MS = 30 * 60 * 1000
+
+type ListingRow = {
+  id: string; status: string; mode: string
+  endsAt: Date | null; currentBid: number; currentBidder: string | null
+  startingBid: number; firstBidAt: Date | null; sellerId: string; title: string
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -38,82 +43,74 @@ export async function POST(request: NextRequest) {
 
   const { listingId, amount } = parsed.data
 
-  const listing = await prisma.listing.findUnique({
-    where: { id: listingId },
-    include: {
-      bids: { orderBy: { createdAt: 'desc' }, take: 1 },
-      seller: { select: { id: true, email: true } },
-      _count: { select: { bids: true } },
-    },
-  })
+  // Wrap everything in a transaction with SELECT FOR UPDATE to prevent race conditions
+  type TxResult =
+    | { error: string; status: number }
+    | { bid: { id: string; amount: number; listingId: string; bidderId: string; createdAt: Date; bidder: { name: string | null; rehomeScore: number } }; newEndsAt: Date; bidCount: number; prevBidder: string | null; listingTitle: string }
 
-  if (!listing) {
-    return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
+  let txResult: TxResult
+  try {
+    txResult = await prisma.$transaction(async (tx) => {
+      // Lock the listing row — prevents concurrent bids from passing validation simultaneously
+      const rows = await tx.$queryRaw<ListingRow[]>`
+        SELECT id, status, mode, "endsAt", "currentBid", "currentBidder",
+               "startingBid", "firstBidAt", "sellerId", title
+        FROM "Listing" WHERE id = ${listingId} FOR UPDATE
+      `
+      const listing = rows[0]
+      if (!listing) return { error: 'Listing not found.', status: 404 }
+      if (listing.status !== 'ACTIVE') return { error: 'Auction is not active.', status: 400 }
+
+      const now = new Date()
+      if (listing.endsAt && now > new Date(listing.endsAt)) return { error: 'Auction has ended.', status: 400 }
+      if (listing.sellerId === user.id) return { error: 'You cannot bid on your own listing.', status: 400 }
+      if (listing.currentBidder === user.id) return { error: 'You cannot bid twice in a row.', status: 400 }
+
+      const bidCount = await tx.bid.count({ where: { listingId } })
+
+      if (bidCount === 0) {
+        if (amount < listing.startingBid) {
+          return { error: `Minimum bid is RM ${listing.startingBid}.`, status: 400 }
+        }
+      } else {
+        if (amount <= listing.currentBid) {
+          return { error: `Bid must be higher than RM ${listing.currentBid}.`, status: 400 }
+        }
+      }
+
+      let newEndsAt: Date
+      let firstBidAt = listing.firstBidAt ? new Date(listing.firstBidAt) : null
+
+      if (bidCount === 0) {
+        firstBidAt = now
+        newEndsAt = new Date(now.getTime() + FLASH_DURATION_MS)
+      } else {
+        newEndsAt = new Date(listing.endsAt!)
+      }
+
+      const bid = await tx.bid.create({
+        data: { amount, listingId, bidderId: user.id },
+        include: { bidder: { select: { name: true, rehomeScore: true } } },
+      })
+      await tx.listing.update({
+        where: { id: listingId },
+        data: { currentBid: amount, currentBidder: user.id, endsAt: newEndsAt, firstBidAt },
+      })
+
+      return { bid, newEndsAt, bidCount, prevBidder: listing.currentBidder, listingTitle: listing.title }
+    })
+  } catch (err) {
+    console.error('[bid] transaction error:', err)
+    return NextResponse.json({ error: 'Failed to place bid. Please try again.' }, { status: 500 })
   }
 
-  if (listing.status !== 'ACTIVE') {
-    return NextResponse.json({ error: 'Auction is not active.' }, { status: 400 })
+  if ('error' in txResult) {
+    return NextResponse.json({ error: txResult.error }, { status: txResult.status })
   }
 
-  const now = new Date()
+  const { bid, newEndsAt, bidCount, prevBidder, listingTitle } = txResult
 
-  // If endsAt is set and already past, auction is over
-  if (listing.endsAt && now > listing.endsAt) {
-    return NextResponse.json({ error: 'Auction has ended.' }, { status: 400 })
-  }
-
-  if (listing.seller.id === user.id) {
-    return NextResponse.json({ error: 'You cannot bid on your own listing.' }, { status: 400 })
-  }
-
-  if (listing.currentBidder === user.id) {
-    return NextResponse.json({ error: 'You cannot bid twice in a row.' }, { status: 400 })
-  }
-
-  const bidCount = listing._count.bids
-
-  // First bid: can be 0 or any amount >= startingBid
-  // Counter bid: must be > currentBid
-  if (bidCount === 0) {
-    if (amount < listing.startingBid) {
-      return NextResponse.json({ error: `Minimum bid is RM ${listing.startingBid}.` }, { status: 400 })
-    }
-  } else {
-    if (amount <= listing.currentBid) {
-      return NextResponse.json({ error: `Bid must be higher than RM ${listing.currentBid}.` }, { status: 400 })
-    }
-  }
-
-  // Timer: first bid starts fixed 30-min window, counter bids do NOT extend timer
-  let newEndsAt: Date
-  let firstBidAt = listing.firstBidAt
-
-  if (bidCount === 0) {
-    // First bid — start fixed 30-minute countdown
-    firstBidAt = now
-    newEndsAt = new Date(now.getTime() + FLASH_DURATION_MS)
-  } else {
-    // Counter bids — keep the existing endsAt unchanged
-    newEndsAt = listing.endsAt!
-  }
-
-  const [bid] = await prisma.$transaction([
-    prisma.bid.create({
-      data: { amount, listingId, bidderId: user.id },
-      include: { bidder: { select: { name: true, rehomeScore: true } } },
-    }),
-    prisma.listing.update({
-      where: { id: listingId },
-      data: {
-        currentBid: amount,
-        currentBidder: user.id,
-        endsAt: newEndsAt,
-        firstBidAt: firstBidAt,
-      },
-    }),
-  ])
-
-  // Broadcast via Supabase Realtime
+  // Broadcast via Supabase Realtime (outside transaction — non-critical)
   await supabase.channel(`listing:${listingId}`).send({
     type: 'broadcast',
     event: 'new_bid',
@@ -128,30 +125,27 @@ export async function POST(request: NextRequest) {
 
   const excludeFromWatchlist = new Set([user.id])
 
-  // Notify previous highest bidder they've been outbid
-  if (listing.currentBidder && listing.currentBidder !== user.id) {
-    excludeFromWatchlist.add(listing.currentBidder)
+  if (prevBidder && prevBidder !== user.id) {
+    excludeFromWatchlist.add(prevBidder)
     try {
-      const prevBidder = await prisma.user.findUnique({
-        where: { id: listing.currentBidder },
+      const prev = await prisma.user.findUnique({
+        where: { id: prevBidder },
         select: { email: true, name: true },
       })
-      if (prevBidder?.email) {
-        await sendOutbidEmail(prevBidder.email, prevBidder.name ?? 'Pengguna', listing.title, amount, listingId, newEndsAt)
+      if (prev?.email) {
+        await sendOutbidEmail(prev.email, prev.name ?? 'Pengguna', listingTitle, amount, listingId, newEndsAt)
       }
-      // Push notification
-      sendPushToUser(listing.currentBidder, {
+      sendPushToUser(prevBidder, {
         title: '⚡ You\'ve been outbid!',
-        body: `${listing.title} — current bid RM${amount}`,
+        body: `${listingTitle} — current bid RM${amount}`,
         url: `/listings/${listingId}`,
         tag: `outbid-${listingId}`,
       }).catch(() => {})
     } catch {
-      // Email/push failure shouldn't fail the bid
+      // non-critical
     }
   }
 
-  // Notify watchlist users (exclude new bidder + outbid user)
   try {
     const watchers = await prisma.watchlist.findMany({
       where: { listingId, userId: { notIn: [...excludeFromWatchlist] } },
@@ -161,10 +155,10 @@ export async function POST(request: NextRequest) {
     await Promise.all(
       watchers
         .filter(w => w.user.email)
-        .map(w => sendWatchlistAlertEmail(w.user.email!, listing.title, amount, `${BASE}/listings/${listingId}`))
+        .map(w => sendWatchlistAlertEmail(w.user.email!, listingTitle, amount, `${BASE}/listings/${listingId}`))
     )
   } catch {
-    // Email failure shouldn't fail the bid
+    // non-critical
   }
 
   return NextResponse.json({

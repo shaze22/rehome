@@ -20,6 +20,7 @@ async function getDashboardData(userId: string) {
         _count: { select: { bids: true, offers: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     }),
     prisma.bid.findMany({
       where: { bidderId: userId },
@@ -41,11 +42,13 @@ async function getDashboardData(userId: string) {
     prisma.transaction.findMany({
       where: { sellerId: userId, status: 'ESCROWED' },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     }),
     // Orders as buyer
     prisma.transaction.findMany({
       where: { buyerId: userId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     }),
     // Watchlist count on user's listings
     prisma.watchlist.count({
@@ -250,6 +253,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         initialName={dbUser?.name ?? ''}
         initialPhone={dbUser?.phone ?? ''}
         initialState={dbUser?.state ?? ''}
+        initialPostcode={dbUser?.postcode ?? ''}
+        initialSavedAddress={dbUser?.savedAddress ?? ''}
         missingPhone={!dbUser?.phone}
       />
 
@@ -287,14 +292,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             </div>
           ) : (
             <div className="space-y-3">
-              {myListings.slice(0, 5).map(listing => (
+              {myListings.map(listing => (
                 <SellerListingCard key={listing.id} listing={listing as any} />
               ))}
-              {myListings.length > 5 && (
-                <p className="text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  And {myListings.length - 5} more listings...
-                </p>
-              )}
             </div>
           )}
         </div>

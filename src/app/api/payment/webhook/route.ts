@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { sendPaymentReceivedEmail, sendShipNowEmail, sendEasyParcelFailureEmail } from '@/lib/resend'
-import { createEasyParcelShipment } from '@/lib/easyparcel'
+import { createEasyParcelShipment, STATE_POSTCODE } from '@/lib/easyparcel'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
       prisma.listing.findUnique({
         where: { id: listingId },
         select: {
-          currentBidder: true, sellerId: true, title: true, weightKg: true,
-          seller: { select: { name: true, email: true, state: true, phone: true } },
+          currentBidder: true, sellerId: true, title: true, weightKg: true, state: true,
+          seller: { select: { name: true, email: true, state: true, phone: true, postcode: true } },
         },
       }),
       prisma.transaction.findUnique({ where: { listingId } }),
@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {
       const sellerUser = listing.seller
       const sellerState = sellerUser?.state ?? 'Kuala Lumpur'
-      const sellerPostcode = '50000' // best-effort; EasyParcel uses postcode for zone calc
+      // Use seller's saved postcode, fall back to state capital postcode
+      const sellerPostcode = sellerUser?.postcode ?? STATE_POSTCODE[sellerState] ?? '50000'
 
       createEasyParcelShipment({
         fromName: sellerUser?.name ?? 'KASSIM Seller',

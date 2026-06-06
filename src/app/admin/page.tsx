@@ -15,7 +15,7 @@ export default async function AdminPage() {
     pendingICs, recentListings,
     totalUsers, activeListings, soldListings, endedListings,
     volumeResult, totalBids, totalMessages, avgRatingResult,
-    recentUsers, topSellers, disputedSwaps, allUsers, pendingPayouts,
+    recentUsers, allUsers, disputedSwaps,
   ] = await Promise.all([
     prisma.user.findMany({
       where: { icStatus: 'PENDING' },
@@ -42,18 +42,13 @@ export default async function AdminPage() {
       orderBy: { createdAt: 'desc' }, take: 5,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, createdAt: true },
     }),
+    // All beta users — ordered by join date, limited to 200
     prisma.user.findMany({
-      orderBy: { successfulSwaps: 'desc' },
-      take: 50,
+      orderBy: { createdAt: 'desc' },
+      take: 200,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, swapScore: true, icVerified: true, createdAt: true, _count: { select: { listings: true } } },
     }),
-    prisma.listing.groupBy({
-      by: ['sellerId'],
-      where: { status: 'SOLD' },
-      _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: 5,
-    }),
+    // Disputed swap transactions
     prisma.swapTransaction.findMany({
       where: { escrowStatus: 'DISPUTED' },
       include: {
@@ -64,24 +59,49 @@ export default async function AdminPage() {
       orderBy: { updatedAt: 'desc' },
       take: 50,
     }),
-    prisma.transaction.findMany({
-      where: { status: 'RELEASED', sellerPaid: false },
-      orderBy: { updatedAt: 'desc' },
-    }),
   ])
 
   const totalVolume = volumeResult._sum.amount ?? 0
   const totalRevenue = volumeResult._sum.platformFee ?? 0
   const avgRating = avgRatingResult._avg.rating ?? 0
 
-  // Enrich pending payouts with listing + seller + buyer info
-  const enrichedPayouts = await Promise.all(pendingPayouts.map(async tx => {
-    const [listing, seller, buyer] = await Promise.all([
-      prisma.listing.findUnique({ where: { id: tx.listingId }, select: { id: true, title: true } }),
-      prisma.user.findUnique({ where: { id: tx.sellerId }, select: { id: true, name: true, email: true } }),
-      prisma.user.findUnique({ where: { id: tx.buyerId }, select: { id: true, name: true, email: true } }),
-    ])
-    return { ...tx, listing, seller, buyer }
+  // Single raw SQL join to get pending payouts — avoids N+1 queries
+  type RawPayout = {
+    id: string; listingId: string; sellerId: string; buyerId: string
+    amount: number; sellerPayout: number; courierName: string | null
+    updatedAt: Date; sellerPaid: boolean; payoutNote: string | null
+    listing_id: string; listing_title: string
+    seller_id: string; seller_name: string | null; seller_email: string
+    buyer_id: string; buyer_name: string | null; buyer_email: string
+  }
+  const rawPayouts = await prisma.$queryRaw<RawPayout[]>`
+    SELECT
+      t.id, t."listingId", t."sellerId", t."buyerId", t.amount, t."sellerPayout",
+      t."courierName", t."updatedAt", t."sellerPaid", t."payoutNote",
+      l.id AS listing_id, l.title AS listing_title,
+      s.id AS seller_id, s.name AS seller_name, s.email AS seller_email,
+      b.id AS buyer_id, b.name AS buyer_name, b.email AS buyer_email
+    FROM "Transaction" t
+    LEFT JOIN "Listing" l ON l.id = t."listingId"
+    LEFT JOIN "User" s ON s.id = t."sellerId"
+    LEFT JOIN "User" b ON b.id = t."buyerId"
+    WHERE t.status = 'RELEASED' AND t."sellerPaid" = false
+    ORDER BY t."updatedAt" DESC
+  `
+  const enrichedPayouts = rawPayouts.map(row => ({
+    id: row.id,
+    listingId: row.listingId,
+    sellerId: row.sellerId,
+    buyerId: row.buyerId,
+    amount: Number(row.amount),
+    sellerPayout: Number(row.sellerPayout),
+    courierName: row.courierName,
+    updatedAt: row.updatedAt,
+    sellerPaid: row.sellerPaid,
+    payoutNote: row.payoutNote,
+    listing: { id: row.listing_id, title: row.listing_title },
+    seller: { id: row.seller_id, name: row.seller_name, email: row.seller_email },
+    buyer: { id: row.buyer_id, name: row.buyer_name, email: row.buyer_email },
   }))
 
   return (

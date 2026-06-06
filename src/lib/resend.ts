@@ -193,6 +193,29 @@ export async function sendWelcomeEmail(to: string, name: string) {
   ))
 }
 
+export async function sendBuyerShippedEmail(to: string, name: string, listingTitle: string, trackingNumber: string | null, listingId: string) {
+  await safeSend(to, `Your item has been shipped — ${listingTitle}`, baseTemplate(
+    'Your Item is On Its Way! 📦',
+    `<p>Hi ${name},</p>
+     <p>The seller has shipped your item "<strong>${listingTitle}</strong>".</p>
+     ${trackingNumber ? `<p style="background:#1e293b;padding:12px;border-radius:8px;font-family:monospace">Tracking No: <strong style="color:#14b8a6">${trackingNumber}</strong></p>` : ''}
+     <p style="color:#94a3b8;font-size:13px">Once you receive the item in good condition, please confirm receipt on your dashboard to release the seller's payment.</p>
+     <p style="color:#94a3b8;font-size:13px">Questions? Contact us via WhatsApp at +60189899495.</p>`,
+    'View Order', `${BASE}/dashboard`
+  ))
+}
+
+export async function sendAuctionRelistedEmail(to: string, name: string, listingTitle: string, listingId: string) {
+  await safeSend(to, `Your listing has been re-listed — ${listingTitle}`, baseTemplate(
+    'Listing Re-listed Automatically',
+    `<p>Hi ${name},</p>
+     <p>The winning bidder did not complete payment for "<strong>${listingTitle}</strong>" within 24 hours.</p>
+     <p>Your listing has been automatically re-listed as active. New bidders can place bids now.</p>
+     <p style="color:#94a3b8;font-size:13px">No action needed from you. We will notify you as soon as someone places a new bid.</p>`,
+    'View Listing', `${BASE}/listings/${listingId}`
+  ))
+}
+
 export async function sendSwapDisputeEmail(to: string, listingTitle: string, disputerName: string, reason: string, listingId: string) {
   await safeSend(to, `[Admin] Dispute filed: "${listingTitle}"`, baseTemplate(
     '⚠️ Dispute Filed',

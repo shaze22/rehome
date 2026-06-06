@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendBuyerShippedEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -31,6 +32,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     type: 'broadcast', event: 'item_shipped',
     payload: { listingId, trackingNumber },
   })
+
+  // Notify buyer by email
+  try {
+    const [buyer, listing] = await Promise.all([
+      prisma.user.findUnique({ where: { id: tx.buyerId }, select: { email: true, name: true } }),
+      prisma.listing.findUnique({ where: { id: listingId }, select: { title: true } }),
+    ])
+    if (buyer?.email && listing) {
+      await sendBuyerShippedEmail(buyer.email, buyer.name ?? 'Buyer', listing.title, trackingNumber ?? null, listingId)
+    }
+  } catch {
+    // non-critical
+  }
 
   return NextResponse.json({ success: true })
 }

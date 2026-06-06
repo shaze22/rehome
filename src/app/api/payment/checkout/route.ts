@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getStripe, calculateFees } from '@/lib/stripe'
+import { getDeliveryQuote } from '@/lib/easyparcel'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -17,16 +18,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
   }
 
-  // Delivery params (buyer must select courier before checkout)
-  const deliveryFee = parseFloat(p.get('deliveryFee') ?? '0')       // charged to buyer
-  const deliveryBase = parseFloat(p.get('deliveryBase') ?? '0')     // cost to platform
-  const deliveryMarkup = parseFloat(p.get('deliveryMarkup') ?? '0') // platform's cut
-  const courierName = p.get('courierName') ?? ''
-  const courierService = p.get('courierService') ?? ''
   const courierServiceId = p.get('courierServiceId') ?? ''
   const buyerPostcode = p.get('buyerPostcode') ?? ''
   const buyerPhone = p.get('buyerPhone') ?? ''
   const buyerAddress = p.get('buyerAddress') ?? ''
+  const courierName = p.get('courierName') ?? ''
+  const courierService = p.get('courierService') ?? ''
 
   const [listing, dbUser] = await Promise.all([
     prisma.listing.findUnique({
@@ -47,6 +44,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'You are not the winner of this auction.' }, { status: 403 })
   }
 
+  // Re-calculate delivery fee server-side — never trust client-provided fee values
+  let serverDeliveryFee = 0, serverDeliveryBase = 0, serverDeliveryMarkup = 0
+  if (courierServiceId && buyerPostcode) {
+    try {
+      const quote = await getDeliveryQuote(listing.state, '', listing.weightKg, buyerPostcode)
+      const selected = quote.couriers.find(c => c.id === courierServiceId)
+      if (selected) {
+        serverDeliveryFee = selected.chargedPrice
+        serverDeliveryBase = selected.basePrice
+        serverDeliveryMarkup = selected.markup
+      } else if (quote.couriers.length > 0) {
+        // Fallback mode returns a single generic option — use it
+        serverDeliveryFee = quote.couriers[0].chargedPrice
+        serverDeliveryBase = quote.couriers[0].basePrice
+        serverDeliveryMarkup = quote.couriers[0].markup
+      }
+    } catch {
+      // If quote fails entirely, require delivery fee from client as last resort (capped)
+      serverDeliveryFee = Math.min(parseFloat(p.get('deliveryFee') ?? '0'), 200)
+      serverDeliveryBase = Math.min(parseFloat(p.get('deliveryBase') ?? '0'), 160)
+      serverDeliveryMarkup = Math.min(parseFloat(p.get('deliveryMarkup') ?? '0'), 60)
+    }
+  }
+
   const creditAvailable = dbUser?.creditBalance ?? 0
   const creditToUse = Math.min(creditAvailable, Math.max(0, listing.currentBid - 1))
   const chargeAmount = listing.currentBid - creditToUse
@@ -55,7 +76,6 @@ export async function GET(request: NextRequest) {
 
   const lineItems = []
 
-  // Bid line item
   lineItems.push({
     price_data: {
       currency: 'myr',
@@ -70,8 +90,7 @@ export async function GET(request: NextRequest) {
     quantity: 1,
   })
 
-  // Delivery line item (required — platform handles all shipping)
-  if (deliveryFee > 0) {
+  if (serverDeliveryFee > 0) {
     lineItems.push({
       price_data: {
         currency: 'myr',
@@ -79,7 +98,7 @@ export async function GET(request: NextRequest) {
           name: `Delivery — ${courierName} ${courierService}`.trim(),
           description: `kassim.app delivery (incl. 30% platform handling fee)`,
         },
-        unit_amount: Math.round(deliveryFee * 100),
+        unit_amount: Math.round(serverDeliveryFee * 100),
       },
       quantity: 1,
     })
@@ -96,16 +115,15 @@ export async function GET(request: NextRequest) {
       platformFee: platformFee.toString(),
       sellerPayout: sellerPayout.toString(),
       creditUsed: creditToUse.toString(),
-      // Delivery metadata
-      deliveryFee: deliveryFee.toString(),
-      deliveryBase: deliveryBase.toString(),
-      deliveryMarkup: deliveryMarkup.toString(),
+      deliveryFee: serverDeliveryFee.toString(),
+      deliveryBase: serverDeliveryBase.toString(),
+      deliveryMarkup: serverDeliveryMarkup.toString(),
       courierName,
       courierService,
       courierServiceId,
       buyerPostcode,
       buyerPhone,
-      buyerAddress: buyerAddress.slice(0, 490), // Stripe metadata max 500 chars per value
+      buyerAddress: buyerAddress.slice(0, 490),
     },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}?payment=success`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listings/${listingId}`,

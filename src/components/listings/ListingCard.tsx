@@ -19,7 +19,9 @@ interface ListingWithSeller {
   status: string
   viewCount?: number
   createdAt?: Date | string
+  sellerId?: string
   seller: {
+    id?: string
     name: string | null
     rehomeScore: number
     icVerified: boolean
@@ -190,10 +192,22 @@ export function ListingCard({ listing, priority = false }: Props) {
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              {listing.state}
-            </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                {listing.state}
+              </span>
+              {listing.seller.id && listing.seller.name && (
+                <Link
+                  href={`/profile/${listing.seller.id}`}
+                  onClick={e => e.stopPropagation()}
+                  className="text-xs truncate hover:underline"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  · {listing.seller.name}
+                </Link>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
               {(listing.viewCount ?? 0) > 10 && (
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   👀 {listing.viewCount}
