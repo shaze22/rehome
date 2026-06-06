@@ -179,6 +179,8 @@ All emails are in **English**. FROM: `KASSIM <noreply@kassim.app>`
 | Auction expired | `sendAuctionExpiredSellerEmail` | Seller |
 | Welcome | `sendWelcomeEmail` | New user |
 | Referral reward | `sendReferralRewardEmail` | Referrer |
+| Flash item shipped | `sendBuyerShippedEmail` | Buyer (Flash) |
+| Auction re-listed (unpaid) | `sendAuctionRelistedEmail` | Seller |
 
 ## Push Notifications (English)
 | Event | Route | Message |
@@ -288,6 +290,7 @@ next.config.ts        — withNextIntl() wrapper + image patterns
 - `20260601150000_add_push_subscriptions`
 - `add_featured_scheduling` (2026-06-03, Supabase MCP) — Listing.featuredAt + Listing.featuredUntil
 - `create_audit_log` (2026-06-03, Supabase MCP) — AuditLog table (id, adminId, action, targetId, targetType, details, createdAt)
+- `add_user_postcode_saved_address` (2026-06-06, Supabase MCP) — User.postcode TEXT, User.savedAddress TEXT
 
 ## Environment Variables
 ```
@@ -478,6 +481,8 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 - ✅ Photo upload: 10MB size limit + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
 - ✅ Rate limit: Upstash Redis sliding window
 - ✅ Supabase RLS: enabled on ALL 12 tables with policies (migration: `enable_rls_all_tables`, 2026-06-01)
+- ✅ Bid race condition: SELECT FOR UPDATE inside Prisma $transaction (Fasa 19)
+- ✅ Delivery fee: recalculated server-side in checkout — client params ignored (Fasa 19)
 
 ## Supabase RLS Summary
 Prisma (DATABASE_URL) bypasses RLS as postgres superuser — all app writes are safe.
@@ -517,6 +522,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/cron/retry-emails` | Process email retry queue from Upstash Redis |
 | `/api/cron/expire-featured` | Auto-expire isFeatured listings |
 | `/api/admin/audit-log` | GET last 50 AuditLog entries (admin only) |
+| `/api/listings/[id]/cancel` | POST — seller cancel ACTIVE listing with 0 bids |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
@@ -589,7 +595,7 @@ Simplified above-fold section (updated Fasa 9):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-05, commit `1c6982f` — Fasa 15: hydration error fix (isEnded init + suppressHydrationWarning on locale dates), Winning Bid label on ended auctions, Flash badge "Timer starts on first bid" pre-bid, DeliveryCheckout hint hides after postcode entered.
+2026-06-06, commit `b0fa098` — Fasa 19: 17 comprehensive fixes (race condition, delivery fee security, auto-relist, Flash expiry, admin bug, N+1, testimonials removed, cancel listing, seller profile link, postcode+address, buyer ship email).
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -621,6 +627,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **13** | **UX + viral fixes (2026-06-04):** "Pay Now" orange banner in dashboard for unpaid Flash Bid wins. "Ship Now" teal alert for seller ESCROWED orders. Copy Link button on listing detail (clipboard + "Copied!" feedback). Post-bid WhatsApp share prompt ("Tell friends before someone outbids you!"). Referral section moved above My Listings. Test users created (testseller@kassim.app, testbuyer@kassim.app). |
 | **14** | **Reliability fixes (2026-06-04):** EasyParcel webhook failure handling — on booking error, seller gets "book manually" email + admin gets alert email with listing ID + error. sendEasyParcelFailureEmail() added to resend.ts. kassim.app DKIM added to Resend (domain ID: d887ba9e). RESEND_API_KEY rotated in Vercel. |
 | **15** | **Bug fixes (2026-06-05):** React hydration error #418 fixed — `isEnded` now initialises from `endsAt` comparison (no more bid form flicker on ended auctions), `suppressHydrationWarning` on `toLocaleString('ms-MY')` and `toLocaleDateString('en-MY')` elements. "Winning Bid" label shows correctly on ended auctions (was "Starting Bid"). Flash trust badge: "Timer starts on first bid" when `endsAt=null`, "30 Min Only" once timer running. DeliveryCheckout postcode hint hides after step 1. |
+| **19** | **17 comprehensive fixes (2026-06-06):** (1) Bid race condition — SELECT FOR UPDATE in $transaction. (2) Delivery fee — server-side recalc, client params ignored. (3) Seller postcode — STATE_POSTCODE[] map, not hardcoded. (4) Auto-relist — unpaid wins reset to ACTIVE after 24h + seller email. (5) Flash 14-day expiry — ACTIVE+no-bid listings expire after 14 days. (6) Admin naming bug — allUsers/disputedSwaps properly wired. (7) N+1 fix — enrichedPayouts via single raw SQL JOIN. (8) Dashboard limits — take:100 listings, take:50 orders. (9) View count — fire-and-forget outside Promise.all. (10) Remove fake testimonials. (11) Seller profile link — ListingCard + SwapListingCard. (12) Cancel listing — POST /api/listings/[id]/cancel + SellerListingCard button. (13) Dashboard — show all listings (no slice). (14) User.postcode + User.savedAddress fields + ProfileEditForm UI. (15) Buyer ship email — sendBuyerShippedEmail on seller mark shipped. (16) sendAuctionRelistedEmail new function. (17) Profile API updated for postcode + savedAddress. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -685,6 +692,6 @@ Admin panel: https://kassim.app/admin
 - ✅ kassim.app DKIM added to Resend (domain ID: d887ba9e-900c-439e-be03-4f8dfd674cbd, region: ap-northeast-1) — DNS records added, pending verification
 - ✅ RESEND_API_KEY rotated in Vercel (2026-06-04)
 - ✅ EasyParcel webhook failure — seller + admin email notification on booking error
+- ✅ Fasa 19: 17 comprehensive fixes deployed (b0fa098, 2026-06-06)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
-- kassim.app DKIM verification pending (DNS propagation) — check resend.com/domains
 - Beta testing 100 users → LAUNCH 🚀
