@@ -83,15 +83,15 @@ const CATEGORY_PLACEHOLDERS: Record<string, { emoji: string; bg: string }> = {
 
 const CONDITION_LABEL: Record<number, { label: string; color: string }> = {
   10: { label: 'Like New', color: 'var(--green)' },
-  9: { label: 'Excellent', color: 'var(--green)' },
-  8: { label: 'Very Good', color: 'var(--green)' },
-  7: { label: 'Good', color: 'var(--teal)' },
-  6: { label: 'Fair', color: 'var(--yellow)' },
-  5: { label: 'Fair', color: 'var(--yellow)' },
-  4: { label: 'Used', color: 'var(--orange)' },
-  3: { label: 'Worn', color: 'var(--orange)' },
-  2: { label: 'Poor', color: 'var(--red)' },
-  1: { label: 'For Parts', color: 'var(--red)' },
+  9:  { label: 'Excellent', color: 'var(--green)' },
+  8:  { label: 'Very Good', color: 'var(--green)' },
+  7:  { label: 'Good', color: 'var(--teal)' },
+  6:  { label: 'Fair', color: 'var(--yellow)' },
+  5:  { label: 'Fair', color: 'var(--yellow)' },
+  4:  { label: 'Used', color: 'var(--orange)' },
+  3:  { label: 'Worn', color: 'var(--orange)' },
+  2:  { label: 'Poor', color: 'var(--red)' },
+  1:  { label: 'For Parts', color: 'var(--red)' },
 }
 
 export function ListingCard({ listing, priority = false }: Props) {
@@ -99,18 +99,19 @@ export function ListingCard({ listing, priority = false }: Props) {
   const bid = listing.currentBid > 0 ? listing.currentBid : listing.startingBid
   const bidCount = listing._count?.bids ?? 0
   const condInfo = CONDITION_LABEL[listing.condition] ?? { label: `${listing.condition}/10`, color: 'var(--text-muted)' }
+  const isFree = bidCount === 0 && listing.startingBid === 0
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
       <div
-        className="rounded-xl overflow-hidden card-hover cursor-pointer"
+        className="rounded-xl overflow-hidden card-hover cursor-pointer h-full"
         style={{
           backgroundColor: 'var(--bg-card)',
           border: isEndingSoon ? '1px solid rgba(239,68,68,0.5)' : '1px solid var(--border)',
           boxShadow: isEndingSoon ? '0 0 16px rgba(239,68,68,0.15)' : undefined,
         }}
       >
-        {/* Image — max 2 overlays: ENDING SOON banner + FLASH BID badge */}
+        {/* Image */}
         <div className="relative aspect-square bg-[var(--bg-elevated)] overflow-hidden">
           {listing.photos[0] ? (
             <Image
@@ -118,84 +119,86 @@ export function ListingCard({ listing, priority = false }: Props) {
               alt={listing.title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={priority}
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2"
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1"
               style={{ background: CATEGORY_PLACEHOLDERS[listing.category]?.bg ?? CATEGORY_PLACEHOLDERS.OTHERS.bg }}>
-              <span className="text-4xl">{CATEGORY_PLACEHOLDERS[listing.category]?.emoji ?? '📦'}</span>
-              <span className="text-xs font-medium text-white opacity-70">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
+              <span className="text-3xl sm:text-4xl">{CATEGORY_PLACEHOLDERS[listing.category]?.emoji ?? '📦'}</span>
+              <span className="text-xs font-medium text-white opacity-70 hidden sm:block">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
             </div>
           )}
 
-          {/* ENDING SOON banner — top of image */}
           {isEndingSoon && (
-            <div className="absolute top-0 left-0 right-0 z-10 py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.92)', color: 'white' }}>
+            <div className="absolute top-0 left-0 right-0 z-10 py-0.5 sm:py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.92)', color: 'white' }}>
               🔥 ENDING SOON
             </div>
           )}
 
-          {/* FLASH BID badge — bottom left */}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold"
+          <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-bold"
             style={{ background: 'linear-gradient(135deg,#ff6b35,#f59e0b)', color: 'white', backdropFilter: 'blur(4px)' }}>
             <Zap className="w-2.5 h-2.5" />
-            FLASH BID
+            <span className="hidden sm:inline">FLASH BID</span>
+            <span className="sm:hidden">FLASH</span>
           </div>
 
-          {/* Bid count — bottom right, only when bids exist */}
           {bidCount >= 2 && (
-            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-xs font-bold"
+            <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-bold"
               style={{ background: 'rgba(10,10,15,0.8)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 {bidCount} bids
+              🔥 {bidCount}
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-3">
-          <h3 className="font-medium text-sm line-clamp-2 mb-1.5" style={{ color: 'var(--text-primary)' }}>
+        <div className="p-2 sm:p-3">
+          <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-1.5" style={{ color: 'var(--text-primary)' }}>
             {listing.title}
           </h3>
 
-          {/* Condition + category row */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: `${condInfo.color}18`, color: condInfo.color, border: `1px solid ${condInfo.color}30` }}>
+          <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
+            <span className="text-xs font-medium px-1 sm:px-1.5 py-0.5 rounded" style={{ backgroundColor: `${condInfo.color}18`, color: condInfo.color, border: `1px solid ${condInfo.color}30` }}>
               {condInfo.label}
             </span>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-muted)' }}>
               {CATEGORY_LABELS[listing.category] ?? listing.category}
             </span>
           </div>
 
-          {/* Bid info */}
-          <div className="flex items-end justify-between mb-2">
+          <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>
-                {bidCount === 0 ? 'No bids yet — be first!' : 'Current bid'}
+              <p className="text-xs mb-0.5 hidden sm:block" style={{ color: 'var(--text-secondary)' }}>
+                {bidCount === 0 ? 'No bids — be first!' : 'Current bid'}
               </p>
-              <p className="text-lg font-bold font-mono" style={{ color: 'var(--teal)' }}>
-                {bidCount === 0 && listing.startingBid === 0 ? 'RM 0 — FREE if only bidder' : `RM ${bid.toFixed(0)}`}
+              <p className="text-sm sm:text-lg font-bold font-mono" style={{ color: isFree ? 'var(--green)' : 'var(--teal)' }}>
+                {isFree ? (
+                  <>
+                    <span className="sm:hidden">FREE</span>
+                    <span className="hidden sm:inline">RM 0 — FREE</span>
+                  </>
+                ) : `RM ${bid.toFixed(0)}`}
               </p>
             </div>
-            <div className="text-right text-xs">
+            <div className="text-right">
               {listing.endsAt ? (
-                <span className={`font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-muted)' }}>
+                <span className={`text-xs font-mono font-medium ${isUrgent ? 'timer-urgent' : ''}`} style={{ color: isUrgent ? 'var(--red)' : 'var(--text-muted)' }}>
                   <Clock className="w-3 h-3 inline mr-0.5" />
                   {timeLeft}
                 </span>
               ) : (
-                <span style={{ color: 'var(--text-muted)' }}>Waiting for bid</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <span className="hidden sm:inline">Waiting</span>
+                  <span className="sm:hidden">—</span>
+                </span>
               )}
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+          {/* Footer — hidden on mobile to keep cards compact */}
+          <div className="hidden sm:flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-                {listing.state}
-              </span>
+              <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{listing.state}</span>
               {listing.seller.id && listing.seller.name && (
                 <Link
                   href={`/profile/${listing.seller.id}`}
@@ -209,9 +212,7 @@ export function ListingCard({ listing, priority = false }: Props) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {(listing.viewCount ?? 0) > 10 && (
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  👀 {listing.viewCount}
-                </span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>👀 {listing.viewCount}</span>
               )}
               {listing.seller.icVerified && (
                 <span title="IC Verified Seller">
@@ -219,6 +220,14 @@ export function ListingCard({ listing, priority = false }: Props) {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Mobile-only minimal footer */}
+          <div className="flex sm:hidden items-center justify-between pt-1.5 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{listing.state}</span>
+            {listing.seller.icVerified && (
+              <CheckCircle className="w-3 h-3" style={{ color: 'var(--teal)' }} />
+            )}
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ export default function Loading() {
       {/* Cards skeleton */}
       <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="h-6 w-40 rounded mb-6" style={{ backgroundColor: 'var(--bg-surface)' }} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="h-48" style={{ backgroundColor: 'var(--bg-surface)' }} />

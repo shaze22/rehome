@@ -9,7 +9,7 @@ export default function ListingsLoading() {
         <aside className="lg:w-64">
           <div className="rounded-xl p-4 h-80 animate-pulse" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }} />
         </aside>
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="flex-1 grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl overflow-hidden animate-pulse" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <div className="aspect-square" style={{ backgroundColor: 'var(--bg-elevated)' }} />

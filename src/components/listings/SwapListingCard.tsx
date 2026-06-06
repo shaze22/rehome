@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, CheckCircle, ArrowLeftRight, MessageSquare } from 'lucide-react'
+import { Clock, CheckCircle, ArrowLeftRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface SwapListing {
@@ -40,7 +40,7 @@ function useCountdown(endsAt: Date | string | null) {
   const [isUrgent, setIsUrgent] = useState(false)
 
   useEffect(() => {
-    if (!endsAt) { setTimeLeft('No time limit'); return }
+    if (!endsAt) { setTimeLeft('Open'); return }
     function update() {
       const diff = new Date(endsAt as Date | string).getTime() - Date.now()
       if (diff <= 0) { setTimeLeft('Ended'); return }
@@ -76,15 +76,15 @@ const CATEGORY_PLACEHOLDERS: Record<string, { emoji: string; bg: string }> = {
 
 const CONDITION_LABEL: Record<number, { label: string; color: string }> = {
   10: { label: 'Like New', color: 'var(--green)' },
-  9: { label: 'Excellent', color: 'var(--green)' },
-  8: { label: 'Very Good', color: 'var(--green)' },
-  7: { label: 'Good', color: 'var(--teal)' },
-  6: { label: 'Fair', color: 'var(--yellow)' },
-  5: { label: 'Fair', color: 'var(--yellow)' },
-  4: { label: 'Used', color: 'var(--orange)' },
-  3: { label: 'Worn', color: 'var(--orange)' },
-  2: { label: 'Poor', color: 'var(--red)' },
-  1: { label: 'For Parts', color: 'var(--red)' },
+  9:  { label: 'Excellent', color: 'var(--green)' },
+  8:  { label: 'Very Good', color: 'var(--green)' },
+  7:  { label: 'Good', color: 'var(--teal)' },
+  6:  { label: 'Fair', color: 'var(--yellow)' },
+  5:  { label: 'Fair', color: 'var(--yellow)' },
+  4:  { label: 'Used', color: 'var(--orange)' },
+  3:  { label: 'Worn', color: 'var(--orange)' },
+  2:  { label: 'Poor', color: 'var(--red)' },
+  1:  { label: 'For Parts', color: 'var(--red)' },
 }
 
 export function SwapListingCard({ listing, priority = false }: Props) {
@@ -99,8 +99,8 @@ export function SwapListingCard({ listing, priority = false }: Props) {
 
   return (
     <Link href={`/listings/${listing.id}`} className="block">
-      <div className="rounded-xl overflow-hidden card-hover cursor-pointer" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
-        {/* Image — only SWAP BID badge */}
+      <div className="rounded-xl overflow-hidden card-hover cursor-pointer h-full" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
+        {/* Image */}
         <div className="relative aspect-square bg-[var(--bg-elevated)] overflow-hidden">
           {listing.photos[0] ? (
             <Image
@@ -108,61 +108,58 @@ export function SwapListingCard({ listing, priority = false }: Props) {
               alt={listing.title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               priority={priority}
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2"
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1"
               style={{ background: CATEGORY_PLACEHOLDERS[listing.category]?.bg ?? CATEGORY_PLACEHOLDERS.OTHERS.bg }}>
-              <span className="text-4xl">{CATEGORY_PLACEHOLDERS[listing.category]?.emoji ?? '📦'}</span>
-              <span className="text-xs font-medium text-white opacity-70">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
+              <span className="text-3xl sm:text-4xl">{CATEGORY_PLACEHOLDERS[listing.category]?.emoji ?? '📦'}</span>
+              <span className="text-xs font-medium text-white opacity-70 hidden sm:block">{CATEGORY_LABELS[listing.category] ?? listing.category}</span>
             </div>
           )}
 
-          {/* SWAP BID badge — bottom left only */}
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1"
+          <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-xs font-bold flex items-center gap-0.5"
             style={{ background: 'linear-gradient(135deg,#16a34a,#14b8a6)', color: 'white', backdropFilter: 'blur(4px)' }}>
             <ArrowLeftRight className="w-2.5 h-2.5" />
-            SWAP BID
+            <span className="hidden sm:inline">SWAP BID</span>
+            <span className="sm:hidden">SWAP</span>
           </div>
 
-          {/* Offer count — bottom right */}
           {offerCount >= 2 && (
-            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-xs font-bold"
+            <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-bold"
               style={{ background: 'rgba(10,10,15,0.8)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 {offerCount} offers
+              🔥 {offerCount}
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-3">
-          <h3 className="font-medium text-sm line-clamp-2 mb-1.5" style={{ color: 'var(--text-primary)' }}>
+        <div className="p-2 sm:p-3">
+          <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-1.5" style={{ color: 'var(--text-primary)' }}>
             {listing.title}
           </h3>
 
-          {/* Condition + category row */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: `${condInfo.color}18`, color: condInfo.color, border: `1px solid ${condInfo.color}30` }}>
+          <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
+            <span className="text-xs font-medium px-1 sm:px-1.5 py-0.5 rounded" style={{ backgroundColor: `${condInfo.color}18`, color: condInfo.color, border: `1px solid ${condInfo.color}30` }}>
               {condInfo.label}
             </span>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-xs hidden sm:inline" style={{ color: 'var(--text-muted)' }}>
               {CATEGORY_LABELS[listing.category] ?? listing.category}
             </span>
           </div>
 
-          {/* Value estimate */}
-          {listing.swapValueEstimate && (
-            <div className="mb-2">
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Est. value</p>
-              <p className="text-base font-bold font-mono" style={{ color: '#16a34a' }}>
-                ~RM {listing.swapValueEstimate.toFixed(0)}
-              </p>
-            </div>
+          {/* Value — always show */}
+          {listing.swapValueEstimate ? (
+            <p className="text-sm sm:text-base font-bold font-mono mb-1 sm:mb-2" style={{ color: '#16a34a' }}>
+              ~RM {listing.swapValueEstimate.toFixed(0)}
+            </p>
+          ) : (
+            <p className="text-xs mb-1 sm:mb-2" style={{ color: 'var(--text-muted)' }}>No value estimate</p>
           )}
 
-          {/* Offer types */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          {/* Offer chips — desktop only */}
+          <div className="hidden sm:flex items-center gap-1.5 flex-wrap mb-2">
             <span className="px-1.5 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.25)' }}>
               🔄 Item Swap
             </span>
@@ -173,38 +170,25 @@ export function SwapListingCard({ listing, priority = false }: Props) {
             )}
           </div>
 
-          {/* Wanted item */}
-          <div className="mb-2 px-2 py-1 rounded-lg text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)' }}>
+          {/* Wants — desktop only */}
+          <div className="hidden sm:block mb-2 px-2 py-1 rounded-lg text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)' }}>
             <span style={{ color: 'var(--text-muted)' }}>Wants: </span>
             <span className="font-medium" style={{ color: '#16a34a' }}>{wantedLabel}</span>
           </div>
 
+          {/* Mobile-only: compact offer type pill */}
+          <div className="flex sm:hidden items-center gap-1 mb-1.5">
+            <span className="px-1.5 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
+              🔄{listing.swapAcceptCash ? ' + 💰' : ''}
+            </span>
+          </div>
+
           {/* Footer */}
-          <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{listing.state}</span>
-              {listing.seller.id && listing.seller.name && (
-                <Link
-                  href={`/profile/${listing.seller.id}`}
-                  onClick={e => e.stopPropagation()}
-                  className="text-xs truncate hover:underline"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  · {listing.seller.name}
-                </Link>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {offerCount > 0 && (
-                <div className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  <MessageSquare className="w-3 h-3" />
-                  {offerCount}
-                </div>
-              )}
+          <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1" style={{ borderTop: '1px solid var(--border)' }}>
+            <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{listing.state}</span>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {listing.seller.icVerified && (
-                <span title="IC Verified">
-                  <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
-                </span>
+                <CheckCircle className="w-3 sm:w-3.5 h-3 sm:h-3.5" style={{ color: 'var(--teal)' }} />
               )}
               <div className="flex items-center gap-0.5 text-xs font-mono" style={{ color: isUrgent ? 'var(--red)' : 'var(--text-muted)' }}>
                 <Clock className="w-3 h-3" />

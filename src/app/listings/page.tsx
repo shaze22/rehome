@@ -137,7 +137,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               {endingSoonListings.length} left
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {endingSoonListings.map(listing => (
               <ListingCard key={listing.id} listing={listing as any} />
             ))}
@@ -235,7 +235,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                 {listings.map(listing =>
                   activeMode === 'swap'
                     ? <SwapListingCard key={listing.id} listing={listing as any} />

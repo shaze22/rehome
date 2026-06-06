@@ -34,7 +34,7 @@ export default async function WatchlistPage() {
           <p style={{ color: 'var(--text-secondary)' }}>Tekan ❤ pada listing untuk simpan di sini</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {items.map(item => (
             <ListingCard key={item.id} listing={item.listing as any} />
           ))}
