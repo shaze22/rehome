@@ -404,8 +404,14 @@ Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
 → redirect to listing?payment=success
 → seller enters tracking → POST /api/transactions/[id]/ship
 → buyer clicks "Confirm Received" → POST /api/transactions/[id]/confirm
-→ status=RELEASED
+→ status=RELEASED → seller email: "payout within 7 working days"
+→ Transaction appears in Admin → Pending Seller Payouts
+→ Admin manually bank-transfers sellerPayout amount to seller
+→ Admin clicks "Mark Paid" (+ optional note) → sellerPaid=true, disappears from list
 ```
+
+**Payout fields on Transaction:** `sellerPaid Boolean @default(false)`, `sellerPaidAt DateTime?`, `payoutNote String?`
+**No Stripe Connect** — manual bank transfer for beta. Upgrade to Stripe Connect for auto-payout post-launch.
 
 > **Note:** `set-pickup` and `pickup-confirm` APIs still exist in codebase but are no longer called from UI.
 
@@ -507,6 +513,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/push/subscribe` | POST/DELETE push subscription |
 | `/api/pwa-icon` | Edge: generate PWA icon PNG |
 | `/api/admin/feature-listing` | Toggle isFeatured + set featuredAt/featuredUntil (admin) |
+| `/api/admin/mark-payout` | POST `{ transactionId, note? }` — mark seller as paid (admin only) |
 | `/api/cron/retry-emails` | Process email retry queue from Upstash Redis |
 | `/api/cron/expire-featured` | Auto-expire isFeatured listings |
 | `/api/admin/audit-log` | GET last 50 AuditLog entries (admin only) |
