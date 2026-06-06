@@ -106,7 +106,8 @@ export async function GET(request: NextRequest) {
 
   const session = await getStripe().checkout.sessions.create({
     mode: 'payment',
-    payment_method_types: ['card'],
+    payment_method_types: ['card', 'fpx'],
+    customer_email: user.email ?? undefined,
     line_items: lineItems,
     metadata: {
       listingId,

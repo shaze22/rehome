@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
+    // FPX (and other async methods) can complete checkout without immediate payment
+    if (session.payment_status !== 'paid') {
+      return NextResponse.json({ received: true })
+    }
     const meta = session.metadata as Record<string, string>
     const {
       listingId, buyerId, sellerId, platformFee, sellerPayout, creditUsed,
