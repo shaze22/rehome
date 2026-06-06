@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Clock, Gavel, Eye, Loader2, Trash2 } from 'lucide-react'
+import { Clock, Gavel, Eye, Loader2, Trash2, Share2 } from 'lucide-react'
 
 interface Listing {
   id: string
@@ -96,6 +96,22 @@ export function SellerListingCard({ listing }: Props) {
           >
             {STATUS_LABELS[status] ?? status}
           </span>
+          {status === 'ACTIVE' && (
+            <button
+              onClick={() => {
+                const url = `https://kassim.app/listings/${listing.id}`
+                const text = listing.mode === 'SWAP'
+                  ? `\u{1F504} Interested to swap or buy *${listing.title}*? Make an offer on KASSIM!\n\n${url}`
+                  : `⚡ Bid on *${listing.title}* from RM0! Only 30 mins once timer starts. Grab it fast on KASSIM!\n\n${url}`
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+              }}
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: '#25D366', border: '1px solid rgba(37,211,102,0.3)' }}
+              title="Share via WhatsApp"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
+          )}
           {canCancel && !confirm && (
             <button
               onClick={() => setConfirm(true)}
