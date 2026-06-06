@@ -294,15 +294,16 @@ next.config.ts        — withNextIntl() wrapper + image patterns
 NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 DATABASE_URL, DIRECT_URL
-STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
-NEXT_PUBLIC_STRIPE_PUBLIC_KEY
-RESEND_API_KEY
+STRIPE_SECRET_KEY            ← ✅ LIVE mode (sk_live_...) set in Vercel
+STRIPE_WEBHOOK_SECRET        ← ✅ LIVE webhook we_1TfCHICGekCA1beqFy1dpImz (checkout.session.completed → kassim.app/api/payment/webhook)
+NEXT_PUBLIC_STRIPE_PUBLIC_KEY ← ✅ LIVE mode (pk_live_...) set in Vercel
+RESEND_API_KEY               ← ✅ rotated (Fasa 13), DKIM verified 2026-06-06
 GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL=https://kassim.app   ← set in Vercel Production
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
-EASYPARCEL_CLIENT_ID=        ← ✅ set in Vercel (OAuth2)
-EASYPARCEL_CLIENT_SECRET=    ← ✅ set in Vercel (OAuth2)
+EASYPARCEL_CLIENT_ID=        ← ✅ set in Vercel (OAuth2, pending EP activation)
+EASYPARCEL_CLIENT_SECRET=    ← ✅ set in Vercel (OAuth2, pending EP activation)
 LALAMOVE_API_KEY=            ← from developers.lalamove.com
 LALAMOVE_API_SECRET=
 LALAMOVE_SANDBOX=false       ← already set in Vercel
