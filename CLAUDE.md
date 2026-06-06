@@ -567,12 +567,13 @@ Shown when user has at least 1 listing:
 - Navbar: ThemeToggle rendered on both desktop + mobile
 
 ## HeroBanner (`src/components/home/HeroBanner.tsx`)
-Simplified above-fold section (updated Fasa 9):
+Simplified above-fold section (updated Fasa 20):
 - Badge: "Malaysia's #1 Pre-Loved Marketplace"
 - H1: "Turn Old Stuff Into Cash or Find a Bargain"
-- 3 CTAs: **Browse Flash Bid** (orange) + **Sell My Item** (teal) + **Browse Swap Bid** (green outline)
+- **Mobile CTAs**: Flash Bid + Sell Now side-by-side in a row; Browse Swap Bid below (full-width row on mobile)
+- **Desktop CTAs**: all 3 inline in a flex-row
 - **Search bar**: `<form action="/listings" method="get">`
-- 4 trust micro-indicators: 🔒 Escrow, ✅ IC Verified, 📦 Auto Delivery, 0% Free to List
+- 4 trust micro-indicators: 🔒 Escrow, ✅ IC Verified, 📦 Auto Delivery, 0% Free to List (flex-wrap, tight gap on mobile)
 - "New here? Learn how..." link → `/how-it-works`
 - No split Flash/Swap explanation cards — moved fully to /how-it-works
 
@@ -587,15 +588,16 @@ Simplified above-fold section (updated Fasa 9):
 
 ## Performance Architecture
 - **Fonts**: `next/font/google` (Inter + JetBrains Mono) in `layout.tsx` — eliminates render-blocking Google Fonts @import
-- **Homepage cache**: all 5 DB query functions wrapped in `unstable_cache` with `revalidate: 60` (60s TTL)
+- **Suspense streaming** (Fasa 20): `HomePage` is non-async — `HeroBanner` renders instantly. `HomeContent` (async server component with all 5 DB queries) is wrapped in `<Suspense fallback={<HomePageSkeleton />}>`. Hero HTML arrives in ~100ms; listings stream in after DB resolves.
+- **Homepage cache**: all 5 DB query functions wrapped in `unstable_cache`. Flash/swap/trending/mega: `revalidate: 60`. Stats: `revalidate: 120`.
 - **Layout auth**: `getSession()` instead of `getUser()` — reads cookie locally, no Supabase network call per page
-- **Loading skeleton**: `src/app/loading.tsx` — instant shell shown while page data loads
-- **LCP images**: `priority={i === 0}` on first ListingCard and SwapListingCard in homepage grids
+- **Loading skeleton**: `src/app/loading.tsx` — instant shell shown while page data loads (route-level). `HomePageSkeleton` shown during Suspense resolve.
+- **LCP images**: `priority={i === 0}` on first ListingCard and SwapListingCard in homepage grids. Image `sizes` updated to `"50vw"` for 2-col mobile (smaller downloads).
 - **DB indexes added** (2026-06-04, Supabase MCP): `isFeatured+status`, `status+updatedAt`, `viewCount`, `createdAt`
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-06, commit `b0fa098` — Fasa 19: 17 comprehensive fixes (race condition, delivery fee security, auto-relist, Flash expiry, admin bug, N+1, testimonials removed, cancel listing, seller profile link, postcode+address, buyer ship email).
+2026-06-06, commit `3e738be` — Fasa 20: Suspense streaming + 2-col mobile grid + card compactness + hero CTA layout. Also: /impact page fully translated to English (f19d0f5).
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -628,6 +630,8 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **14** | **Reliability fixes (2026-06-04):** EasyParcel webhook failure handling — on booking error, seller gets "book manually" email + admin gets alert email with listing ID + error. sendEasyParcelFailureEmail() added to resend.ts. kassim.app DKIM added to Resend (domain ID: d887ba9e). RESEND_API_KEY rotated in Vercel. |
 | **15** | **Bug fixes (2026-06-05):** React hydration error #418 fixed — `isEnded` now initialises from `endsAt` comparison (no more bid form flicker on ended auctions), `suppressHydrationWarning` on `toLocaleString('ms-MY')` and `toLocaleDateString('en-MY')` elements. "Winning Bid" label shows correctly on ended auctions (was "Starting Bid"). Flash trust badge: "Timer starts on first bid" when `endsAt=null`, "30 Min Only" once timer running. DeliveryCheckout postcode hint hides after step 1. |
 | **19** | **17 comprehensive fixes (2026-06-06):** (1) Bid race condition — SELECT FOR UPDATE in $transaction. (2) Delivery fee — server-side recalc, client params ignored. (3) Seller postcode — STATE_POSTCODE[] map, not hardcoded. (4) Auto-relist — unpaid wins reset to ACTIVE after 24h + seller email. (5) Flash 14-day expiry — ACTIVE+no-bid listings expire after 14 days. (6) Admin naming bug — allUsers/disputedSwaps properly wired. (7) N+1 fix — enrichedPayouts via single raw SQL JOIN. (8) Dashboard limits — take:100 listings, take:50 orders. (9) View count — fire-and-forget outside Promise.all. (10) Remove fake testimonials. (11) Seller profile link — ListingCard + SwapListingCard. (12) Cancel listing — POST /api/listings/[id]/cancel + SellerListingCard button. (13) Dashboard — show all listings (no slice). (14) User.postcode + User.savedAddress fields + ProfileEditForm UI. (15) Buyer ship email — sendBuyerShippedEmail on seller mark shipped. (16) sendAuctionRelistedEmail new function. (17) Profile API updated for postcode + savedAddress. |
+| **Impact** | **/impact page fully translated to English (2026-06-06):** Title, all stat labels, CO2 methodology section, category names (Perabot→Furniture etc.), badges section. Badge display: English name primary, Malay (nameMs) as subtitle. |
+| **20** | **Perf streaming + Mobile overhaul (2026-06-06):** (1) Suspense streaming — HeroBanner renders instantly, HomeContent async component wrapped in Suspense. (2) Mobile grid — all listing grids changed to grid-cols-2 (homepage, listings page, watchlist, loadings). (3) Card compactness — smaller padding/text on mobile, verbose text hidden (sm:block), footer condensed, image sizes="50vw". (4) Hero CTA — Flash Bid + Sell Now side-by-side on mobile, Swap below. (5) Section spacing — py-6 sm:py-10. (6) Section headers — removed duplicate Lucide icons, text-xl sm:text-2xl. (7) Stats — text-lg sm:text-2xl. (8) Why KASSIM — 2-col on mobile, desc hidden on mobile. (9) SwapListingCard — Wants/chips hidden mobile, timer always visible. |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -649,11 +653,15 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 - **BottomNav** (`src/components/layout/BottomNav.tsx`): mobile-only sticky nav, md:hidden. Home/Browse/Sell(float CTA)/Saved/Account
 - **LanguageSwitcher**: removed from Navbar (translations incomplete). Still in `src/components/layout/LanguageSwitcher.tsx` for future use.
 
-### Listing Cards (updated)
-- Max 2 image overlays: ENDING SOON banner (top, red) + mode badge (bottom-left: FLASH BID / SWAP BID)
-- Bid count shown bottom-right only when ≥2 bids
-- Condition: label text in card body (`Like New`, `Excellent`, `Good`, `Fair`, `Used`, `Worn`, `Poor`, `For Parts`) with color-coded pill
-- Category text shown in card body, not as image overlay
+### Listing Cards (updated Fasa 20)
+- **Mobile grid**: `grid-cols-2` on mobile (was `grid-cols-1`). All grids: `grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`, gap `gap-3 sm:gap-6`.
+- Max 2 image overlays: ENDING SOON banner (top, red) + mode badge (bottom-left: FLASH BID / SWAP BID). Badge text abbreviated on mobile: "FLASH" / "SWAP".
+- Bid count shown bottom-right only when ≥2 bids (abbreviated: `🔥 {count}`)
+- Condition: label text in card body with color-coded pill. Category text `hidden sm:inline`.
+- Card padding: `p-2 sm:p-3`. Title: `text-xs sm:text-sm`. Bid price: `text-sm sm:text-lg`.
+- Verbose text hidden on mobile (bid sublabel, seller name, view count, full "FREE if only bidder" string).
+- Footer: mobile shows state + IC check only. Desktop shows full footer with seller link.
+- SwapListingCard: "Wants:" section and offer chips hidden on mobile. Timer always visible.
 
 ### Mobile Filter Drawer (`src/components/listings/MobileFilterDrawer.tsx`)
 - "Filters (N)" button visible on mobile, hidden on desktop (lg:hidden)
@@ -693,5 +701,7 @@ Admin panel: https://kassim.app/admin
 - ✅ RESEND_API_KEY rotated in Vercel (2026-06-04)
 - ✅ EasyParcel webhook failure — seller + admin email notification on booking error
 - ✅ Fasa 19: 17 comprehensive fixes deployed (b0fa098, 2026-06-06)
+- ✅ /impact page fully translated to English (f19d0f5, 2026-06-06)
+- ✅ Fasa 20: Suspense streaming + 2-col mobile + card compactness (3e738be, 2026-06-06)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
