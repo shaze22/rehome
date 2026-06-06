@@ -181,6 +181,7 @@ All emails are in **English**. FROM: `KASSIM <noreply@kassim.app>`
 | Referral reward | `sendReferralRewardEmail` | Referrer |
 | Flash item shipped | `sendBuyerShippedEmail` | Buyer (Flash) |
 | Auction re-listed (unpaid) | `sendAuctionRelistedEmail` | Seller |
+| Payment window expired | `sendPaymentWindowExpiredEmail` | Former winner (when listing auto-relistts) |
 
 ## Push Notifications (English)
 | Event | Route | Message |
@@ -598,7 +599,7 @@ Simplified above-fold section (updated Fasa 20):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-06, commit `9c4c040` — FPX payment method enabled (card + fpx), customer_email added, webhook payment_status guard.
+2026-06-06, commit `deaf9dd` — payment cancel banner, DeliveryCheckout pre-fill, missed payment email (sendPaymentWindowExpiredEmail).
 Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
@@ -634,6 +635,7 @@ Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 | **Impact** | **/impact page fully translated to English (2026-06-06):** Title, all stat labels, CO2 methodology section, category names (Perabot→Furniture etc.), badges section. Badge display: English name primary, Malay (nameMs) as subtitle. |
 | **20** | **Perf streaming + Mobile overhaul (2026-06-06):** (1) Suspense streaming — HeroBanner renders instantly, HomeContent async component wrapped in Suspense. (2) Mobile grid — all listing grids changed to grid-cols-2 (homepage, listings page, watchlist, loadings). (3) Card compactness — smaller padding/text on mobile, verbose text hidden (sm:block), footer condensed, image sizes="50vw". (4) Hero CTA — Flash Bid + Sell Now side-by-side on mobile, Swap below. (5) Section spacing — py-6 sm:py-10. (6) Section headers — removed duplicate Lucide icons, text-xl sm:text-2xl. (7) Stats — text-lg sm:text-2xl. (8) Why KASSIM — 2-col on mobile, desc hidden on mobile. (9) SwapListingCard — Wants/chips hidden mobile, timer always visible. |
 | **FPX** | **FPX payment method enabled (2026-06-06):** checkout/route.ts: payment_method_types=['card','fpx'] + customer_email for pre-fill. webhook/route.ts: payment_status guard (skip if not 'paid' — handles FPX async confirmation edge case). |
+| **Beta UX** | **Pre-launch UX fixes (2026-06-06):** (1) cancel_url → ?payment=cancelled; amber banner shown to winner who abandons Stripe checkout ("Payment not completed. You have 24 hours."). (2) DeliveryCheckout pre-fills postcode+address from User.postcode+User.savedAddress (listing/[id]/page.tsx fetches + passes to ListingDetailClient). (3) sendPaymentWindowExpiredEmail — new email to former winner when listing auto-relistts after 24h; cron now emails both seller (relisted) and former winner (window expired). |
 
 ## Supabase Auth URL Config (updated 2026-06-03)
 - **Site URL:** `https://kassim.app`
@@ -706,5 +708,6 @@ Admin panel: https://kassim.app/admin
 - ✅ /impact page fully translated to English (f19d0f5, 2026-06-06)
 - ✅ Fasa 20: Suspense streaming + 2-col mobile + card compactness (3e738be, 2026-06-06)
 - ✅ FPX enabled: payment_method_types=['card','fpx'], customer_email, webhook payment_status guard (9c4c040, 2026-06-06)
+- ✅ Beta UX fixes: payment cancel banner, DeliveryCheckout pre-fill, sendPaymentWindowExpiredEmail (deaf9dd, 2026-06-06)
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
 - Beta testing 100 users → LAUNCH 🚀
