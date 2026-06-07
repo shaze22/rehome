@@ -12,45 +12,36 @@ export function HeroBanner() {
         <p className="text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-3" style={{ color: 'var(--teal)' }}>
           Malaysia&apos;s #1 Pre-Loved Marketplace
         </p>
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-2 sm:mb-3">
-          Turn Old Stuff Into{' '}
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-2 sm:mb-3 italic">
           <span style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Cash
+            One man&apos;s trash
           </span>
-          {' '}or Find a{' '}
+          {' '}is another man&apos;s{' '}
           <span style={{ background: 'linear-gradient(135deg, var(--teal), var(--green))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Bargain
+            treasure.
           </span>
         </h1>
         <p className="text-xs sm:text-base max-w-lg mx-auto mb-4 sm:mb-6" style={{ color: 'var(--text-secondary)' }}>
           30-min flash auctions, item swaps, 100% secure escrow, delivery included.
         </p>
 
-        {/* Primary CTAs — side by side on mobile */}
-        <div className="flex flex-col items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
-            <Link
-              href="/listings?mode=flash"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', boxShadow: '0 4px 20px rgba(255,107,53,0.35)' }}
-            >
-              <Zap className="w-4 h-4" />
-              Flash Bid
-            </Link>
-            <Link
-              href="/sell"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 active:scale-95 gradient-teal glow-teal"
-            >
-              Sell Now
-            </Link>
-          </div>
+        {/* Primary CTAs — Flash Bid + Swap Bid side by side */}
+        <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
+          <Link
+            href="/listings?mode=flash"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', boxShadow: '0 4px 20px rgba(255,107,53,0.35)' }}
+          >
+            <Zap className="w-4 h-4" />
+            Flash Bid
+          </Link>
           <Link
             href="/listings?mode=swap"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:scale-105"
-            style={{ border: '1px solid rgba(22,163,74,0.4)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.06)' }}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #16a34a, #22c55e)', boxShadow: '0 4px 20px rgba(22,163,74,0.35)' }}
           >
             <ArrowLeftRight className="w-4 h-4" />
-            Browse Swap Bid
+            Swap Bid
           </Link>
         </div>
 

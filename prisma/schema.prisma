@@ -86,6 +86,7 @@ model Listing {
   hasCompleteParts   Boolean       @default(true)
   hasOriginalBox     Boolean       @default(false)
   hasWarranty        Boolean       @default(false)
+  hiddenBySeller     Boolean       @default(false)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 

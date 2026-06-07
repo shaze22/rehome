@@ -67,6 +67,9 @@ export function Navbar() {
                   <Heart className="w-4 h-4" />
                 </Link>
 
+                {/* Theme toggle — next to heart */}
+                <ThemeToggle />
+
                 {/* Notification bell */}
                 <Link href="/dashboard" className="relative" style={{ color: 'var(--text-secondary)' }}>
                   <Bell className="w-4 h-4" />
@@ -108,6 +111,7 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
+                <ThemeToggle />
                 <Link href="/auth/login" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
                   Sign In
                 </Link>
@@ -116,12 +120,10 @@ export function Navbar() {
                 </Link>
               </div>
             )}
-            <ThemeToggle />
           </div>
 
-          {/* Mobile: theme + hamburger */}
+          {/* Mobile: hamburger only */}
           <div className="flex items-center gap-2 md:hidden">
-            <ThemeToggle />
             <button
               className="p-2 rounded-lg"
               style={{ color: 'var(--text-secondary)' }}
@@ -135,6 +137,10 @@ export function Navbar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden pb-4 space-y-1">
+            <div className="px-3 py-2 flex items-center justify-between">
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Theme</span>
+              <ThemeToggle />
+            </div>
             <Link href="/listings" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }} onClick={() => setMenuOpen(false)}>
               Browse Listings
             </Link>

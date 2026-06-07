@@ -95,15 +95,19 @@ export async function DELETE(
 
   if (!listing) return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   if (listing.sellerId !== user.id) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
-  if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Only active listings can be withdrawn.' }, { status: 400 })
 
-  if (listing.mode === 'FLASH' && listing.bids.length > 0) {
-    return NextResponse.json({ error: 'Listings with existing bids cannot be withdrawn.' }, { status: 400 })
-  }
-  if (listing.mode === 'SWAP' && listing.offers.length > 0) {
-    return NextResponse.json({ error: 'Listings with active offers cannot be withdrawn.' }, { status: 400 })
+  if (listing.status === 'ACTIVE') {
+    // Cancel any pending offers before hiding
+    await prisma.$transaction([
+      prisma.offer.updateMany({
+        where: { listingId: id, status: { in: ['PENDING', 'COUNTERED'] } },
+        data: { status: 'REJECTED' },
+      }),
+      prisma.listing.update({ where: { id }, data: { status: 'CANCELLED', hiddenBySeller: true } }),
+    ])
+  } else {
+    await prisma.listing.update({ where: { id }, data: { hiddenBySeller: true } })
   }
 
-  await prisma.listing.update({ where: { id }, data: { status: 'CANCELLED' } })
   return NextResponse.json({ success: true })
 }

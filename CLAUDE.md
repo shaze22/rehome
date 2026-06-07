@@ -154,7 +154,7 @@ enum EscrowStatus { PENDING  BOTH_SHIPPED  COMPLETED  DISPUTED }
 - `POST  /api/listings` — create listing (Flash or Swap)
 - `GET   /api/listings?mode=flash|swap` — fetch with filters
 - `PATCH /api/listings/[id]` — edit listing (seller only, ACTIVE, 0 bids/offers for mode switch)
-- `DELETE /api/listings/[id]` — withdraw listing (seller only, ACTIVE, 0 bids/offers)
+- `DELETE /api/listings/[id]` — hide listing (seller only, ALL statuses allowed). ACTIVE: cancels pending offers + sets status=CANCELLED + hiddenBySeller=true. ENDED/CANCELLED/SOLD: sets hiddenBySeller=true only. Dashboard filters `hiddenBySeller: false`.
 
 ### Gemini AI
 - `POST /api/gemini/price` — AI pricing suggestion
@@ -571,14 +571,14 @@ Shown when user has at least 1 listing:
 - CSS: `[data-theme="light"]` in `globals.css` — light bg/text vars, teal unchanged
 - `ThemeToggle.tsx` — Sun/Moon button, `document.documentElement.dataset.theme`
 - Default: **system preference** (`prefers-color-scheme`). Falls back to dark if no preference. Persists override in `localStorage.kassim_theme`
-- Navbar: ThemeToggle rendered on both desktop + mobile
+- **Desktop Navbar**: ThemeToggle placed next to Heart (watchlist) icon — inside both logged-in and logged-out desktop nav sections
+- **Mobile**: ThemeToggle removed from top bar; accessible inside the hamburger menu (top of menu, "Theme" label + toggle)
 
 ## HeroBanner (`src/components/home/HeroBanner.tsx`)
-Simplified above-fold section (updated Fasa 20):
+Simplified above-fold section (updated 2026-06-07):
 - Badge: "Malaysia's #1 Pre-Loved Marketplace"
-- H1: "Turn Old Stuff Into Cash or Find a Bargain"
-- **Mobile CTAs**: Flash Bid + Sell Now side-by-side in a row; Browse Swap Bid below (full-width row on mobile)
-- **Desktop CTAs**: all 3 inline in a flex-row
+- H1: italic gradient — "One man's trash is another man's treasure." (orange gradient on "One man's trash", teal gradient on "treasure.")
+- **CTAs**: 2 buttons side-by-side — ⚡ Flash Bid (orange gradient) + 🔄 Swap Bid (green gradient). No "Sell Now" button (that's in the Navbar).
 - **Search bar**: `<form action="/listings" method="get">`
 - 4 trust micro-indicators: 🔒 Escrow, ✅ IC Verified, 📦 Auto Delivery, 0% Free to List (flex-wrap, tight gap on mobile)
 - "New here? Learn how..." link → `/how-it-works`
@@ -604,9 +604,17 @@ Simplified above-fold section (updated Fasa 20):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-07, multiple fixes + Edit Listing feature. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-07 (session 2), dashboard + hero + UX fixes. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
 
-### 2026-06-07 Changes
+### 2026-06-07 Session 2 Changes
+- **hiddenBySeller** — `Listing.hiddenBySeller Boolean @default(false)` added (Supabase MCP + schema + prisma generate). Dashboard query filters `hiddenBySeller: false`. DELETE API sets this for all statuses.
+- **Delete any listing** — DELETE /api/listings/[id] now works on ALL statuses (no bid/offer restriction). ACTIVE: pending offers auto-REJECTED + status=CANCELLED + hiddenBySeller=true. ENDED/CANCELLED/SOLD: hiddenBySeller=true only. Card disappears immediately (deleted state → null).
+- **Flash/Swap badge on SellerListingCard** — ⚡ (orange) or 🔄 (green) emoji before listing title in dashboard.
+- **HeroBanner** — h1 replaced with italic proverb "One man's trash is another man's treasure." (orange + teal gradient). CTAs reduced to 2: Flash Bid + Swap Bid (no Sell Now). Proverb divider on homepage removed (redundant).
+- **ThemeToggle moved** — Desktop: next to Heart icon in navbar (both logged-in and logged-out). Mobile: removed from top bar, accessible inside hamburger menu (top row).
+- **Floating buttons above BottomNav** — WhatsApp + Beta Feedback buttons now use `bottom-20 md:bottom-6` so they don't overlap mobile BottomNav.
+
+### 2026-06-07 Session 1 Changes
 - **Supabase storage policies** — added INSERT/SELECT/DELETE/UPDATE policies for `rehome-photos` bucket (was RLS-enabled but no policies → all uploads blocked)
 - **Photo upload compression** — Canvas API in SellForm + EditListingForm: max 1200px, JPEG 0.82 quality. Always uploads as `image/jpeg`. Fixes large phone photos as og:image.
 - **ListingChat fully English** — "Ask Seller", "No messages yet. Ask the seller now!", "User", "(Seller)", "Type a message...", "Sign in to send a message"
@@ -668,9 +676,11 @@ Simplified above-fold section (updated Fasa 20):
 ## UX Architecture Notes (Fasa 9)
 
 ### Navigation
-- **Navbar**: Logo | Browse | How It Works | (logged-in: ❤ Bell + Sell + Avatar dropdown) | ThemeToggle
+- **Navbar desktop**: Logo | Browse | How It Works | (logged-in: ❤ ThemeToggle Bell + Sell + Avatar dropdown) | (logged-out: ThemeToggle + Sign In + Register)
+- **Navbar mobile**: Logo | Hamburger (ThemeToggle at top of dropdown + Browse + HowItWorks + user links)
 - **Avatar dropdown**: Dashboard · Saved Items · Sign Out
 - **BottomNav** (`src/components/layout/BottomNav.tsx`): mobile-only sticky nav, md:hidden. Home/Browse/Sell(float CTA)/Saved/Account
+- **Floating buttons**: WhatsApp support (bottom-left) + Beta Feedback (bottom-right). On mobile: `bottom-20` to clear BottomNav. On desktop: `bottom-6`.
 - **LanguageSwitcher**: removed from Navbar (translations incomplete). Still in `src/components/layout/LanguageSwitcher.tsx` for future use.
 
 ### Listing Cards (updated Fasa 20)

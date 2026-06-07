@@ -14,7 +14,7 @@ async function getDashboardData(userId: string) {
   const [user, myListings, myBids, transactions, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.listing.findMany({
-      where: { sellerId: userId },
+      where: { sellerId: userId, hiddenBySeller: false },
       include: {
         seller: { select: { name: true, rehomeScore: true, icVerified: true } },
         _count: { select: { bids: true, offers: true } },

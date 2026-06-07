@@ -34,7 +34,7 @@ export function FeedbackWidget() {
       {/* Floating button — small icon only */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-11 h-11 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex items-center justify-center w-11 h-11 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95"
         style={{ backgroundColor: 'var(--teal)', boxShadow: '0 4px 16px rgba(20,184,166,0.35)' }}
         aria-label="Beta feedback"
         title="Beta Feedback"

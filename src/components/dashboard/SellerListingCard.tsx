@@ -13,7 +13,7 @@ interface Listing {
   mode?: string
   endsAt: string | Date | null
   viewCount?: number
-  _count: { bids: number }
+  _count: { bids: number; offers: number }
 }
 
 interface Props {
@@ -36,29 +36,45 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function SellerListingCard({ listing }: Props) {
   const [status, setStatus] = useState(listing.status)
-  const [cancelling, setCancelling] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [confirm, setConfirm] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleted, setDeleted] = useState(false)
 
   const isWaiting = listing.endsAt === null
   const endDate = listing.endsAt ? new Date(listing.endsAt) : null
   const isActive = status === 'ACTIVE' && (isWaiting || (endDate !== null && endDate > new Date()))
-  const canCancel = status === 'ACTIVE' && listing._count.bids === 0
+  const canDelete = true
 
-  async function handleCancel() {
-    setCancelling(true)
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError('')
     try {
-      const res = await fetch(`/api/listings/${listing.id}/cancel`, { method: 'POST' })
-      if (res.ok) { setStatus('CANCELLED'); setConfirm(false) }
+      const res = await fetch(`/api/listings/${listing.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setDeleted(true)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setDeleteError(data.error ?? 'Failed to delete. Please try again.')
+        setConfirm(false)
+      }
     } finally {
-      setCancelling(false)
+      setDeleting(false)
     }
   }
+
+  if (deleted) return null
 
   return (
     <div className="rounded-xl p-4 transition-all" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       <div className="flex items-start justify-between gap-3">
         <Link href={`/listings/${listing.id}`} className="flex-1 min-w-0 hover:underline">
-          <p className="text-sm font-medium line-clamp-1 mb-1">{listing.title}</p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-xs font-bold flex-shrink-0" style={{ color: listing.mode === 'SWAP' ? '#16a34a' : 'var(--orange)' }}>
+              {listing.mode === 'SWAP' ? '🔄' : '⚡'}
+            </span>
+            <p className="text-sm font-medium line-clamp-1">{listing.title}</p>
+          </div>
           <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <span className="font-mono" style={{ color: 'var(--teal)' }}>
               RM {(listing.currentBid || listing.startingBid).toFixed(0)}
@@ -122,7 +138,7 @@ export function SellerListingCard({ listing }: Props) {
               </button>
             </>
           )}
-          {canCancel && !confirm && (
+          {canDelete && !confirm && (
             <button
               onClick={() => setConfirm(true)}
               className="p-1.5 rounded-lg transition-colors"
@@ -135,6 +151,9 @@ export function SellerListingCard({ listing }: Props) {
         </div>
       </div>
 
+      {deleteError && (
+        <p className="mt-2 text-xs" style={{ color: 'var(--red)' }}>{deleteError}</p>
+      )}
       {confirm && (
         <div className="mt-3 flex items-center gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
           <p className="text-xs flex-1" style={{ color: 'var(--text-secondary)' }}>Delete this listing?</p>
@@ -142,12 +161,12 @@ export function SellerListingCard({ listing }: Props) {
             No
           </button>
           <button
-            onClick={handleCancel}
-            disabled={cancelling}
+            onClick={handleDelete}
+            disabled={deleting}
             className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg font-medium"
             style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}
           >
-            {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
             Yes, Delete
           </button>
         </div>
