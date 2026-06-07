@@ -729,19 +729,27 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             <div className="flex items-start justify-between gap-3">
               <h1 className="text-2xl font-bold mb-1">{listing.title}</h1>
               <button
-                onClick={() => {
+                onClick={async () => {
                   const url = `https://kassim.app/listings/${listing.id}`
                   const interestCount = isSwap ? (listing._count.offers ?? 0) : listing._count.bids
-                  const text = isSwap
-                    ? `I found *${listing.title}* on KASSIM - swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap? ${url}`
-                    : `I found *${listing.title}* on KASSIM - starting at RM${listing.startingBid}!\n\n${interestCount > 0 ? `${interestCount} people already bid. ` : 'No bids yet! '}Bid now, timer is only 30 mins.\n\n${url}`
-                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                  // Text without URL — for navigator.share, url is passed separately
+                  const shareText = isSwap
+                    ? `I found *${listing.title}* on KASSIM - swap it, no cash needed!\n\nEst. value: ~RM ${listing.swapValueEstimate ?? 0}${interestCount > 0 ? `\n${interestCount} offers already in!` : ''}\n\nGot something to swap?`
+                    : `I found *${listing.title}* on KASSIM - starting at RM${listing.startingBid}!\n\n${interestCount > 0 ? `${interestCount} people already bid. ` : 'No bids yet! '}Bid now, timer is only 30 mins.`
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: listing.title, text: shareText, url })
+                      return
+                    } catch { /* user cancelled or not supported */ }
+                  }
+                  // Desktop fallback: wa.me with URL appended in text
+                  window.open(`https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + url)}`, '_blank')
                 }}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                 style={{ backgroundColor: '#25D366', color: 'white' }}
-                title="Share ke WhatsApp"
+                title="Share listing"
               >
-                <Share2 className="w-3.5 h-3.5" /> WhatsApp
+                <Share2 className="w-3.5 h-3.5" /> Share
               </button>
               <button
                 onClick={() => {

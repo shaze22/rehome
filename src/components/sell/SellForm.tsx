@@ -147,18 +147,46 @@ export function SellForm({ userId }: Props) {
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (photos.length + files.length > 5) { alert('Maximum 5 photos only.'); return }
-    const MAX_SIZE = 10 * 1024 * 1024
     for (const file of files) {
-      if (file.size > MAX_SIZE) { setSubmitError('File size cannot exceed 10MB.'); return }
       if (!file.type.startsWith('image/')) { setSubmitError('Only image files are allowed.'); return }
     }
     setPhotoUploading(true)
+    setSubmitError('')
     const supabase = createClient()
     for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `listings/${userId}/${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage.from('rehome-photos').upload(path, file)
-      if (!error && data) {
+      // Compress to JPEG max 1200px — keeps og:image fast for WhatsApp preview
+      let blob: Blob = file
+      try {
+        blob = await new Promise<Blob>((resolve, reject) => {
+          const img = new Image()
+          const objectUrl = URL.createObjectURL(file)
+          img.onload = () => {
+            URL.revokeObjectURL(objectUrl)
+            const MAX = 1200
+            let { width, height } = img
+            if (width > MAX || height > MAX) {
+              if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+              else { width = Math.round(width * MAX / height); height = MAX }
+            }
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error('Compression failed')), 'image/jpeg', 0.82)
+          }
+          img.onerror = reject
+          img.src = objectUrl
+        })
+      } catch { blob = file }
+
+      const path = `listings/${userId}/${Date.now()}.jpg`
+      const { data, error } = await supabase.storage.from('rehome-photos').upload(path, blob, { contentType: 'image/jpeg' })
+      if (error) {
+        setSubmitError(`Upload failed: ${error.message}`)
+        setPhotoUploading(false)
+        return
+      }
+      if (data) {
         const { data: { publicUrl } } = supabase.storage.from('rehome-photos').getPublicUrl(data.path)
         setPhotos(prev => [...prev, publicUrl])
       }
@@ -325,7 +353,7 @@ export function SellForm({ userId }: Props) {
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Original Price (RM) *</label>
             <input
-              type="number" required min={0} step={1} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
+              type="number" required min={0} step={0.01} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
               placeholder="0"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
               style={inputStyle}
@@ -428,7 +456,7 @@ export function SellForm({ userId }: Props) {
                 Minimum cash top-up (RM) for swap + cash (optional)
               </label>
               <input
-                type="number" min={0} step={1} value={swapMinCashTopup} onChange={e => setSwapMinCashTopup(e.target.value)}
+                type="number" min={0} step={0.01} value={swapMinCashTopup} onChange={e => setSwapMinCashTopup(e.target.value)}
                 placeholder="0"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
                 style={inputStyle}

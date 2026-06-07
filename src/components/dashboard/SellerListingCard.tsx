@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Clock, Gavel, Eye, Loader2, Trash2, Share2 } from 'lucide-react'
+import { Clock, Gavel, Eye, Loader2, Trash2, Share2, Pencil } from 'lucide-react'
 
 interface Listing {
   id: string
@@ -21,10 +21,10 @@ interface Props {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: 'Aktif',
-  ENDED: 'Tamat',
-  SOLD: 'Dijual',
-  CANCELLED: 'Dibatal',
+  ACTIVE: 'Active',
+  ENDED: 'Ended',
+  SOLD: 'Sold',
+  CANCELLED: 'Cancelled',
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -65,7 +65,7 @@ export function SellerListingCard({ listing }: Props) {
             </span>
             <span className="flex items-center gap-1">
               <Gavel className="w-3 h-3" />
-              {listing._count.bids} tawaran
+              {listing._count.bids} {listing._count.bids === 1 ? 'bid' : 'bids'}
             </span>
             {listing.viewCount !== undefined && (
               <span className="flex items-center gap-1">
@@ -76,12 +76,12 @@ export function SellerListingCard({ listing }: Props) {
             {isWaiting ? (
               <span className="flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <Clock className="w-3 h-3" />
-                Menunggu bidder
+                Waiting for bid
               </span>
             ) : isActive && endDate && (
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {endDate.toLocaleDateString('ms-MY')}
+                {endDate.toLocaleDateString('en-MY')}
               </span>
             )}
           </div>
@@ -97,27 +97,37 @@ export function SellerListingCard({ listing }: Props) {
             {STATUS_LABELS[status] ?? status}
           </span>
           {status === 'ACTIVE' && (
-            <button
-              onClick={() => {
-                const url = `https://kassim.app/listings/${listing.id}`
-                const text = listing.mode === 'SWAP'
-                  ? `\u{1F504} Interested to swap or buy *${listing.title}*? Make an offer on KASSIM!\n\n${url}`
-                  : `⚡ Bid on *${listing.title}* from RM0! Only 30 mins once timer starts. Grab it fast on KASSIM!\n\n${url}`
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
-              }}
-              className="p-1.5 rounded-lg transition-colors"
-              style={{ color: '#25D366', border: '1px solid rgba(37,211,102,0.3)' }}
-              title="Share via WhatsApp"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-            </button>
+            <>
+              <Link
+                href={`/sell/edit/${listing.id}`}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.3)' }}
+                title="Edit listing"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Link>
+              <button
+                onClick={() => {
+                  const url = `https://kassim.app/listings/${listing.id}`
+                  const text = listing.mode === 'SWAP'
+                    ? `\u{1F504} Interested to swap or buy *${listing.title}*? Make an offer on KASSIM!\n\n${url}`
+                    : `⚡ Bid on *${listing.title}* from RM0! Only 30 mins once timer starts. Grab it fast on KASSIM!\n\n${url}`
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                }}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ color: '#25D366', border: '1px solid rgba(37,211,102,0.3)' }}
+                title="Share via WhatsApp"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
           {canCancel && !confirm && (
             <button
               onClick={() => setConfirm(true)}
               className="p-1.5 rounded-lg transition-colors"
               style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-              title="Cancel listing"
+              title="Delete listing"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -127,13 +137,9 @@ export function SellerListingCard({ listing }: Props) {
 
       {confirm && (
         <div className="mt-3 flex items-center gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-          <p className="text-xs flex-1" style={{ color: 'var(--text-secondary)' }}>Batalkan listing ini?</p>
-          <button
-            onClick={() => setConfirm(false)}
-            className="text-xs px-2 py-1 rounded"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Tidak
+          <p className="text-xs flex-1" style={{ color: 'var(--text-secondary)' }}>Delete this listing?</p>
+          <button onClick={() => setConfirm(false)} className="text-xs px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
+            No
           </button>
           <button
             onClick={handleCancel}
@@ -142,7 +148,7 @@ export function SellerListingCard({ listing }: Props) {
             style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}
           >
             {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-            Ya, Batal
+            Yes, Delete
           </button>
         </div>
       )}

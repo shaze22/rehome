@@ -28,7 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${listing.title} | ${priceText}`
   const description = `${modeLabel} · ${category} · ${listing.state} · ${listing.description.slice(0, 120)}...`
   const photo = listing.photos[0]
-  const ogImage = photo ?? `${BASE}/api/og?title=${encodeURIComponent(listing.title)}&subtitle=${encodeURIComponent(`${modeLabel} · ${category} · ${listing.state}`)}&price=${encodeURIComponent(priceText)}&mode=${listing.mode === 'SWAP' ? 'swap' : 'flash'}`
+  const ogFallback = `${BASE}/api/og?title=${encodeURIComponent(listing.title)}&subtitle=${encodeURIComponent(`${modeLabel} · ${category} · ${listing.state}`)}&price=${encodeURIComponent(priceText)}&mode=${listing.mode === 'SWAP' ? 'swap' : 'flash'}`
+  const ogImage = photo ?? ogFallback
 
   return {
     title,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       type: 'website',
-      images: [{ url: ogImage, width: photo ? 800 : 1200, height: photo ? 800 : 630, alt: listing.title }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: listing.title }],
     },
     twitter: {
       card: 'summary_large_image',

@@ -151,8 +151,10 @@ enum EscrowStatus { PENDING  BOTH_SHIPPED  COMPLETED  DISPUTED }
 - `POST /api/swap-transactions/[id]/dispute` — `{ reason }` → DISPUTED + email admin
 
 ### Listings
-- `POST /api/listings` — create listing (Flash or Swap)
-- `GET  /api/listings?mode=flash|swap` — fetch with filters
+- `POST  /api/listings` — create listing (Flash or Swap)
+- `GET   /api/listings?mode=flash|swap` — fetch with filters
+- `PATCH /api/listings/[id]` — edit listing (seller only, ACTIVE, 0 bids/offers for mode switch)
+- `DELETE /api/listings/[id]` — withdraw listing (seller only, ACTIVE, 0 bids/offers)
 
 ### Gemini AI
 - `POST /api/gemini/price` — AI pricing suggestion
@@ -236,6 +238,7 @@ src/
       cron/                       — Expire auctions
     listings/[id]/                — Listing detail (Flash + Swap + Escrow)
     sell/                         — Create listing (mode toggle + AI swap suggest)
+    sell/edit/[id]/               — Edit listing (pre-filled form, mode switch, photo management)
     dashboard/                    — Seller/buyer dashboard
     profile/[id]/                 — Profile + swap history + SwapScore + badges
     admin/                        — IC verify + disputed swaps
@@ -261,7 +264,8 @@ src/
       Footer.tsx          — includes Terms + Privacy links
       LanguageSwitcher.tsx — 5-language dropdown, sets 'kassim_locale' cookie
       ThemeToggle.tsx     — Sun/Moon toggle, persists in localStorage 'kassim_theme'
-    sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest
+    sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest. Photos compressed via Canvas (max 1200px JPEG 0.82)
+    sell/EditListingForm.tsx       — Pre-filled edit form: all fields + mode switch + photo add/remove
     listings/ListingCard.tsx       — Flash card
     listings/SwapListingCard.tsx   — Swap card (green, value, wants, offer count)
     listings/ListingDetailClient.tsx — Detail (Flash + Swap + Escrow)
@@ -525,6 +529,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/cron/expire-featured` | Auto-expire isFeatured listings |
 | `/api/admin/audit-log` | GET last 50 AuditLog entries (admin only) |
 | `/api/listings/[id]/cancel` | POST — seller cancel ACTIVE listing with 0 bids |
+| `/sell/edit/[id]` | Edit listing page — pre-filled form, mode switch (Flash↔Swap if 0 bids/offers), photo management |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
@@ -599,8 +604,19 @@ Simplified above-fold section (updated Fasa 20):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-06, commit `08a9767` — WhatsApp share button on SellerListingCard, all share/copy URLs hardcoded to kassim.app.
-Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-07, multiple fixes + Edit Listing feature. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+### 2026-06-07 Changes
+- **Supabase storage policies** — added INSERT/SELECT/DELETE/UPDATE policies for `rehome-photos` bucket (was RLS-enabled but no policies → all uploads blocked)
+- **Photo upload compression** — Canvas API in SellForm + EditListingForm: max 1200px, JPEG 0.82 quality. Always uploads as `image/jpeg`. Fixes large phone photos as og:image.
+- **ListingChat fully English** — "Ask Seller", "No messages yet. Ask the seller now!", "User", "(Seller)", "Type a message...", "Sign in to send a message"
+- **Original price decimals** — step={0.01} on originalPrice + swapMinCashTopup inputs (was step={1})
+- **navigator.share() fix** — URL no longer duplicated: text field has no URL, url field handles it
+- **Edit Listing** — PATCH /api/listings/[id] + /sell/edit/[id] page + EditListingForm component
+  - Edit: title, description, category, state, weight, price, condition flags, photos (add/remove), swap fields
+  - Mode switch Flash↔Swap: allowed only if 0 bids (Flash) or 0 active offers (Swap)
+  - Flash→Swap: sets endsAt=now+72h. Swap→Flash: clears endsAt, resets startingBid/currentBid to 0
+- **SellerListingCard** — teal Edit button (pencil) on all Active listings. All labels English ("Active", "Ended", "bids", "Waiting for bid", "Yes, Delete")
 
 > **Note:** GitHub→Vercel auto-deploy kadang tidak trigger. Guna `vercel deploy --prod --scope syedshazni-7682s-projects --yes` untuk force deploy bila perlu.
 

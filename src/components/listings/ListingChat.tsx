@@ -68,7 +68,7 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
       >
         <div className="flex items-center gap-2 text-sm font-semibold">
           <MessageCircle className="w-4 h-4" style={{ color: 'var(--blue)' }} />
-          Tanya Penjual
+          Ask Seller
         </div>
         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{open ? '▲' : '▼'}</span>
       </button>
@@ -83,7 +83,7 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
               </div>
             ) : messages.length === 0 ? (
               <p className="text-center text-xs py-4" style={{ color: 'var(--text-muted)' }}>
-                Belum ada mesej. Tanya penjual sekarang!
+                No messages yet. Ask the seller now!
               </p>
             ) : (
               messages.map(msg => {
@@ -98,11 +98,11 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
                       }}>
                       {!isMe && (
                         <p className="text-xs font-semibold mb-0.5" style={{ color: isSeller ? 'var(--orange)' : 'var(--text-secondary)' }}>
-                          {msg.sender.name ?? 'Pengguna'}{isSeller ? ' (Penjual)' : ''}
+                          {msg.sender.name ?? 'User'}{isSeller ? ' (Seller)' : ''}
                         </p>
                       )}
                       <p>{msg.content}</p>
-                      <p className="text-xs mt-0.5 opacity-60">{new Date(msg.createdAt).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs mt-0.5 opacity-60">{new Date(msg.createdAt).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
                 )
@@ -116,7 +116,7 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
             <form onSubmit={handleSend} className="flex gap-2 p-3 border-t" style={{ borderColor: 'var(--border)' }}>
               <input
                 value={content} onChange={e => setContent(e.target.value)}
-                placeholder="Taip mesej..."
+                placeholder="Type a message..."
                 className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
                 style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               />
@@ -128,7 +128,7 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
             </form>
           ) : (
             <p className="text-center text-xs p-3" style={{ color: 'var(--text-muted)' }}>
-              Log masuk untuk hantar mesej
+              Sign in to send a message
             </p>
           )}
         </div>
