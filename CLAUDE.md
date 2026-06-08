@@ -374,6 +374,7 @@ Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `
 | `kassim_push_asked` | localStorage | Push notification asked |
 | `kassim_theme` | localStorage | UI theme: 'dark' (default) or 'light' |
 | `kassim-v1` | Service Worker cache | SW cache name |
+| `kassim_bid_[listingId]` | sessionStorage | Bid amount saved before login redirect, restored on return |
 
 ## PWA
 - `src/app/manifest.ts` — name: KASSIM, theme: #14b8a6, standalone
@@ -605,7 +606,19 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 5), 10 sell-flow UX improvements. Live: https://kassim.app
+2026-06-08 (session 6), 9 first-time buyer UX fixes. Live: https://kassim.app
+
+### 2026-06-08 Session 6 Changes (commit c5e23ad)
+9 first-time buyer UX improvements found during buyer journey review:
+- **Register free link** — "New here? Register free" link added below "Log In to Bid" (Flash) and "Log In to Make an Offer" (Swap) buttons. New buyers now have a clear path without needing to find the Register button in the navbar.
+- **Bid amount persists across login** — bid amount typed pre-login is saved to `sessionStorage` (`kassim_bid_[id]`) on "Log In to Bid" click, restored on return. No more blank bid field after login redirect.
+- **Login subtitle for bid context** — `isBidFlow` detected from `?next=/listings/` param. Subtitle now shows "Sign in to place your bid" (was "Sign in to your account") when arriving from a listing.
+- **Ask Seller sign-in link** — "Sign in to send a message" was dead plain text. Now rendered as `<Link href="/auth/login?next=/listings/[id]">Sign in</Link> to message the seller` — fully clickable.
+- **WatchlistButton redirects to login** — was `disabled={!currentUserId}` (invisible/grayed out). Now `disabled={loading}` only; clicking when not logged in redirects to `/auth/login?next=[currentPath]` so user returns to the same listing.
+- **"Estimated Market Value"** — renamed from "AI Price Suggestion" on listing detail page. Buyer-context label: tells buyers what the item is worth, not a suggestion for sellers.
+- **"KASSIM Shield" tooltip** — badge now has `title="Seller-declared condition details — verified by KASSIM before listing goes live"` + `cursor:help` so new buyers understand the term on hover.
+- **Swap empty state buyer-friendly** — "No swap listings yet" + "List Your Item" CTA replaced with "No swap listings right now" + "Check back soon for items to swap." (no seller CTA shown to buyers who are just browsing).
+- **Register Google button consistent** — "Register with Google" → "Continue with Google" (same as login page).
 
 ### 2026-06-08 Session 5 Changes (commit da85b97)
 10 sell-flow UX improvements from expert review:
