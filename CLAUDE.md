@@ -604,7 +604,18 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 1), 11 pre-launch issues fixed after external review. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-08 (session 2), seller+buyer role-based review — 8 more issues fixed. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+### 2026-06-08 Session 2 Changes (commit ecd64c1)
+Seller + buyer role-based review of kassim.app — 8 issues found and fixed:
+- **Login page English** — fully translated from Malay (Emel→Email, Kata Laluan→Password, Log Masuk→Sign In, Belum ada akaun→Don't have an account, etc.)
+- **Login subtitle** — "Continue your auction experience" → "Sign in to your account"
+- **how-it-works Flash timer corrected** — Step 4 "+5min/+2.5min" → "No time added"; mobile step 4 description fixed; real example badges now show "23:00 left" / "6:00 left" instead of fake extensions; win timestamp 9:35pm → 9:34pm (9:04pm + 30 min)
+- **/jual badge** — "Malaysia's #1 Auction Platform" → "Malaysia's Smarter Auction Platform"
+- **/jual testimonials removed** — fake Ahmad F./Siti R./Razif M. stories replaced with 3 real feature benefit cards (AI Analysis, Zero Fraud, Delivery Handled)
+- **/jual Step 2** — "AI Sets the Price... You can adjust it" → "AI Analyses Your Photos" (accurate for Flash Bid where starting bid is always RM0)
+- **/jual payout copy** — "Money in 1–3 days" → "Paid out after buyer confirms receipt" (accurate)
+- **Hydration error #418** — `suppressHydrationWarning` added to `<html>` element in layout.tsx
 
 ### 2026-06-08 Session 1 Changes (commit fa7ab72)
 External review of kassim.app as an outsider — 11 issues found and fixed:
