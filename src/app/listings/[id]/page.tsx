@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { ListingDetailClient } from '@/components/listings/ListingDetailClient'
@@ -6,6 +7,7 @@ import { ListingCard } from '@/components/listings/ListingCard'
 import { SwapListingCard } from '@/components/listings/SwapListingCard'
 import { ListingChat } from '@/components/listings/ListingChat'
 import { WatchlistButton } from '@/components/listings/WatchlistButton'
+import { CheckCircle, Pencil } from 'lucide-react'
 import type { Metadata } from 'next'
 
 const CATEGORY_MS: Record<string, string> = {
@@ -69,8 +71,9 @@ async function getListing(id: string) {
   }
 }
 
-export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function ListingDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }> }) {
+  const [{ id }, sp] = await Promise.all([params, searchParams])
+  const isNew = sp.new === '1'
   const listing = await getListing(id)
   if (!listing) notFound()
 
@@ -123,6 +126,27 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div>
+      {isNew && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4 mb-2" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.3)' }}>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#16a34a' }} />
+              <div>
+                <p className="font-semibold text-sm" style={{ color: '#16a34a' }}>Your listing is live!</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Review it below — you can still edit if anything looks off.</p>
+              </div>
+            </div>
+            <Link
+              href={`/sell/edit/${listing.id}`}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold flex-shrink-0"
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </Link>
+          </div>
+        </div>
+      )}
       <ListingDetailClient
         listing={listing as any}
         currentUserId={user?.id ?? null}

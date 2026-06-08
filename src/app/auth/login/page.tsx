@@ -6,12 +6,19 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Lock, AlertCircle } from 'lucide-react'
 
+function getNext(): string {
+  if (typeof window === 'undefined') return '/dashboard'
+  return new URLSearchParams(window.location.search).get('next') || '/dashboard'
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  const isSellFlow = typeof window !== 'undefined' && window.location.search.includes('next=/sell')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -20,13 +27,14 @@ export default function LoginPage() {
     const { error } = await createClient().auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) { setError(error.message); return }
-    router.push('/dashboard')
+    router.push(getNext())
   }
 
   async function handleGoogle() {
+    const next = getNext()
     await createClient().auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     })
   }
 
@@ -37,7 +45,9 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
           <h1 className="text-2xl font-bold mb-2">Sign In to KASSIM</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Sign in to your account</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {isSellFlow ? 'Sign in to start selling your item' : 'Sign in to your account'}
+          </p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>

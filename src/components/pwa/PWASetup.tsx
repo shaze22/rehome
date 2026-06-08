@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { X, Download } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -25,6 +26,7 @@ const DISMISS_KEY = 'kassim_install_dismissed'
 export function PWASetup() {
   useServiceWorker()
 
+  const pathname = usePathname()
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showBanner, setShowBanner] = useState(false)
   const [installed, setInstalled] = useState(false)
@@ -62,7 +64,7 @@ export function PWASetup() {
     setDeferredPrompt(null)
   }
 
-  if (installed || !showBanner || !deferredPrompt) return null
+  if (installed || !showBanner || !deferredPrompt || pathname.startsWith('/auth')) return null
 
   return (
     <div

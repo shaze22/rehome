@@ -13,7 +13,7 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/auth/login?next=/sell')
 
   const params = await searchParams
   const isWelcome = params.welcome === '1'

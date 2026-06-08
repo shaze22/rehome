@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot, Upload, Loader2, AlertCircle, Info, Zap, ArrowLeftRight, Sparkles, RotateCcw } from 'lucide-react'
+import { Bot, Upload, Loader2, AlertCircle, Info, Zap, ArrowLeftRight, Sparkles, RotateCcw, ChevronDown } from 'lucide-react'
 import { MALAYSIAN_STATES } from '@/lib/delivery'
 import { createClient } from '@/lib/supabase/client'
 
@@ -33,6 +33,7 @@ export function SellForm({ userId }: Props) {
   const router = useRouter()
 
   const [mode, setMode] = useState<'FLASH' | 'SWAP'>('FLASH')
+  const [showModeInfo, setShowModeInfo] = useState(false)
 
   // Common fields
   const [title, setTitle] = useState('')
@@ -256,7 +257,7 @@ export function SellForm({ userId }: Props) {
       })
       const data = await res.json()
       if (!res.ok) { setSubmitError(data.error ?? 'Failed to create listing.'); return }
-      router.push(`/listings/${data.listing.id}`)
+      router.push(`/listings/${data.listing.id}?new=1`)
     } catch {
       setSubmitError('Network error. Please try again.')
     } finally {
@@ -303,15 +304,46 @@ export function SellForm({ userId }: Props) {
             Swap Bid
           </button>
         </div>
-        <p className="text-xs text-center mt-2 pb-1" style={{ color: 'var(--text-muted)' }}>
-          {mode === 'FLASH'
-            ? '30-minute auction after first bid. Get cash.'
-            : '3-day offer period. Swap items, cash, or a combination.'}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2 pb-1">
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            {mode === 'FLASH' ? '30-minute auction after first bid. Get cash.' : '3-day offer period. Swap items, cash, or a combination.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowModeInfo(v => !v)}
+            className="flex items-center gap-0.5 text-xs font-medium"
+            style={{ color: 'var(--teal)' }}
+          >
+            What&apos;s the difference?
+            <ChevronDown className={`w-3 h-3 transition-transform ${showModeInfo ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+        {showModeInfo && (
+          <div className="mt-2 rounded-xl p-4 grid grid-cols-2 gap-4" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div>
+              <p className="text-xs font-bold mb-2" style={{ color: 'var(--orange)' }}>Flash Bid</p>
+              <ul className="space-y-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <li>Get cash in your account</li>
+                <li>30-min timer starts on first bid</li>
+                <li>Starting bid always RM0</li>
+                <li>15% platform fee on sale</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-bold mb-2" style={{ color: '#16a34a' }}>Swap Bid</p>
+              <ul className="space-y-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <li>Trade items, cash, or both</li>
+                <li>Listing active for 72 hours</li>
+                <li>You review and accept offers</li>
+                <li>0% platform fee, completely free</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── 2. Photos + Auto AI Analysis ── */}
-      <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+      <section id="photos-section" className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-lg font-semibold">Item Photos</h2>
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{photos.length}/5</span>
@@ -503,7 +535,29 @@ export function SellForm({ userId }: Props) {
                 {Number(weightKg).toFixed(1)} kg
               </span>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>More accurate = more precise delivery quote. Min 0.1kg, Max 30kg.</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[
+                { label: 'Phone', kg: '0.2' },
+                { label: 'Clothes', kg: '0.5' },
+                { label: 'Book', kg: '0.5' },
+                { label: 'Laptop', kg: '2' },
+                { label: 'Chair', kg: '8' },
+              ].map(p => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setWeightKg(p.kg)}
+                  className="px-2.5 py-1 rounded-lg text-xs transition-all"
+                  style={{
+                    border: '1px solid var(--border)',
+                    backgroundColor: weightKg === p.kg ? 'rgba(20,184,166,0.12)' : 'var(--bg-elevated)',
+                    color: weightKg === p.kg ? 'var(--teal)' : 'var(--text-muted)',
+                  }}
+                >
+                  {p.label} ({p.kg}kg)
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -547,6 +601,7 @@ export function SellForm({ userId }: Props) {
           />
         </div>
 
+        <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Make sure your checkboxes match your score above.</p>
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: 'Has scratches?', value: hasScratch, setter: setHasScratch },
@@ -571,9 +626,13 @@ export function SellForm({ userId }: Props) {
       {/* ── 5. Swap Settings ── */}
       {mode === 'SWAP' && (
         <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-3">
             <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
             <h2 className="text-lg font-semibold">Swap Settings</h2>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-5 text-xs" style={{ backgroundColor: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)', color: 'var(--text-secondary)' }}>
+            <Info className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#16a34a' }} />
+            Your listing stays active for <strong className="mx-1">72 hours</strong> from when you publish. After that it expires automatically.
           </div>
 
           <div className="space-y-4">
@@ -581,7 +640,8 @@ export function SellForm({ userId }: Props) {
               type="button"
               onClick={getSwapAISuggestion}
               disabled={swapAiLoading || !title}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 disabled:opacity-50"
+              title={!title ? 'Fill in your item title first' : undefined}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ border: '1px solid rgba(22,163,74,0.5)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}
             >
               {swapAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
@@ -659,12 +719,17 @@ export function SellForm({ userId }: Props) {
 
       {/* ── 6. AI Price Suggestion ── */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-1">
           <Bot className="w-5 h-5" style={{ color: 'var(--purple)' }} />
           <h2 className="text-lg font-semibold">
-            {mode === 'FLASH' ? 'AI Price Suggestion' : 'AI Value Estimate'}
+            {mode === 'FLASH' ? 'Estimated Selling Price' : 'AI Value Estimate'}
           </h2>
         </div>
+        {mode === 'FLASH' && (
+          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+            See what your item may realistically sell for — for your reference only. Starting bid is always RM0.
+          </p>
+        )}
 
         <button
           type="button"
@@ -674,7 +739,7 @@ export function SellForm({ userId }: Props) {
           style={{ border: '1px solid rgba(168,85,247,0.5)', color: 'var(--purple)', backgroundColor: 'rgba(168,85,247,0.08)' }}
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-          {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'Get AI Price Suggestion' : 'Estimate Item Value'}
+          {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'See Estimated Selling Price' : 'Estimate Item Value'}
         </button>
 
         {aiError && (
@@ -727,10 +792,13 @@ export function SellForm({ userId }: Props) {
       )}
 
       <button
-        type="submit"
-        disabled={submitting || photos.length === 0}
-        className="w-full py-4 rounded-xl font-semibold text-white disabled:opacity-60 transition-all hover:scale-[1.02] active:scale-95 text-lg"
-        style={{ backgroundColor: mode === 'SWAP' ? '#16a34a' : 'var(--orange)' }}
+        type={photos.length === 0 ? 'button' : 'submit'}
+        disabled={submitting}
+        onClick={photos.length === 0 ? () => {
+          document.getElementById('photos-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } : undefined}
+        className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:scale-[1.02] active:scale-95 text-lg disabled:opacity-60"
+        style={{ backgroundColor: mode === 'SWAP' ? '#16a34a' : 'var(--orange)', opacity: !submitting && photos.length === 0 ? 0.6 : undefined }}
       >
         {submitting ? (
           <span className="flex items-center justify-center gap-2">
