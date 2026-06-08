@@ -188,8 +188,8 @@ export function ListingCard({ listing, priority = false }: Props) {
                 </span>
               ) : (
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <span className="hidden sm:inline">Bid opens timer</span>
-                  <span className="sm:hidden">Bid</span>
+                  <span className="hidden sm:inline">First bid starts timer</span>
+                  <span className="sm:hidden">No timer</span>
                 </span>
               )}
             </div>

@@ -134,7 +134,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             )}
             <div className="text-center">
               <p className="text-2xl font-bold font-mono" style={{ color: 'var(--teal)' }}>{profile._count.listings}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Listing</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Total Listings</p>
             </div>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               <div key={badge.id} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: `${badge.color}15`, border: `1px solid ${badge.color}40` }}>
                 <span className="text-lg">{badge.emoji}</span>
                 <div>
-                  <p className="text-xs font-semibold" style={{ color: badge.color }}>{badge.nameMs}</p>
+                  <p className="text-xs font-semibold" style={{ color: badge.color }}>{badge.name}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{badge.description}</p>
                 </div>
               </div>

@@ -324,13 +324,17 @@ async function HomeContent() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-6 sm:mt-8">
+          <div className="text-center mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/listings" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all text-sm sm:text-base" style={{ border: '1px solid var(--border)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}>
+              Browse Items
+              <ArrowRight className="w-4 h-4" />
+            </Link>
             <Link href="/sell" className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 rounded-xl font-bold text-white gradient-teal glow-teal hover:scale-105 transition-all text-sm sm:text-base">
               List Your First Item Free
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No listing fee · 15% only when sold</p>
           </div>
+          <p className="text-xs mt-3 text-center" style={{ color: 'var(--text-muted)' }}>No listing fee · 15% only when sold</p>
         </div>
       </section>
 

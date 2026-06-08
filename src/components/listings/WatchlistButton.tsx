@@ -45,7 +45,7 @@ export function WatchlistButton({ listingId, currentUserId }: Props) {
         border: `1px solid ${watching ? 'rgba(239,68,68,0.4)' : 'var(--border)'}`,
         color: watching ? 'var(--red)' : 'var(--text-secondary)',
       }}
-      title={currentUserId ? (watching ? 'Remove from saved' : 'Save listing') : 'Sign in to save'}
+      title={currentUserId ? (watching ? 'Remove from saved' : 'Save listing') : 'Save to get notified when the auction timer starts'}
     >
       <Heart className="w-3.5 h-3.5" fill={watching ? 'currentColor' : 'none'} />
       {watching ? 'Saved' : 'Save'}
