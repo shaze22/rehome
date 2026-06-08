@@ -54,7 +54,7 @@ async function getListing(id: string) {
     return await prisma.listing.findUnique({
       where: { id },
       include: {
-        seller: { select: { id: true, name: true, phone: true, rehomeScore: true, icVerified: true, state: true, icStatus: true, createdAt: true, swapScore: true, swapVerified: true, _count: { select: { listings: true } } } },
+        seller: { select: { id: true, name: true, phone: true, rehomeScore: true, icVerified: true, state: true, icStatus: true, createdAt: true, swapScore: true, swapVerified: true, _count: { select: { listings: { where: { status: 'ACTIVE', hiddenBySeller: false } } } } } },
         bids: {
           include: { bidder: { select: { name: true, rehomeScore: true } } },
           orderBy: { createdAt: 'desc' },

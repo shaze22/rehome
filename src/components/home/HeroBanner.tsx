@@ -10,7 +10,7 @@ export function HeroBanner() {
 
       <div className="max-w-3xl mx-auto relative text-center">
         <p className="text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-3" style={{ color: 'var(--teal)' }}>
-          Malaysia&apos;s #1 Pre-Loved Marketplace
+          Malaysia&apos;s Smarter Pre-Loved Marketplace
         </p>
         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-2 sm:mb-3 italic">
           <span style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>

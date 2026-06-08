@@ -64,10 +64,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     return (
       <div className="max-w-7xl mx-auto px-4 py-24 text-center">
         <UserX className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-        <h1 className="text-2xl font-bold mb-2">Profil Tidak Dijumpai</h1>
-        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Pengguna ini tidak wujud atau telah dihapuskan.</p>
+        <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>This user does not exist or has been removed.</p>
         <Link href="/" className="inline-block px-5 py-2.5 rounded-xl font-medium text-white gradient-teal">
-          Balik ke Laman Utama
+          Back to Home
         </Link>
       </div>
     )
@@ -95,10 +95,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold">{profile.name ?? 'Pengguna Tanpa Nama'}</h1>
+              <h1 className="text-2xl font-bold">{profile.name ?? 'Anonymous User'}</h1>
               {profile.icVerified && (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)', border: '1px solid rgba(0,217,165,0.3)' }}>
-                  <CheckCircle className="w-3 h-3" /> IC Disahkan
+                  <CheckCircle className="w-3 h-3" /> IC Verified
                 </span>
               )}
             </div>
@@ -111,7 +111,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               )}
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                Ahli sejak {new Date(profile.createdAt).toLocaleDateString('ms-MY', { year: 'numeric', month: 'long' })}
+                Member since {new Date(profile.createdAt).toLocaleDateString('en-MY', { year: 'numeric', month: 'long' })}
               </span>
             </div>
           </div>
@@ -149,7 +149,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <div className="h-full rounded-full transition-all" style={{ width: `${profile.rehomeScore}%`, backgroundColor: scoreColor }} />
           </div>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-            Berdasarkan sejarah transaksi, masa respons dan rekod pertikaian
+            Based on transaction history, response time and dispute records
           </p>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Award className="w-5 h-5" style={{ color: 'var(--yellow)' }} />
-            Lencana ({earnedBadges.length})
+            Badges ({earnedBadges.length})
           </h2>
           <div className="flex flex-wrap gap-3">
             {earnedBadges.map(badge => (
@@ -183,14 +183,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               <ArrowLeftRight className="w-4 h-4" style={{ color: '#16a34a' }} />
               <div>
                 <p className="text-xs font-semibold" style={{ color: '#16a34a' }}>Verified Swapper</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{profile.successfulSwaps} swap berjaya</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{profile.successfulSwaps} successful swaps</p>
               </div>
             </div>
           )}
           {!profile.swapVerified && profile.successfulSwaps > 0 && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
               <ArrowLeftRight className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{profile.successfulSwaps} swap berjaya · {5 - profile.successfulSwaps} lagi untuk Verified</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{profile.successfulSwaps} successful swaps · {5 - profile.successfulSwaps} more for Verified</p>
             </div>
           )}
         </div>
@@ -201,7 +201,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <ArrowLeftRight className="w-5 h-5" style={{ color: '#16a34a' }} />
-            Sejarah Pertukaran ({profile.swapHistory.length})
+            Swap History ({profile.swapHistory.length})
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {profile.swapHistory.map(tx => {
@@ -214,13 +214,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                       <img src={tx.listing.photos[0]} alt={tx.listing.title} className="w-full h-full object-cover" />
                     )}
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: 'rgba(22,163,74,0.9)', color: 'white' }}>
-                      ✓ Selesai
+                      ✓ Completed
                     </div>
                   </div>
                   <div className="p-3">
                     <p className="text-sm font-medium line-clamp-1">{tx.listing.title}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {isSeller ? 'Ditukar kepada' : 'Ditukar dari'} {partner.name ?? 'Pengguna'}
+                      {isSeller ? 'Traded to' : 'Traded from'} {partner.name ?? 'User'}
                     </p>
                   </div>
                 </a>
@@ -233,13 +233,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       {/* Active Listings */}
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
         <Package className="w-5 h-5" style={{ color: 'var(--teal)' }} />
-        Listing Aktif ({profile.listings.length})
+        Active Listings ({profile.listings.length})
       </h2>
 
       {profile.listings.length === 0 ? (
         <div className="rounded-xl p-12 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <Package className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>Tiada listing aktif pada masa ini</p>
+          <p style={{ color: 'var(--text-secondary)' }}>No active listings at this time</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

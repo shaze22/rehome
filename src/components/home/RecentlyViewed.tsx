@@ -34,7 +34,11 @@ export function RecentlyViewed() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY)
-      if (raw) setItems(JSON.parse(raw))
+      if (!raw) return
+      const all: RecentItem[] = JSON.parse(raw)
+      const valid = all.filter(i => !i.title.startsWith('[') && !i.title.toLowerCase().startsWith('[test]'))
+      if (valid.length !== all.length) localStorage.setItem(KEY, JSON.stringify(valid))
+      setItems(valid)
     } catch {
       // ignore
     }

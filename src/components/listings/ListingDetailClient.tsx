@@ -989,7 +989,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                         <span>Est. delivery to your address</span>
                       </div>
                       <span className="font-mono font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        {autoDeliveryEst !== null ? `~RM ${autoDeliveryEst.toFixed(2)}` : currentUserState ? '...' : 'Set in profile'}
+                        {autoDeliveryEst !== null ? `~RM ${autoDeliveryEst.toFixed(2)}` : currentUserState ? '...' : 'Login to see estimate'}
                       </span>
                     </div>
                   </>

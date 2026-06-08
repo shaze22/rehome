@@ -5,6 +5,7 @@ import { Moon, Sun } from 'lucide-react'
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('kassim_theme') as 'dark' | 'light' | null
@@ -12,6 +13,7 @@ export function ThemeToggle() {
     const initial = saved ?? (systemLight ? 'light' : 'dark')
     setTheme(initial)
     document.documentElement.dataset.theme = initial === 'light' ? 'light' : ''
+    setMounted(true)
   }, [])
 
   function toggle() {
@@ -20,6 +22,10 @@ export function ThemeToggle() {
     localStorage.setItem('kassim_theme', next)
     document.documentElement.dataset.theme = next === 'light' ? 'light' : ''
   }
+
+  if (!mounted) return (
+    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }} />
+  )
 
   return (
     <button

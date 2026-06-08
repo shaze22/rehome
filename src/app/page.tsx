@@ -166,6 +166,9 @@ async function HomeContent() {
   ])
   const { sold: totalTransactions, co2: totalCO2, activeFlash, activeSwap, totalSales, co2Full } = stats
   const hasRealData = totalTransactions > 0
+  const uniqueTrendingListings = trendingListings.filter(t =>
+    !flashListings.some(f => f.id === t.id) && !swapListings.some(s => s.id === t.id)
+  )
 
   return (
     <>
@@ -248,8 +251,8 @@ async function HomeContent() {
         </div>
       </section>
 
-      {/* Trending This Week */}
-      {trendingListings.length >= 2 && (
+      {/* Trending This Week — only show if distinct from Flash/Swap sections */}
+      {uniqueTrendingListings.length >= 2 && (
         <section className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -262,7 +265,7 @@ async function HomeContent() {
               </div>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-              {trendingListings.map(listing => (
+              {uniqueTrendingListings.map(listing => (
                 listing.mode === 'SWAP'
                   ? <SwapListingCard key={listing.id} listing={listing as any} />
                   : <ListingCard key={listing.id} listing={listing as any} />
@@ -331,8 +334,8 @@ async function HomeContent() {
         </div>
       </section>
 
-      {/* Waste Counter */}
-      {hasRealData && <WasteCounter totalCO2={totalCO2} totalTransactions={totalTransactions} />}
+      {/* Waste Counter — uses same co2Full as stats bar to stay consistent */}
+      {co2Full > 0 && <WasteCounter totalCO2={co2Full} totalTransactions={totalTransactions} />}
     </>
   )
 }

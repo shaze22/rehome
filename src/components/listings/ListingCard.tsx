@@ -174,8 +174,8 @@ export function ListingCard({ listing, priority = false }: Props) {
               <p className="text-sm sm:text-lg font-bold font-mono" style={{ color: isFree ? 'var(--green)' : 'var(--teal)' }}>
                 {isFree ? (
                   <>
-                    <span className="sm:hidden">FREE</span>
-                    <span className="hidden sm:inline">RM 0 — FREE</span>
+                    <span className="sm:hidden">RM 0</span>
+                    <span className="hidden sm:inline">Starting: RM 0</span>
                   </>
                 ) : `RM ${bid.toFixed(0)}`}
               </p>
@@ -188,8 +188,8 @@ export function ListingCard({ listing, priority = false }: Props) {
                 </span>
               ) : (
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <span className="hidden sm:inline">Waiting</span>
-                  <span className="sm:hidden">—</span>
+                  <span className="hidden sm:inline">Bid opens timer</span>
+                  <span className="sm:hidden">Bid</span>
                 </span>
               )}
             </div>

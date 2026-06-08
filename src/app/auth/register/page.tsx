@@ -80,7 +80,7 @@ export default function RegisterPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
           <h1 className="text-2xl font-bold mb-2">Join KASSIM</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Join thousands of Malaysians buying &amp; selling smarter</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Buy, sell &amp; swap pre-loved items the smarter way</p>
         </div>
 
         <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
