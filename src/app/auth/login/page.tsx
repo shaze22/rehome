@@ -19,6 +19,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   const isSellFlow = typeof window !== 'undefined' && window.location.search.includes('next=/sell')
+  const isBidFlow = typeof window !== 'undefined' && window.location.search.includes('next=/listings/')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -46,7 +47,7 @@ export default function LoginPage() {
           <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
           <h1 className="text-2xl font-bold mb-2">Sign In to KASSIM</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {isSellFlow ? 'Sign in to start selling your item' : 'Sign in to your account'}
+            {isSellFlow ? 'Sign in to start selling your item' : isBidFlow ? 'Sign in to place your bid' : 'Sign in to your account'}
           </p>
         </div>
 

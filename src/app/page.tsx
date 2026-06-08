@@ -238,8 +238,8 @@ async function HomeContent() {
           {swapListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
               <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">No swap listings yet</p>
-              <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white inline-block mt-2" style={{ backgroundColor: '#16a34a' }}>List Your Item</Link>
+              <p className="font-medium mb-1">No swap listings right now</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Check back soon for items to swap.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">

@@ -367,6 +367,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
     }).catch(() => {})
   }, [currentUserId])
 
+  // Restore bid amount entered before login redirect
+  useEffect(() => {
+    const key = `kassim_bid_${listing.id}`
+    const saved = sessionStorage.getItem(key)
+    if (saved && !isNaN(Number(saved))) {
+      setBidAmount(Number(saved))
+      sessionStorage.removeItem(key)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const isSwap = initialListing.mode === 'SWAP'
 
   // Auto-fetch delivery estimate from user's saved state (silent, no user action needed)
@@ -675,9 +685,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
 
           {/* Condition Report */}
           <div className="mt-6 rounded-xl p-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 flex-wrap">
               <Shield className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-              Condition Report (KASSIM Shield)
+              Condition Report
+              <span
+                className="text-xs font-normal px-1.5 py-0.5 rounded"
+                title="Seller-declared condition details — verified by KASSIM before listing goes live"
+                style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.2)', cursor: 'help' }}
+              >
+                KASSIM Shield
+              </span>
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -779,7 +796,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <Bot className="w-4 h-4" style={{ color: 'var(--purple)' }} />
-                <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>AI Price Suggestion</span>
+                <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>Estimated Market Value</span>
               </div>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--purple)' }}>
                 RM {listing.aiSuggestedMin} to RM {listing.aiSuggestedMax}
@@ -915,9 +932,17 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     </button>
                   </div>
                 ) : !currentUserId ? (
-                  <Link href="/auth/login" className="block w-full text-center py-3 rounded-xl font-semibold text-white" style={{ backgroundColor: '#16a34a' }}>
-                    Log In to Make an Offer
-                  </Link>
+                  <div className="space-y-2">
+                    <Link href={`/auth/login?next=/listings/${listing.id}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white" style={{ backgroundColor: '#16a34a' }}>
+                      Log In to Make an Offer
+                    </Link>
+                    <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+                      New here?{' '}
+                      <Link href="/auth/register" className="font-medium hover:underline" style={{ color: '#16a34a' }}>
+                        Register free
+                      </Link>
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={() => setShowOfferModal(true)}
@@ -1026,9 +1051,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   </div>
                 )}
                 {!currentUserId ? (
-                  <Link href={`/auth/login?next=/listings/${listing.id}`} className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal">
-                    Log In to Bid
-                  </Link>
+                  <div className="space-y-2">
+                    <Link
+                      href={`/auth/login?next=/listings/${listing.id}`}
+                      onClick={() => sessionStorage.setItem(`kassim_bid_${listing.id}`, String(bidAmount))}
+                      className="block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal"
+                    >
+                      Log In to Bid
+                    </Link>
+                    <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+                      New here?{' '}
+                      <Link href="/auth/register" className="font-medium hover:underline" style={{ color: 'var(--teal)' }}>
+                        Register free
+                      </Link>
+                    </p>
+                  </div>
                 ) : (
                   <button
                     type="submit"

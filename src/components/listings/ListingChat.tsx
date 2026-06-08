@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { MessageCircle, Send, Loader2 } from 'lucide-react'
 
@@ -127,9 +128,10 @@ export function ListingChat({ listingId, currentUserId, sellerId }: Props) {
               </button>
             </form>
           ) : (
-            <p className="text-center text-xs p-3" style={{ color: 'var(--text-muted)' }}>
-              Sign in to send a message
-            </p>
+            <div className="flex items-center justify-center gap-1 p-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+              <Link href={`/auth/login?next=/listings/${listingId}`} className="font-medium hover:underline" style={{ color: 'var(--teal)' }}>Sign in</Link>
+              <span>to message the seller</span>
+            </div>
           )}
         </div>
       )}

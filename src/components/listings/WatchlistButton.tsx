@@ -20,7 +20,11 @@ export function WatchlistButton({ listingId, currentUserId }: Props) {
   }, [listingId, currentUserId])
 
   async function toggle() {
-    if (!currentUserId || loading) return
+    if (loading) return
+    if (!currentUserId) {
+      window.location.href = `/auth/login?next=${encodeURIComponent(window.location.pathname)}`
+      return
+    }
     setLoading(true)
     const res = await fetch('/api/watchlist', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -34,7 +38,7 @@ export function WatchlistButton({ listingId, currentUserId }: Props) {
   return (
     <button
       onClick={toggle}
-      disabled={loading || !currentUserId}
+      disabled={loading}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 disabled:opacity-40"
       style={{
         backgroundColor: watching ? 'rgba(239,68,68,0.1)' : 'var(--bg-elevated)',
