@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot, Upload, Loader2, AlertCircle, Info, Zap, ArrowLeftRight } from 'lucide-react'
+import { Bot, Upload, Loader2, AlertCircle, Info, Zap, ArrowLeftRight, Sparkles, RotateCcw } from 'lucide-react'
 import { MALAYSIAN_STATES } from '@/lib/delivery'
 import { createClient } from '@/lib/supabase/client'
 
@@ -68,28 +68,45 @@ export function SellForm({ userId }: Props) {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
 
+  // Photo AI analysis state
   const [photoAnalysing, setPhotoAnalysing] = useState(false)
   const [photoAnalysisError, setPhotoAnalysisError] = useState('')
+  const [photoAnalysisDone, setPhotoAnalysisDone] = useState(false)
+  // Track which fields were AI-populated (so we can show a badge)
+  const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set())
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  async function analysePhotos() {
-    if (photos.length === 0) { setPhotoAnalysisError('Please upload at least 1 photo first.'); return }
+  function markAiFilled(fields: string[]) {
+    setAiFilledFields(prev => new Set([...prev, ...fields]))
+  }
+
+  function clearAiFilled(field: string) {
+    setAiFilledFields(prev => { const s = new Set(prev); s.delete(field); return s })
+  }
+
+  // Accept optional URLs so we can call immediately after upload (before state update settles)
+  async function analysePhotos(urlsToAnalyse?: string[]) {
+    const urls = urlsToAnalyse ?? photos
+    if (urls.length === 0) { setPhotoAnalysisError('Please upload at least 1 photo first.'); return }
     setPhotoAnalysing(true)
     setPhotoAnalysisError('')
     try {
       const res = await fetch('/api/gemini/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photoUrls: photos, category }),
+        body: JSON.stringify({ photoUrls: urls, category }),
       })
       const data = await res.json()
-      if (!res.ok) { setPhotoAnalysisError(data.error ?? 'AI gagal.'); return }
-      if (!data.isPhotoValid) { setPhotoAnalysisError(`Photo is unclear: ${data.invalidReason ?? 'Please upload a clearer photo.'}`); return }
-      if (data.title) setTitle(data.title)
-      if (data.description) setDescription(data.description)
-      if (data.conditionScore) setCondition(data.conditionScore)
+      if (!res.ok) { setPhotoAnalysisError(data.error ?? 'AI analysis failed.'); return }
+      if (!data.isPhotoValid) { setPhotoAnalysisError(`Photo unclear: ${data.invalidReason ?? 'Please upload a clearer photo.'}`); return }
+      const filled: string[] = []
+      if (data.title) { setTitle(data.title); filled.push('title') }
+      if (data.description) { setDescription(data.description); filled.push('description') }
+      if (data.conditionScore) { setCondition(data.conditionScore); filled.push('condition') }
+      markAiFilled(filled)
+      setPhotoAnalysisDone(true)
     } catch {
       setPhotoAnalysisError('Failed to contact AI. Please try again.')
     } finally {
@@ -134,7 +151,7 @@ export function SellForm({ userId }: Props) {
         body: JSON.stringify({ category, condition, originalPrice: Number(originalPrice), state }),
       })
       const data = await res.json()
-      if (!res.ok) { setAiError(data.error ?? 'AI gagal.'); return }
+      if (!res.ok) { setAiError(data.error ?? 'AI failed.'); return }
       setAiSuggestion(data)
       if (mode === 'FLASH') setStartingBid(String(data.suggested_min))
     } catch {
@@ -153,8 +170,9 @@ export function SellForm({ userId }: Props) {
     setPhotoUploading(true)
     setSubmitError('')
     const supabase = createClient()
+    const newUrls: string[] = []
+
     for (const file of files) {
-      // Compress to JPEG max 1200px — keeps og:image fast for WhatsApp preview
       let blob: Blob = file
       try {
         blob = await new Promise<Blob>((resolve, reject) => {
@@ -188,10 +206,18 @@ export function SellForm({ userId }: Props) {
       }
       if (data) {
         const { data: { publicUrl } } = supabase.storage.from('rehome-photos').getPublicUrl(data.path)
-        setPhotos(prev => [...prev, publicUrl])
+        newUrls.push(publicUrl)
       }
     }
+
+    const allPhotos = [...photos, ...newUrls]
+    setPhotos(allPhotos)
     setPhotoUploading(false)
+
+    // Auto-trigger AI analysis on first upload
+    if (newUrls.length > 0 && photos.length === 0) {
+      await analysePhotos(allPhotos)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -244,33 +270,37 @@ export function SellForm({ userId }: Props) {
     color: 'var(--text-primary)',
   }
 
+  function AiBadge() {
+    return (
+      <span className="ml-1.5 inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.25)' }}>
+        <Sparkles className="w-2.5 h-2.5" />AI
+      </span>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
 
-      {/* Mode Toggle */}
+      {/* ── 1. Mode Toggle ── */}
       <section className="rounded-2xl p-2" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="grid grid-cols-2 gap-1">
           <button
             type="button"
             onClick={() => setMode('FLASH')}
             className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-all"
-            style={mode === 'FLASH'
-              ? { backgroundColor: 'var(--orange)', color: 'white' }
-              : { color: 'var(--text-secondary)' }}
+            style={mode === 'FLASH' ? { backgroundColor: 'var(--orange)', color: 'white' } : { color: 'var(--text-secondary)' }}
           >
             <Zap className="w-4 h-4" />
-            Flash Auction
+            Flash Bid
           </button>
           <button
             type="button"
             onClick={() => setMode('SWAP')}
             className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-all"
-            style={mode === 'SWAP'
-              ? { backgroundColor: '#16a34a', color: 'white' }
-              : { color: 'var(--text-secondary)' }}
+            style={mode === 'SWAP' ? { backgroundColor: '#16a34a', color: 'white' } : { color: 'var(--text-secondary)' }}
           >
             <ArrowLeftRight className="w-4 h-4" />
-            Swap
+            Swap Bid
           </button>
         </div>
         <p className="text-xs text-center mt-2 pb-1" style={{ color: 'var(--text-muted)' }}>
@@ -280,29 +310,154 @@ export function SellForm({ userId }: Props) {
         </p>
       </section>
 
-      {/* Basic Info */}
+      {/* ── 2. Photos + Auto AI Analysis ── */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-5">Basic Information</h2>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-lg font-semibold">Item Photos</h2>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{photos.length}/5</span>
+        </div>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+          Upload photos first — AI will automatically fill in your title, description and condition.
+        </p>
+
+        {/* Upload zone */}
+        {photos.length < 5 && (
+          <label
+            className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl cursor-pointer transition-all"
+            style={{
+              border: `2px dashed ${photos.length === 0 ? 'var(--teal)' : 'var(--border)'}`,
+              backgroundColor: photos.length === 0 ? 'rgba(20,184,166,0.04)' : 'var(--bg-elevated)',
+            }}
+          >
+            <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" disabled={photoUploading || photoAnalysing} />
+            {photoUploading ? (
+              <>
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--teal)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--teal)' }}>Uploading...</p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8" style={{ color: photos.length === 0 ? 'var(--teal)' : 'var(--text-muted)' }} />
+                <div className="text-center">
+                  <p className="text-sm font-medium" style={{ color: photos.length === 0 ? 'var(--teal)' : 'var(--text-secondary)' }}>
+                    {photos.length === 0 ? 'Upload photos to start' : 'Add more photos'}
+                  </p>
+                  {photos.length === 0 && (
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                      AI will generate your listing automatically
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </label>
+        )}
+
+        {/* Thumbnails */}
+        {photos.length > 0 && (
+          <div className="flex flex-wrap gap-3 mt-4">
+            {photos.map((url, i) => (
+              <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setPhotos(p => p.filter((_, j) => j !== i))}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{ backgroundColor: 'rgba(239,68,68,0.85)', color: 'white' }}
+                >
+                  ×
+                </button>
+                {i === 0 && (
+                  <span className="absolute bottom-1 left-1 text-xs px-1 rounded font-bold" style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: 'white' }}>Cover</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* AI analysis status */}
+        {photoAnalysing && (
+          <div className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.25)' }}>
+            <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" style={{ color: 'var(--teal)' }} />
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--teal)' }}>AI is analysing your photos...</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Generating title, description and condition score</p>
+            </div>
+          </div>
+        )}
+
+        {photoAnalysisDone && !photoAnalysing && (
+          <div className="mt-4 flex items-center justify-between px-4 py-2.5 rounded-xl" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)' }}>
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--teal)' }}>
+              <Sparkles className="w-4 h-4" />
+              <span className="font-medium">AI filled your listing details</span>
+              <span style={{ color: 'var(--text-muted)' }}>— review and edit below</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => analysePhotos()}
+              disabled={photoAnalysing}
+              className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg"
+              style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            >
+              <RotateCcw className="w-3 h-3" />
+              Re-analyse
+            </button>
+          </div>
+        )}
+
+        {photoAnalysisError && (
+          <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg mt-3" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {photoAnalysisError}
+          </div>
+        )}
+
+        {/* Manual trigger if photos exist but analysis not done */}
+        {photos.length > 0 && !photoAnalysisDone && !photoAnalysing && (
+          <button
+            type="button"
+            onClick={() => analysePhotos()}
+            className="mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105"
+            style={{ border: '1px solid rgba(20,184,166,0.5)', color: 'var(--teal)', backgroundColor: 'rgba(20,184,166,0.08)' }}
+          >
+            <Bot className="w-4 h-4" />
+            Auto-fill from photos (AI)
+          </button>
+        )}
+      </section>
+
+      {/* ── 3. Listing Details ── */}
+      <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <h2 className="text-lg font-semibold mb-5">Listing Details</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Item Title *</label>
+            <label className="flex items-center text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Item Title *
+              {aiFilledFields.has('title') && <AiBadge />}
+            </label>
             <input
-              type="text" required value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. iPhone 13 Pro 256GB Space Gray"
+              type="text" required value={title}
+              onChange={e => { setTitle(e.target.value); clearAiFilled('title') }}
+              placeholder={photos.length === 0 ? 'Upload photos first — AI will generate this' : 'e.g. iPhone 13 Pro 256GB Space Gray'}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={inputStyle}
+              style={{ ...inputStyle, borderColor: aiFilledFields.has('title') ? 'rgba(20,184,166,0.4)' : undefined }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Description *</label>
+            <label className="flex items-center text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Description *
+              {aiFilledFields.has('description') && <AiBadge />}
+            </label>
             <textarea
-              required value={description} onChange={e => setDescription(e.target.value)}
-              placeholder="Describe the condition, accessories included, reason for selling/swapping..."
+              required value={description}
+              onChange={e => { setDescription(e.target.value); clearAiFilled('description') }}
+              placeholder={photos.length === 0 ? 'Upload photos first — AI will generate this' : 'Describe condition, accessories, reason for selling...'}
               rows={4}
               className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
-              style={inputStyle}
+              style={{ ...inputStyle, borderColor: aiFilledFields.has('description') ? 'rgba(20,184,166,0.4)' : undefined }}
             />
           </div>
 
@@ -332,22 +487,19 @@ export function SellForm({ userId }: Props) {
 
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Estimated Weight (kg) - for delivery quote
+              Estimated Weight (kg) — for delivery quote
             </label>
             <div className="flex items-center gap-3">
               <input
                 type="range" min={0.1} max={30} step={0.1}
-                value={weightKg}
-                onChange={e => setWeightKg(e.target.value)}
+                value={weightKg} onChange={e => setWeightKg(e.target.value)}
                 className="flex-1 accent-teal-400"
               />
               <span className="text-sm font-mono font-bold w-14 text-right" style={{ color: 'var(--teal)' }}>
                 {Number(weightKg).toFixed(1)} kg
               </span>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-              More accurate → more precise delivery quote. Min 0.1kg, Max 30kg.
-            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>More accurate = more precise delivery quote. Min 0.1kg, Max 30kg.</p>
           </div>
 
           <div>
@@ -363,12 +515,55 @@ export function SellForm({ userId }: Props) {
           <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: mode === 'SWAP' ? 'rgba(22,163,74,0.08)' : 'rgba(20,184,166,0.08)', border: `1px solid ${mode === 'SWAP' ? 'rgba(22,163,74,0.2)' : 'rgba(20,184,166,0.2)'}`, color: 'var(--text-secondary)' }}>
             {mode === 'FLASH'
               ? 'Listing stays active until the first bidder. After that, auction lasts only 30 minutes.'
-              : 'Listing stays active for 3 days (72 hours). All offers are accepted within this period.'}
+              : 'Listing stays active for 3 days (72 hours). All offers accepted within this period.'}
           </div>
         </div>
       </section>
 
-      {/* Swap Settings */}
+      {/* ── 4. Condition ── */}
+      <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-lg font-semibold">Condition Score</h2>
+          {aiFilledFields.has('condition') && <AiBadge />}
+        </div>
+        <p className="text-xs mb-5" style={{ color: 'var(--text-secondary)' }}>1 = Very worn, 10 = Like new</p>
+
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Condition</span>
+            <span className="text-2xl font-bold font-mono" style={{ color: condition >= 7 ? 'var(--green)' : condition >= 4 ? 'var(--yellow)' : 'var(--orange)' }}>
+              {condition}/10
+            </span>
+          </div>
+          <input
+            type="range" min={1} max={10} value={condition}
+            onChange={e => { setCondition(Number(e.target.value)); clearAiFilled('condition') }}
+            className="w-full accent-teal-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: 'Has scratches?', value: hasScratch, setter: setHasScratch },
+            { label: 'Still functional?', value: isFunctional, setter: setIsFunctional },
+            { label: 'Complete parts?', value: hasCompleteParts, setter: setHasCompleteParts },
+            { label: 'Original box?', value: hasOriginalBox, setter: setHasOriginalBox },
+            { label: 'Under warranty?', value: hasWarranty, setter: setHasWarranty },
+          ].map(item => (
+            <label key={item.label} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+              <input
+                type="checkbox"
+                checked={item.value}
+                onChange={e => item.setter(e.target.checked)}
+                className="w-4 h-4 accent-teal-500"
+              />
+              <span className="text-sm">{item.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 5. Swap Settings ── */}
       {mode === 'SWAP' && (
         <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
           <div className="flex items-center gap-2 mb-5">
@@ -377,7 +572,6 @@ export function SellForm({ userId }: Props) {
           </div>
 
           <div className="space-y-4">
-            {/* AI Swap Suggestion */}
             <button
               type="button"
               onClick={getSwapAISuggestion}
@@ -429,21 +623,14 @@ export function SellForm({ userId }: Props) {
 
             <div className="space-y-3">
               <label className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-                <input
-                  type="checkbox" checked={swapOpenOffers} onChange={e => setSwapOpenOffers(e.target.checked)}
-                  className="w-4 h-4 accent-green-600"
-                />
+                <input type="checkbox" checked={swapOpenOffers} onChange={e => setSwapOpenOffers(e.target.checked)} className="w-4 h-4 accent-green-600" />
                 <div>
                   <p className="text-sm font-medium">Accept any offer</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Open to all offer types even if category differs</p>
                 </div>
               </label>
-
               <label className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-                <input
-                  type="checkbox" checked={swapAcceptCash} onChange={e => setSwapAcceptCash(e.target.checked)}
-                  className="w-4 h-4 accent-green-600"
-                />
+                <input type="checkbox" checked={swapAcceptCash} onChange={e => setSwapAcceptCash(e.target.checked)} className="w-4 h-4 accent-green-600" />
                 <div>
                   <p className="text-sm font-medium">Accept cash offers</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Allow cash-only offers as a last resort</p>
@@ -452,63 +639,20 @@ export function SellForm({ userId }: Props) {
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Minimum cash top-up (RM) for swap + cash (optional)
-              </label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Minimum cash top-up (RM) for swap + cash (optional)</label>
               <input
                 type="number" min={0} step={0.01} value={swapMinCashTopup} onChange={e => setSwapMinCashTopup(e.target.value)}
                 placeholder="0"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
                 style={inputStyle}
               />
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                If swap + cash, the bidder must add at least this amount in RM.
-              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>If swap + cash, the bidder must add at least this amount in RM.</p>
             </div>
           </div>
         </section>
       )}
 
-      {/* Condition */}
-      <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-2">Condition Score</h2>
-        <p className="text-xs mb-5" style={{ color: 'var(--text-secondary)' }}>1 = Very worn, 10 = Like new</p>
-
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Condition</span>
-            <span className="text-2xl font-bold font-mono" style={{ color: condition >= 7 ? 'var(--green)' : condition >= 4 ? 'var(--yellow)' : 'var(--orange)' }}>
-              {condition}/10
-            </span>
-          </div>
-          <input
-            type="range" min={1} max={10} value={condition} onChange={e => setCondition(Number(e.target.value))}
-            className="w-full accent-teal-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Has scratches?', value: hasScratch, setter: setHasScratch },
-            { label: 'Still functional?', value: isFunctional, setter: setIsFunctional },
-            { label: 'Complete parts?', value: hasCompleteParts, setter: setHasCompleteParts },
-            { label: 'Original box?', value: hasOriginalBox, setter: setHasOriginalBox },
-            { label: 'Under warranty?', value: hasWarranty, setter: setHasWarranty },
-          ].map(item => (
-            <label key={item.label} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer" style={{ backgroundColor: 'var(--bg-elevated)' }}>
-              <input
-                type="checkbox"
-                checked={item.value}
-                onChange={e => item.setter(e.target.checked)}
-                className="w-4 h-4 accent-teal-500"
-              />
-              <span className="text-sm">{item.label}</span>
-            </label>
-          ))}
-        </div>
-      </section>
-
-      {/* AI Pricing / Value Estimate */}
+      {/* ── 6. AI Price Suggestion ── */}
       <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-2 mb-4">
           <Bot className="w-5 h-5" style={{ color: 'var(--purple)' }} />
@@ -525,7 +669,7 @@ export function SellForm({ userId }: Props) {
           style={{ border: '1px solid rgba(168,85,247,0.5)', color: 'var(--purple)', backgroundColor: 'rgba(168,85,247,0.08)' }}
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-          {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'Get AI Suggestion' : 'Estimate Item Value'}
+          {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'Get AI Price Suggestion' : 'Estimate Item Value'}
         </button>
 
         {aiError && (
@@ -565,65 +709,8 @@ export function SellForm({ userId }: Props) {
             <span className="text-2xl font-black font-mono" style={{ color: '#ff6b35' }}>RM 0</span>
             <div>
               <p className="text-sm font-semibold" style={{ color: '#ff6b35' }}>Starting bid is always RM0</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>You want to clear your item. Anyone who bids wins — even at RM0 if they are the only bidder.</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Anyone who bids wins — even at RM0 if they are the only bidder.</p>
             </div>
-          </div>
-        )}
-      </section>
-
-      {/* Photos */}
-      <section className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        <h2 className="text-lg font-semibold mb-4">Item Photos (Max 5)</h2>
-
-        <label className="flex flex-col items-center justify-center gap-3 p-8 rounded-xl cursor-pointer transition-colors" style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--bg-elevated)' }}>
-          <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" disabled={photos.length >= 5} />
-          {photoUploading ? (
-            <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--teal)' }} />
-          ) : (
-            <>
-              <Upload className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Click to upload photos</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{photos.length}/5 photos</p>
-            </>
-          )}
-        </label>
-
-        {photos.length > 0 && (
-          <div className="flex flex-wrap gap-3 mt-4">
-            {photos.map((url, i) => (
-              <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setPhotos(p => p.filter((_, j) => j !== i))}
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ backgroundColor: 'rgba(239,68,68,0.8)', color: 'white' }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {photos.length > 0 && (
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={analysePhotos}
-              disabled={photoAnalysing}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105"
-              style={{ border: '1px solid rgba(20,184,166,0.5)', color: 'var(--teal)', backgroundColor: 'rgba(20,184,166,0.08)' }}
-            >
-              {photoAnalysing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {photoAnalysing ? 'AI is analysing photos...' : '✨ Auto-fill from Photo (AI)'}
-            </button>
-            {photoAnalysisError && (
-              <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg mt-2" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {photoAnalysisError}
-              </div>
-            )}
-            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>AI will automatically fill in the title, description and condition score.</p>
           </div>
         )}
       </section>
@@ -636,7 +723,7 @@ export function SellForm({ userId }: Props) {
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || photos.length === 0}
         className="w-full py-4 rounded-xl font-semibold text-white disabled:opacity-60 transition-all hover:scale-[1.02] active:scale-95 text-lg"
         style={{ backgroundColor: mode === 'SWAP' ? '#16a34a' : 'var(--orange)' }}
       >
@@ -645,8 +732,8 @@ export function SellForm({ userId }: Props) {
             <Loader2 className="w-5 h-5 animate-spin" />
             {mode === 'FLASH' ? 'Creating Auction...' : 'Publishing Swap...'}
           </span>
-        ) : (
-          mode === 'FLASH' ? 'Publish Auction' : 'Publish Swap'
+        ) : photos.length === 0 ? 'Upload photos to continue' : (
+          mode === 'FLASH' ? 'Publish Flash Bid' : 'Publish Swap Bid'
         )}
       </button>
     </form>
