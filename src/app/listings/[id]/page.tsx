@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
@@ -17,10 +18,7 @@ const CATEGORY_MS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const listing = await prisma.listing.findUnique({
-    where: { id },
-    select: { title: true, description: true, photos: true, currentBid: true, state: true, category: true, mode: true },
-  })
+  const listing = await getListing(id)
   if (!listing) return { title: 'Listing tidak dijumpai' }
 
   const category = CATEGORY_MS[listing.category] ?? listing.category
@@ -51,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-async function getListing(id: string) {
+const getListing = cache(async (id: string) => {
   try {
     return await prisma.listing.findUnique({
       where: { id },
@@ -60,16 +58,15 @@ async function getListing(id: string) {
         bids: {
           include: { bidder: { select: { name: true, rehomeScore: true } } },
           orderBy: { createdAt: 'desc' },
-          take: 20,
+          take: 5,
         },
-        reviews: { select: { rating: true, comment: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 10 },
         _count: { select: { bids: true, offers: true } },
       },
     })
   } catch {
     return null
   }
-}
+})
 
 export default async function ListingDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }> }) {
   const [{ id }, sp] = await Promise.all([params, searchParams])

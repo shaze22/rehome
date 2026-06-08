@@ -2,9 +2,7 @@ const CACHE = 'kassim-v1'
 const OFFLINE_URL = '/offline'
 
 const PRECACHE = [
-  '/',
   '/offline',
-  '/listings',
 ]
 
 self.addEventListener('install', e => {
@@ -35,10 +33,14 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        // Cache successful page navigations
+        // Cache successful page navigations (skip dynamic listing/dashboard pages)
         if (res.ok && e.request.mode === 'navigate') {
-          const clone = res.clone()
-          caches.open(CACHE).then(c => c.put(e.request, clone))
+          const path = new URL(e.request.url).pathname
+          const skip = path.startsWith('/listings/') || path.startsWith('/dashboard') || path.startsWith('/profile/')
+          if (!skip) {
+            const clone = res.clone()
+            caches.open(CACHE).then(c => c.put(e.request, clone))
+          }
         }
         return res
       })

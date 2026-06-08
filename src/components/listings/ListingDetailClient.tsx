@@ -383,11 +383,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const [autoDeliveryEst, setAutoDeliveryEst] = useState<number | null>(null)
   useEffect(() => {
     if (!currentUserState || isSwap) return
+    if (initialListing.status !== 'ACTIVE') return
+    if (initialUserId === initialListing.seller.id) return
     fetch(`/api/listings/${initialListing.id}/delivery-quote?buyerState=${encodeURIComponent(currentUserState)}`)
       .then(r => r.json())
       .then((d: { cheapest?: number }) => setAutoDeliveryEst(d.cheapest ?? null))
       .catch(() => {})
-  }, [initialListing.id, currentUserState, isSwap])
+  }, [initialListing.id, currentUserState, isSwap, initialListing.status, initialUserId, initialListing.seller.id])
 
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')

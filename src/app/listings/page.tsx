@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { ListingsFilters } from '@/components/listings/ListingsFilters'
@@ -113,12 +114,15 @@ async function getEndingSoonListings() {
   }
 }
 
+const cachedGetListings = unstable_cache(getListings, ['browse-listings'], { revalidate: 15 })
+const cachedGetEndingSoon = unstable_cache(getEndingSoonListings, ['ending-soon'], { revalidate: 30 })
+
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams
   const activeMode = params.mode === 'swap' ? 'swap' : 'flash'
   const [{ listings, total, page, totalPages }, endingSoon] = await Promise.all([
-    getListings(params),
-    activeMode === 'flash' && !params.q ? getEndingSoonListings() : Promise.resolve([]),
+    params.q ? getListings(params) : cachedGetListings(params),
+    activeMode === 'flash' && !params.q ? cachedGetEndingSoon() : Promise.resolve([]),
   ])
   const endingSoonListings = Array.isArray(endingSoon) ? endingSoon : []
 

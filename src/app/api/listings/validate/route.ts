@@ -11,5 +11,8 @@ export async function GET(req: NextRequest) {
     select: { id: true },
   })
 
-  return NextResponse.json({ valid: found.map(l => l.id) })
+  return NextResponse.json(
+    { valid: found.map(l => l.id) },
+    { headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' } }
+  )
 }
