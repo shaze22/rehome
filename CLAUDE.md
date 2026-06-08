@@ -606,7 +606,20 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 6), 9 first-time buyer UX fixes. Live: https://kassim.app
+2026-06-08 (session 7), 10 buy-flow UX expert improvements. Live: https://kassim.app
+
+### 2026-06-08 Session 7 Changes (commit 2e2facd)
+10 buy-flow UX improvements from expert review:
+- **🔥 0 bids removed** — fire emoji now only appears when bids > 0. Zero bids shows plain "0 bids". Fixes contradictory social proof signal.
+- **Badge English** — profile page badge displays `badge.name` ("Trusted Seller") instead of `badge.nameMs` ("Penjual Dipercayai"). Consistent with English-first platform.
+- **Condition Report optional fields** — "Original Box" and "Under Warranty" now show neutral grey `—` when absent instead of alarming red ✗. Red ✗ reserved for functional defects (No Scratches, Functional, Complete). `optional: true` flag added to those two items.
+- **"Total Listings" label** — profile stats box now shows "Total Listings" instead of "Listing" to disambiguate from "Active Listings (2)" count shown in section below.
+- **WhatsApp button raised** — `md:bottom-10` (was `md:bottom-6`) to give more clearance above the filter sidebar Sort By label on the listings page.
+- **"First bid starts timer"** — ListingCard label changed from "Bid opens timer" (awkward) to "First bid starts timer". Mobile shows "No timer" (was "Bid").
+- **Share button WhatsApp logo** — WhatsApp SVG icon added to Share button (was `<Share2>` Lucide icon with WhatsApp-green color — confusing without the logo). Title updated to "Share via WhatsApp".
+- **"25 views"** — metadata line shortened from "25 people viewed this" to "25 views" (cleaner, more scannable).
+- **Browse Items CTA** — "Why Malaysians Choose KASSIM" section now has two CTAs side-by-side: "Browse Items" (for buyers) + "List Your First Item Free" (for sellers). Was seller-only before.
+- **Save tooltip value prop** — WatchlistButton tooltip for non-logged-in users changed to "Save to get notified when the auction timer starts" (explains the benefit of saving, not just "Sign in to save").
 
 ### 2026-06-08 Session 6 Changes (commit c5e23ad)
 9 first-time buyer UX improvements found during buyer journey review:
