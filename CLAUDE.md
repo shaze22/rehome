@@ -532,6 +532,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/admin/audit-log` | GET last 50 AuditLog entries (admin only) |
 | `/api/listings/[id]/cancel` | POST — seller cancel ACTIVE listing with 0 bids |
 | `/sell/edit/[id]` | Edit listing page — pre-filled form, mode switch (Flash↔Swap if 0 bids/offers), photo management |
+| `/api/listings/validate` | GET `?ids=id1,id2,...` — returns `{ valid: string[] }` of ACTIVE listing IDs (used by RecentlyViewed to purge stale localStorage entries) |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed

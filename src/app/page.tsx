@@ -313,7 +313,7 @@ async function HomeContent() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 sm:mb-10">
             <h2 className="text-xl sm:text-2xl font-bold mb-2">Why Malaysians Choose KASSIM</h2>
-            <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>Better than Mudah. Safer than Facebook Marketplace. Faster than Carousell.</p>
+            <p className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>Trusted. Structured. Built for Malaysians.</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {TRUST_FEATURES.map(item => (

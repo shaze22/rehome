@@ -32,16 +32,26 @@ export function RecentlyViewed() {
   const [items, setItems] = useState<RecentItem[]>([])
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY)
-      if (!raw) return
-      const all: RecentItem[] = JSON.parse(raw)
-      const valid = all.filter(i => !i.title.startsWith('[') && !i.title.toLowerCase().startsWith('[test]'))
-      if (valid.length !== all.length) localStorage.setItem(KEY, JSON.stringify(valid))
-      setItems(valid)
-    } catch {
-      // ignore
+    async function load() {
+      try {
+        const raw = localStorage.getItem(KEY)
+        if (!raw) return
+        const all: RecentItem[] = JSON.parse(raw)
+        if (all.length === 0) return
+
+        const ids = all.map(i => i.id).join(',')
+        const res = await fetch(`/api/listings/validate?ids=${ids}`)
+        const data = await res.json()
+        const validIds: Set<string> = new Set(data.valid ?? [])
+
+        const valid = all.filter(i => validIds.has(i.id))
+        localStorage.setItem(KEY, JSON.stringify(valid))
+        setItems(valid)
+      } catch {
+        // ignore
+      }
     }
+    load()
   }, [])
 
   if (items.length === 0) return null
