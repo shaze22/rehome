@@ -50,7 +50,7 @@ export function SellForm({ userId }: Props) {
   const [hasWarranty, setHasWarranty] = useState(false)
 
   // Common
-  const [weightKg, setWeightKg] = useState('1')
+  const [weightKg, setWeightKg] = useState('0.5')
 
   // Flash-only fields
   const [startingBid, setStartingBid] = useState('0')
@@ -105,6 +105,7 @@ export function SellForm({ userId }: Props) {
       if (data.title) { setTitle(data.title); filled.push('title') }
       if (data.description) { setDescription(data.description); filled.push('description') }
       if (data.conditionScore) { setCondition(data.conditionScore); filled.push('condition') }
+      if (data.category) { setCategory(data.category); filled.push('category') }
       markAiFilled(filled)
       setPhotoAnalysisDone(true)
     } catch {
@@ -153,7 +154,6 @@ export function SellForm({ userId }: Props) {
       const data = await res.json()
       if (!res.ok) { setAiError(data.error ?? 'AI failed.'); return }
       setAiSuggestion(data)
-      if (mode === 'FLASH') setStartingBid(String(data.suggested_min))
     } catch {
       setAiError('Failed to contact AI. Please try again.')
     } finally {
@@ -362,7 +362,11 @@ export function SellForm({ userId }: Props) {
                 <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => setPhotos(p => p.filter((_, j) => j !== i))}
+                  onClick={() => {
+                    const next = photos.filter((_, j) => j !== i)
+                    setPhotos(next)
+                    if (next.length === 0) { setPhotoAnalysisDone(false); setAiFilledFields(new Set()) }
+                  }}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ backgroundColor: 'rgba(239,68,68,0.85)', color: 'white' }}
                 >
@@ -510,6 +514,7 @@ export function SellForm({ userId }: Props) {
               className="w-full px-4 py-3 rounded-xl text-sm outline-none font-mono"
               style={inputStyle}
             />
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>What you originally paid — needed for AI price estimate.</p>
           </div>
 
           <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: mode === 'SWAP' ? 'rgba(22,163,74,0.08)' : 'rgba(20,184,166,0.08)', border: `1px solid ${mode === 'SWAP' ? 'rgba(22,163,74,0.2)' : 'rgba(20,184,166,0.2)'}`, color: 'var(--text-secondary)' }}>

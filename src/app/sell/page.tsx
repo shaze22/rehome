@@ -29,7 +29,7 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Sell an Item</h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Fill in your item details. AI will suggest a fair starting price.
+          Upload photos first — AI fills your listing automatically.
         </p>
       </div>
       <SellForm userId={user.id} />

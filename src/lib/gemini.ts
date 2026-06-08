@@ -33,6 +33,7 @@ export interface PhotoAnalysis {
   issues: string[]
   title: string
   description: string
+  category?: string
   isPhotoValid: boolean
   invalidReason?: string
 }
@@ -56,11 +57,12 @@ export async function analyzeItemPhotos(photoUrls: string[], category: string): 
   "issues": ["list of visible damage/issues, max 4, in English"],
   "title": "<concise & attractive listing title in English, max 60 chars>",
   "description": "<2-3 sentence description of the item condition in English>",
+  "category": "<one of: FURNITURE, ELECTRONICS, FASHION, BOOKS, SPORTS, KITCHEN, OTHERS>",
   "isPhotoValid": <true if photo clearly shows the item, false if blurry/dark/wrong item>,
   "invalidReason": "<reason if invalid, or null>"
 }
 
-Item category: ${category}
+Hint category: ${category}
 Score guide: 9-10=near new, 7-8=good, 5-6=average, 3-4=worn, 1-2=heavily damaged`
 
   const result = await model.generateContent([...imageParts, prompt])
