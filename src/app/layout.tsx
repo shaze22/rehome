@@ -83,7 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const messages = await getMessages()
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={`h-full ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/api/pwa-icon?size=192" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

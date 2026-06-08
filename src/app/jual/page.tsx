@@ -8,15 +8,15 @@ export const metadata: Metadata = {
   description: 'Earn money from your old items. 30-minute progressive auction with AI pricing. Free registration, sell in minutes.',
 }
 
-const SUCCESS_STORIES = [
-  { name: 'Ahmad F.', item: 'iPhone 13 Pro', price: 'RM 680', duration: '22 minutes', quote: 'Faster than Carousell. Money came in straight away!' },
-  { name: 'Siti R.', item: 'Dyson V11 Vacuum', price: 'RM 850', duration: '18 minutes', quote: 'AI suggested the perfect price. No need to think.' },
-  { name: 'Razif M.', item: 'Sofa L-Shape', price: 'RM 1,200', duration: '29 minutes', quote: 'Escrow is safe. No worries about buyer fraud.' },
+const SELLER_BENEFITS = [
+  { emoji: '🤖', title: 'AI Does the Work', desc: 'Upload photos — AI instantly generates your listing title, description, and fair market price. No guessing, no writing.' },
+  { emoji: '🔒', title: 'Zero Fraud Risk', desc: 'Buyer payment is held in secure escrow until you ship and they confirm receipt. You always get paid before anyone can dispute.' },
+  { emoji: '📦', title: 'Delivery Handled', desc: 'Buyer pays for delivery. Ship via any courier. KASSIM tracks and manages the escrow release automatically.' },
 ]
 
 const HOW_TO_SELL = [
   { icon: Camera, step: '01', title: 'Take Photos', desc: 'Take 1–5 clear photos. Our AI will analyse and suggest a price.' },
-  { icon: Bot, step: '02', title: 'AI Sets the Price', desc: 'Our system suggests a price based on current market conditions. You can adjust it.' },
+  { icon: Bot, step: '02', title: 'AI Analyses Your Photos', desc: 'AI reads your photos and generates a title, description, and fair market price estimate automatically.' },
   { icon: Zap, step: '03', title: 'Auction Starts', desc: '30-minute timer starts when the first bid comes in. Bidders compete to raise the price.' },
   { icon: Package, step: '04', title: 'Money In', desc: 'Winning bid is held in escrow. Once buyer receives the item, money goes straight to your account.' },
 ]
@@ -39,7 +39,7 @@ export default function JualPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
               <Zap className="w-3.5 h-3.5" />
-              Malaysia's #1 Auction Platform
+              Malaysia&apos;s Smarter Auction Platform
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Earn Money from{' '}
@@ -98,7 +98,7 @@ export default function JualPage() {
                 {[
                   'Fee only deducted on successful sale',
                   'SWAP listings 0% fee, completely free',
-                  'Money goes straight to your account in 1–3 days',
+                  'Paid out after buyer confirms receipt of item',
                   'No limit on number of listings',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -113,28 +113,19 @@ export default function JualPage() {
         </div>
       </section>
 
-      {/* Success Stories */}
+      {/* Seller Benefits */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">KASSIM Seller Success Stories</h2>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>They have already sold. Now it is your turn.</p>
+            <h2 className="text-2xl font-bold mb-2">Why Sellers Choose KASSIM</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Everything handled for you. Just list and ship.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {SUCCESS_STORIES.map(story => (
-              <div key={story.name} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-full gradient-teal flex items-center justify-center text-white font-bold">
-                    {story.name[0]}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold font-mono" style={{ color: 'var(--teal)' }}>{story.price}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>in {story.duration}</p>
-                  </div>
-                </div>
-                <p className="font-semibold text-sm mb-1">{story.item}</p>
-                <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>by {story.name}</p>
-                <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>"{story.quote}"</p>
+            {SELLER_BENEFITS.map(b => (
+              <div key={b.title} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="text-3xl mb-4">{b.emoji}</div>
+                <h3 className="font-bold text-sm mb-2">{b.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{b.desc}</p>
               </div>
             ))}
           </div>

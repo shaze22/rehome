@@ -130,7 +130,7 @@ export default function HowItWorksPage() {
               { n: 1, emoji: '📸', label: 'List Item', sub: 'RM0 start ok' },
               { n: 2, emoji: '🟢', label: 'Goes Live', sub: 'No timer yet' },
               { n: 3, emoji: '⚡', label: 'First Bid', sub: '30:00 starts' },
-              { n: 4, emoji: '🔥', label: 'Counter Bids', sub: '+5min / +2.5min' },
+              { n: 4, emoji: '🔥', label: 'Counter Bids', sub: 'No time added' },
               { n: 5, emoji: '🏆', label: 'Timer Ends', sub: 'Highest wins' },
               { n: 6, emoji: '💳', label: 'Buyer Pays', sub: 'Escrow holds' },
               { n: 7, emoji: '📦', label: 'You Ship', sub: 'Any courier' },
@@ -155,7 +155,7 @@ export default function HowItWorksPage() {
               { n: 1, emoji: '📸', label: 'List Your Item', desc: 'Upload photos. Starting bid can be RM0. AI suggests fair price.' },
               { n: 2, emoji: '🟢', label: 'Goes Live Instantly', desc: 'No timer yet. Listing stays active indefinitely until first bid.' },
               { n: 3, emoji: '⚡', label: 'First Bid Placed', desc: '30-minute countdown STARTS. Bid minimum +RM1 from current.' },
-              { n: 4, emoji: '🔥', label: 'Counter Bids', desc: 'Each counter adds +5min (1st) or +2.5min (subsequent). Cap: 30min from first bid.' },
+              { n: 4, emoji: '🔥', label: 'Counter Bids', desc: 'Counter bids do NOT extend the timer. Clock keeps running. Highest bid when 30 min is up wins.' },
               { n: 5, emoji: '🏆', label: 'Timer Hits Zero', desc: 'Highest bidder wins. If only one bidder, they win at their bid price.' },
               { n: 6, emoji: '💳', label: 'Buyer Pays via Stripe', desc: 'Funds held in secure escrow. Seller cannot touch it yet.' },
               { n: 7, emoji: '📦', label: 'Seller Ships', desc: 'Pack and ship via any courier. Enter tracking number in app.' },
@@ -232,7 +232,7 @@ export default function HowItWorksPage() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="font-semibold">Siti bids <span style={{ color: orange }}>RM220</span></p>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}>+5min → 24:00</span>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}>23:00 left</span>
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>9:11pm</p>
               </div>
@@ -242,7 +242,7 @@ export default function HowItWorksPage() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="font-semibold">Ahmad bids <span style={{ color: orange }}>RM310</span></p>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}>+2.5min → 6:30</span>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-muted)' }}>6:00 left</span>
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>9:28pm</p>
               </div>
@@ -251,7 +251,7 @@ export default function HowItWorksPage() {
               <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: orange }} />
               <div className="flex-1">
                 <p className="font-bold" style={{ color: orange }}>🏆 Ahmad WINS at RM310</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>9:35pm — timer reached zero, no more bids</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>9:34pm — 30-min timer ended, Ahmad&apos;s bid is highest</p>
               </div>
             </div>
           </div>
