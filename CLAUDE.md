@@ -569,14 +569,14 @@ Shown when user has at least 1 listing:
 
 ## Dark Mode
 - CSS: `[data-theme="light"]` in `globals.css` — light bg/text vars, teal unchanged
-- `ThemeToggle.tsx` — Sun/Moon button, `document.documentElement.dataset.theme`
+- `ThemeToggle.tsx` — Sun/Moon button, `document.documentElement.dataset.theme`. Uses `mounted` guard: renders blank `div` placeholder server-side, real button only after `useEffect` — prevents React hydration error #418.
 - Default: **system preference** (`prefers-color-scheme`). Falls back to dark if no preference. Persists override in `localStorage.kassim_theme`
 - **Desktop Navbar**: ThemeToggle placed next to Heart (watchlist) icon — inside both logged-in and logged-out desktop nav sections
 - **Mobile**: ThemeToggle removed from top bar; accessible inside the hamburger menu (top of menu, "Theme" label + toggle)
 
 ## HeroBanner (`src/components/home/HeroBanner.tsx`)
-Simplified above-fold section (updated 2026-06-07):
-- Badge: "Malaysia's #1 Pre-Loved Marketplace"
+Simplified above-fold section (updated 2026-06-08):
+- Badge: "Malaysia's Smarter Pre-Loved Marketplace"
 - H1: italic gradient — "One man's trash is another man's treasure." (orange gradient on "One man's trash", teal gradient on "treasure.")
 - **CTAs**: 2 buttons side-by-side — ⚡ Flash Bid (orange gradient) + 🔄 Swap Bid (green gradient). No "Sell Now" button (that's in the Navbar).
 - **Search bar**: `<form action="/listings" method="get">`
@@ -604,7 +604,20 @@ Simplified above-fold section (updated 2026-06-07):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-07 (session 2), dashboard + hero + UX fixes. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-08 (session 1), 11 pre-launch issues fixed after external review. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+### 2026-06-08 Session 1 Changes (commit fa7ab72)
+External review of kassim.app as an outsider — 11 issues found and fixed:
+- **ThemeToggle hydration fix** — `mounted` guard prevents React error #418 (server/client icon mismatch)
+- **RecentlyViewed** — filters [TEST] items from localStorage on render + cleans storage entry
+- **HeroBanner badge** — "#1 Pre-Loved Marketplace" → "Smarter Pre-Loved Marketplace" (more honest for beta)
+- **Register copy** — "Join thousands of Malaysians" → "Buy, sell & swap pre-loved items the smarter way"
+- **ListingCard status** — "RM 0 — FREE" → "Starting: RM 0", "Waiting" → "Bid opens timer" (clearer for new users)
+- **ListingDetailClient delivery** — "Set in profile" → "Login to see estimate" for guests
+- **Homepage CO₂ consistency** — WasteCounter now uses `co2Full` (same as stats bar), no more 17kg vs 0kg discrepancy
+- **Trending deduplication** — Trending section hidden if all items already appear in Flash/Swap sections
+- **Seller listing count** — `_count.listings` now filters `status: ACTIVE, hiddenBySeller: false` → "2 active listings" instead of "19"
+- **Profile page language** — fully standardized to English (was mixed Malay/English): IC Disahkan→IC Verified, Ahli sejak→Member since, Lencana→Badges, Listing Aktif→Active Listings, all swap history text, error page, date locale ms-MY→en-MY
 
 ### 2026-06-07 Session 2 Changes
 - **hiddenBySeller** — `Listing.hiddenBySeller Boolean @default(false)` added (Supabase MCP + schema + prisma generate). Dashboard query filters `hiddenBySeller: false`. DELETE API sets this for all statuses.
