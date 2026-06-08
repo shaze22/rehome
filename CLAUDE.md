@@ -596,8 +596,16 @@ Simplified above-fold section (updated 2026-06-08):
 - `SwapListingCard`: 🔄 SWAP BID gradient badge (green→teal), offer type chips
 - **Listing card placeholders**: when no photo, shows category emoji + gradient bg (`CATEGORY_PLACEHOLDERS` map in both `ListingCard.tsx` and `SwapListingCard.tsx`)
 
-## Performance Architecture
+## Performance Architecture (updated 2026-06-08 S9)
 - **Fonts**: `next/font/google` (Inter + JetBrains Mono) in `layout.tsx` — eliminates render-blocking Google Fonts @import
+- **React.cache()** on `getListing()` in `listings/[id]/page.tsx` — deduplicates DB fetch between `generateMetadata` and page render (1 DB hit per request, not 2)
+- **`unstable_cache`** on `/listings` browse queries: `cachedGetListings` (15s TTL), `cachedGetEndingSoon` (30s TTL). Search (`?q=`) bypasses cache.
+- **Bids `take: 5`** on server-fetch — Supabase Realtime fills full history client-side
+- **No `reviews` include** in `getListing` — was fetched but never rendered
+- **Delivery-quote guard**: auto-fetch skipped if listing status !== ACTIVE or viewer is seller
+- **Cache-Control on `/api/listings/validate`**: `s-maxage=60, stale-while-revalidate=300`
+- **SW precache**: only `/offline` precached. Dynamic pages (`/listings/[id]`, `/dashboard`, `/profile/`) excluded from navigation cache.
+- **Composite DB index**: `(mode, status, createdAt DESC)` — covers core browse query pattern
 - **Suspense streaming** (Fasa 20): `HomePage` is non-async — `HeroBanner` renders instantly. `HomeContent` (async server component with all 5 DB queries) is wrapped in `<Suspense fallback={<HomePageSkeleton />}>`. Hero HTML arrives in ~100ms; listings stream in after DB resolves.
 - **Homepage cache**: all 5 DB query functions wrapped in `unstable_cache`. Flash/swap/trending/mega: `revalidate: 60`. Stats: `revalidate: 120`.
 - **Layout auth**: `getSession()` instead of `getUser()` — reads cookie locally, no Supabase network call per page
