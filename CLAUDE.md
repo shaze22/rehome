@@ -202,7 +202,8 @@ getAIPriceSuggestion({ category, condition, originalPrice, state })
 → { low, fair, high, suggested_min, suggested_max, reasoning }
 
 analyzeItemPhotos(photoUrls, category)
-→ { conditionScore, title, description, isPhotoValid, invalidReason }
+→ { conditionScore, title, description, category, isPhotoValid, invalidReason }
+// category: one of FURNITURE|ELECTRONICS|FASHION|BOOKS|SPORTS|KITCHEN|OTHERS
 // Prompts are in English — generates English titles/descriptions
 
 getSwapSuggestions({ title, category, condition, estimatedValue })
@@ -264,7 +265,7 @@ src/
       Footer.tsx          — includes Terms + Privacy links
       LanguageSwitcher.tsx — 5-language dropdown, sets 'kassim_locale' cookie
       ThemeToggle.tsx     — Sun/Moon toggle, persists in localStorage 'kassim_theme'
-    sell/SellForm.tsx              — Photos-first UX: upload → AI auto-analyses → fills title/description/condition. Mode toggle, swap fields, AI swap suggest. Photos compressed via Canvas (max 1200px JPEG 0.82)
+    sell/SellForm.tsx              — Photos-first UX: upload → AI auto-analyses → fills title/description/condition/category. Mode toggle, swap fields, AI swap suggest. Photos compressed via Canvas (max 1200px JPEG 0.82). Weight default 0.5kg.
     sell/EditListingForm.tsx       — Pre-filled edit form: all fields + mode switch + photo add/remove
     listings/ListingCard.tsx       — Flash card
     listings/SwapListingCard.tsx   — Swap card (green, value, wants, offer count)
@@ -604,7 +605,16 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 3), SellForm UX rewrite — photos-first with auto AI analysis. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-08 (session 4), 6 sell-flow fixes — startingBid bug, AI category, weight default, state reset. Live: https://kassim.app
+
+### 2026-06-08 Session 4 Changes (commit 7ea627c)
+6 sell-flow fixes found during seller review:
+- **startingBid Flash bug** — `getAISuggestion()` was silently setting `startingBid` to AI's `suggested_min` instead of RM0. UI showed "RM0" but DB stored e.g. RM150. Removed the bad line.
+- **Photo deletion AI reset** — deleting all photos now resets `photoAnalysisDone` + `aiFilledFields`. "AI filled your listing" banner no longer persists after photos removed.
+- **AI auto-fills category** — `analyzeItemPhotos()` now returns `category` field in prompt + `PhotoAnalysis` interface. `analysePhotos()` in SellForm applies it and marks field with AI badge.
+- **Weight default 0.5kg** — was 1kg, which over-estimates delivery for phones/clothes/books.
+- **Sell page subtitle** — "Fill in your item details. AI will suggest a fair starting price." → "Upload photos first — AI fills your listing automatically."
+- **Original Price hint** — "What you originally paid — needed for AI price estimate." added below field.
 
 ### 2026-06-08 Session 3 Changes (commit 9977730)
 SellForm UX rewrite — photos-first flow with auto AI analysis:
