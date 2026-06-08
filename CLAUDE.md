@@ -605,7 +605,21 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 4), 6 sell-flow fixes — startingBid bug, AI category, weight default, state reset. Live: https://kassim.app
+2026-06-08 (session 5), 10 sell-flow UX improvements. Live: https://kassim.app
+
+### 2026-06-08 Session 5 Changes (commit da85b97)
+10 sell-flow UX improvements from expert review:
+- **Login redirect** — `/sell` redirects to `/auth/login?next=/sell`; login reads `?next` param for both email + Google OAuth
+- **Login subtitle** — contextual "Sign in to start selling your item" when coming from `/sell`
+- **PWA banner** — hidden on all `/auth/*` pages (was appearing on login form, terrible timing)
+- **Mode toggle info panel** — collapsible "What's the difference?" panel comparing Flash vs Swap (4 bullet points each)
+- **AI Price reframe** — section renamed "Estimated Selling Price" in Flash mode with copy: "for your reference only. Starting bid is always RM0."
+- **Post-publish banner** — `?new=1` param on listing redirect shows green "Your listing is live! Review — you can still edit." banner with Edit button
+- **Weight presets** — 5 clickable chips: Phone(0.2kg), Clothes(0.5kg), Book(0.5kg), Laptop(2kg), Chair(8kg)
+- **Swap 72h notice** — info banner at top of Swap Settings section: "72 hours from when you publish"
+- **AI Swap disabled tooltip** — `title="Fill in your item title first"` + `cursor-not-allowed` when disabled
+- **Disabled submit scroll** — type=button when no photos, onClick scrolls to `#photos-section`
+- **Condition hint** — "Make sure your checkboxes match your score above."
 
 ### 2026-06-08 Session 4 Changes (commit 7ea627c)
 6 sell-flow fixes found during seller review:
