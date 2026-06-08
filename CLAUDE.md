@@ -264,7 +264,7 @@ src/
       Footer.tsx          — includes Terms + Privacy links
       LanguageSwitcher.tsx — 5-language dropdown, sets 'kassim_locale' cookie
       ThemeToggle.tsx     — Sun/Moon toggle, persists in localStorage 'kassim_theme'
-    sell/SellForm.tsx              — Mode toggle, swap fields, AI swap suggest. Photos compressed via Canvas (max 1200px JPEG 0.82)
+    sell/SellForm.tsx              — Photos-first UX: upload → AI auto-analyses → fills title/description/condition. Mode toggle, swap fields, AI swap suggest. Photos compressed via Canvas (max 1200px JPEG 0.82)
     sell/EditListingForm.tsx       — Pre-filled edit form: all fields + mode switch + photo add/remove
     listings/ListingCard.tsx       — Flash card
     listings/SwapListingCard.tsx   — Swap card (green, value, wants, offer count)
@@ -604,7 +604,19 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 2), seller+buyer role-based review — 8 more issues fixed. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+2026-06-08 (session 3), SellForm UX rewrite — photos-first with auto AI analysis. Live: https://kassim.app (also: www.kassim.app, rehome-eta.vercel.app)
+
+### 2026-06-08 Session 3 Changes (commit 9977730)
+SellForm UX rewrite — photos-first flow with auto AI analysis:
+- **Photos moved to top** (step 2, right after mode toggle). Was buried below title/description.
+- **Auto AI trigger** — `handlePhotoUpload` calls `analysePhotos()` automatically after first upload. No manual button needed.
+- **AI fills title + description + condition** immediately after upload. Fields show teal `✨ AI` badge when AI-populated; badge clears on manual edit.
+- **Upload zone** — highlighted teal with "Upload photos to start / AI will generate your listing" when empty.
+- **AI status banners** — "AI is analysing your photos..." while loading; "AI filled your listing details — review and edit below" on success with Re-analyse button.
+- **Submit button** — disabled + shows "Upload photos to continue" until at least 1 photo uploaded. Clear CTA hierarchy.
+- **Cover label** on first thumbnail.
+- **Manual fallback** — "Auto-fill from photos (AI)" button still appears if photos uploaded but analysis failed or was skipped.
+- **Section order:** Mode → Photos+AI → Listing Details → Condition → Swap Settings → AI Price → Publish
 
 ### 2026-06-08 Session 2 Changes (commit ecd64c1)
 Seller + buyer role-based review of kassim.app — 8 issues found and fixed:
