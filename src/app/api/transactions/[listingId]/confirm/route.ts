@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendPaymentReceivedEmail } from '@/lib/resend'
+import { logAdminAction } from '@/lib/audit'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ listingId: string }> }) {
   const { listingId } = await params
@@ -39,6 +40,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await sendPaymentReceivedEmail(seller.email, seller.name ?? 'Penjual', listing.title, tx.sellerPayout)
     }
   } catch { /* email failure is non-critical */ }
+
+  void logAdminAction(user.id, 'BUYER_CONFIRMED_RECEIPT', listingId, 'Transaction', {
+    sellerId: tx.sellerId,
+    sellerPayout: tx.sellerPayout,
+  })
 
   return NextResponse.json({ success: true, sellerPayout: tx.sellerPayout })
 }

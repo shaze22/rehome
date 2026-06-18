@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -10,12 +11,16 @@ export async function POST(request: NextRequest) {
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
   if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
 
+  const { allowed } = await rateLimit('admin', user.id)
+  if (!allowed) return NextResponse.json({ error: 'Too many admin actions. Please slow down.' }, { status: 429 })
+
   const { transactionId, note } = await request.json() as { transactionId: string; note?: string }
   if (!transactionId) return NextResponse.json({ error: 'transactionId required.' }, { status: 400 })
 
   const tx = await prisma.transaction.findUnique({ where: { id: transactionId } })
   if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
   if (tx.sellerPaid) return NextResponse.json({ error: 'Already marked as paid.' }, { status: 400 })
+  if (tx.status !== 'RELEASED') return NextResponse.json({ error: 'Transaction must be RELEASED before payout can be marked.' }, { status: 400 })
 
   const updated = await prisma.transaction.update({
     where: { id: transactionId },

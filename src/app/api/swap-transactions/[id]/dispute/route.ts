@@ -5,9 +5,18 @@ import { sendSwapDisputeEmail } from '@/lib/resend'
 import { sendPushToUser } from '@/lib/push'
 import { z } from 'zod'
 
+// Only accept evidence photos uploaded to our own Supabase bucket
+const trustedPhotoUrl = z.string().url().refine(
+  (url) => {
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    return base ? url.startsWith(`${base}/storage/v1/object/public/rehome-photos/`) : true
+  },
+  { message: 'Evidence photos must be uploaded via KASSIM.' }
+)
+
 const DisputeSchema = z.object({
   reason: z.string().min(10).max(1000),
-  evidence: z.array(z.string().url()).max(5).default([]),
+  evidence: z.array(trustedPhotoUrl).max(5).default([]),
 })
 
 export async function POST(

@@ -7,6 +7,13 @@ export async function GET(request: NextRequest) {
 
   if (!code) return NextResponse.redirect(`${BASE}/auth/register`)
 
+  // Block sub-resource loads (img, script tags) — only allow direct browser navigation
+  // Prevents attacker from stealing referral credit via <img src="/api/referral/set-cookie?code=...">
+  const fetchDest = request.headers.get('sec-fetch-dest')
+  if (fetchDest && fetchDest !== 'document' && fetchDest !== 'empty') {
+    return NextResponse.redirect(`${BASE}/auth/register`)
+  }
+
   // Validate code exists
   const referrer = await prisma.user.findUnique({
     where: { referralCode: code },

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
-    return NextResponse.json({ error: 'Invalid webhook.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid webhook.' }, { status: 500 })
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -56,37 +56,45 @@ export async function POST(request: NextRequest) {
     const dBase = parseFloat(deliveryBase ?? '0')
     const dMarkup = parseFloat(deliveryMarkup ?? '0')
 
-    await prisma.$transaction([
-      prisma.listing.update({
-        where: { id: listingId },
-        data: { status: 'SOLD' },
-      }),
-      prisma.transaction.create({
-        data: {
-          listingId,
-          buyerId,
-          sellerId,
-          amount: (session.amount_total ?? 0) / 100,
-          platformFee: parseFloat(platformFee),
-          sellerPayout: parseFloat(sellerPayout),
-          stripePaymentId: session.payment_intent as string,
-          status: 'ESCROWED',
-          pickupMethod: 'DELIVERY', // self-pickup removed — all orders use platform delivery
-          deliveryFee: dFee,
-          deliveryBase: dBase,
-          deliveryMarkup: dMarkup,
-          courierName: courierName || null,
-          courierService: courierService || null,
-          courierServiceId: courierServiceId || null,
-          buyerPostcode: buyerPostcode || null,
-          buyerPhone: buyerPhone || null,
-          buyerAddress: buyerAddress || null,
-        },
-      }),
-      ...(creditAmount > 0
-        ? [prisma.user.update({ where: { id: buyerId }, data: { creditBalance: { decrement: creditAmount } } })]
-        : []),
-    ])
+    try {
+      await prisma.$transaction([
+        prisma.listing.update({
+          where: { id: listingId },
+          data: { status: 'SOLD' },
+        }),
+        prisma.transaction.create({
+          data: {
+            listingId,
+            buyerId,
+            sellerId,
+            amount: (session.amount_total ?? 0) / 100,
+            platformFee: parseFloat(platformFee),
+            sellerPayout: parseFloat(sellerPayout),
+            stripePaymentId: session.payment_intent as string,
+            status: 'ESCROWED',
+            pickupMethod: 'DELIVERY', // self-pickup removed — all orders use platform delivery
+            deliveryFee: dFee,
+            deliveryBase: dBase,
+            deliveryMarkup: dMarkup,
+            courierName: courierName || null,
+            courierService: courierService || null,
+            courierServiceId: courierServiceId || null,
+            buyerPostcode: buyerPostcode || null,
+            buyerPhone: buyerPhone || null,
+            buyerAddress: buyerAddress || null,
+          },
+        }),
+        ...(creditAmount > 0
+          ? [prisma.user.update({ where: { id: buyerId }, data: { creditBalance: { decrement: creditAmount } } })]
+          : []),
+      ])
+    } catch (e: unknown) {
+      // P2002 = unique constraint violation — concurrent webhook already created this transaction
+      if ((e as { code?: string }).code === 'P2002') {
+        return NextResponse.json({ received: true })
+      }
+      throw e
+    }
 
     // Auto-book EasyParcel shipment (fire-and-forget — does not block webhook response)
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {

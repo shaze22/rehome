@@ -6,11 +6,20 @@ import { sendPushToUser } from '@/lib/push'
 import { rateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
+// Only accept photos uploaded to our own Supabase bucket — prevents SSRF/XSS via external URLs
+const trustedPhotoUrl = z.string().url().refine(
+  (url) => {
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+    return base ? url.startsWith(`${base}/storage/v1/object/public/rehome-photos/`) : true
+  },
+  { message: 'Photos must be uploaded via KASSIM.' }
+)
+
 const OfferSchema = z.object({
   listingId: z.string().min(1),
   offerType: z.enum(['CASH', 'SWAP', 'HYBRID']),
   offeredCashAmount: z.number().min(0).optional(),
-  offeredItemPhotos: z.array(z.string().url()).max(5).default([]),
+  offeredItemPhotos: z.array(trustedPhotoUrl).max(5).default([]),
   offeredItemDesc: z.string().max(1000).optional(),
   offeredItemValue: z.number().min(0).optional(),
   message: z.string().max(500).optional(),

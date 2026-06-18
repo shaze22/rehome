@@ -37,6 +37,10 @@ export async function POST(request: NextRequest) {
 
   const isNew = !existing
 
+  if (isNew) {
+    console.log(`[referral] New user ${user.id} assigned code ${dbUser.referralCode}`)
+  }
+
   if (isNew && user.email) {
     // Welcome email
     try {

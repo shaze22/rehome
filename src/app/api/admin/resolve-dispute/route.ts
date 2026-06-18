@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logAdminAction } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
 
 const Schema = z.object({
   transactionId: z.string().min(1),
@@ -17,6 +18,9 @@ export async function POST(request: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
   if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+
+  const { allowed } = await rateLimit('admin', user.id)
+  if (!allowed) return NextResponse.json({ error: 'Too many admin actions. Please slow down.' }, { status: 429 })
 
   let body: unknown
   try { body = await request.json() } catch {
@@ -40,11 +44,34 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  // If resolved as complete, update listing to SOLD (already SOLD but just ensure) and swap scores
+  // If resolved as complete, update swap scores (same formula as /receive route)
   if (resolution === 'complete') {
+    const [seller, buyer] = await Promise.all([
+      prisma.user.findUnique({ where: { id: tx.sellerId }, select: { successfulSwaps: true } }),
+      prisma.user.findUnique({ where: { id: tx.buyerId }, select: { successfulSwaps: true } }),
+    ])
+
+    const calcSwapScore = (newCount: number) => Math.min(4.0 + newCount * 0.1, 5.0)
+    const sellerNewCount = (seller?.successfulSwaps ?? 0) + 1
+    const buyerNewCount = (buyer?.successfulSwaps ?? 0) + 1
+
     await prisma.$transaction([
-      prisma.user.update({ where: { id: tx.sellerId }, data: { successfulSwaps: { increment: 1 } } }),
-      prisma.user.update({ where: { id: tx.buyerId }, data: { successfulSwaps: { increment: 1 } } }),
+      prisma.user.update({
+        where: { id: tx.sellerId },
+        data: {
+          successfulSwaps: { increment: 1 },
+          swapScore: calcSwapScore(sellerNewCount),
+          swapVerified: sellerNewCount >= 5,
+        },
+      }),
+      prisma.user.update({
+        where: { id: tx.buyerId },
+        data: {
+          successfulSwaps: { increment: 1 },
+          swapScore: calcSwapScore(buyerNewCount),
+          swapVerified: buyerNewCount >= 5,
+        },
+      }),
     ])
   }
 

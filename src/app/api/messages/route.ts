@@ -43,11 +43,14 @@ export async function GET(request: NextRequest) {
   const listingId = request.nextUrl.searchParams.get('listingId')
   if (!listingId) return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
 
-  const messages = await prisma.message.findMany({
+  // Fetch last 100 messages desc, reverse to restore chronological order for client
+  const raw = await prisma.message.findMany({
     where: { listingId },
     include: { sender: { select: { name: true, avatar: true } } },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
   })
+  const messages = raw.reverse()
 
   return NextResponse.json({ messages })
 }

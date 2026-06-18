@@ -32,12 +32,12 @@ export async function POST(request: NextRequest) {
     data: { listingId, reviewerId: user.id, sellerId: tx.sellerId, rating, comment },
   })
 
-  // Recalculate seller's Ballout Score based on avg rating
-  const sellerReviews = await prisma.review.findMany({
+  // Recalculate seller's score using DB-side aggregation (avoids unbounded fetch)
+  const agg = await prisma.review.aggregate({
     where: { sellerId: tx.sellerId },
-    select: { rating: true },
+    _avg: { rating: true },
   })
-  const avgRating = sellerReviews.reduce((s, r) => s + r.rating, 0) / sellerReviews.length
+  const avgRating = agg._avg.rating ?? 3
   const newScore = Math.min(100, Math.round(50 + (avgRating - 3) * 15))
   await prisma.user.update({ where: { id: tx.sellerId }, data: { rehomeScore: newScore } })
 

@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data
 
-  await prisma.user.upsert({
+  const dbUser = await prisma.user.upsert({
     where: { id: user.id },
     create: {
       id: user.id,
@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
       role: 'SELLER',
     },
     update: { role: 'SELLER' },
+    select: { icVerified: true },
   })
 
   let aiSuggestedMin: number | null = null
@@ -153,5 +154,9 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  return NextResponse.json({ listing }, { status: 201 })
+  const warnings = !dbUser.icVerified
+    ? ['Your IC is not yet verified. Listings from unverified sellers display a warning to buyers. Verify your IC in your profile.']
+    : []
+
+  return NextResponse.json({ listing, warnings }, { status: 201 })
 }

@@ -22,7 +22,13 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   if (subs.length === 0) return
 
   const wp = getWebPush()
-  const json = JSON.stringify(payload)
+  // Web Push payloads are capped at ~4KB — truncate to stay well within limit
+  const safe: PushPayload = {
+    ...payload,
+    title: payload.title.length > 100 ? payload.title.slice(0, 97) + '...' : payload.title,
+    body:  payload.body.length  > 150 ? payload.body.slice(0, 147)  + '...' : payload.body,
+  }
+  const json = JSON.stringify(safe)
   const stale: string[] = []
 
   await Promise.allSettled(

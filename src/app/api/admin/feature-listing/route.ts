@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { logAdminAction } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
 
 function nextFriday8pmMYT(): Date {
   const now = new Date()
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
   if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { allowed } = await rateLimit('admin', user.id)
+  if (!allowed) return NextResponse.json({ error: 'Too many admin actions. Please slow down.' }, { status: 429 })
 
   const { listingId, featured } = await request.json()
   if (!listingId) return NextResponse.json({ error: 'listingId required' }, { status: 400 })

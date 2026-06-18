@@ -6,6 +6,8 @@ const MARKUP = 0.30
 // In-memory token cache (survives across requests in same Node.js instance)
 let _token: string | null = null
 let _tokenExpiry = 0
+// Shared promise prevents concurrent requests from each triggering a separate OAuth call
+let _refreshing: Promise<string | null> | null = null
 
 async function getToken(): Promise<string | null> {
   const clientId = process.env.EASYPARCEL_CLIENT_ID
@@ -13,26 +15,33 @@ async function getToken(): Promise<string | null> {
   if (!clientId || !clientSecret) return null
 
   if (_token && Date.now() < _tokenExpiry - 60_000) return _token
+  if (_refreshing) return _refreshing
 
-  try {
-    const res = await fetch(`${EP_BASE}/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
-      }),
-      signal: AbortSignal.timeout(8000),
-    })
-    if (!res.ok) return null
-    const json = await res.json() as { access_token?: string; expires_in?: number }
-    _token = json.access_token ?? null
-    _tokenExpiry = Date.now() + (json.expires_in ?? 3600) * 1000
-    return _token
-  } catch {
-    return null
-  }
+  _refreshing = (async () => {
+    try {
+      const res = await fetch(`${EP_BASE}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret,
+        }),
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!res.ok) return null
+      const json = await res.json() as { access_token?: string; expires_in?: number }
+      _token = json.access_token ?? null
+      _tokenExpiry = Date.now() + (json.expires_in ?? 3600) * 1000
+      return _token
+    } catch {
+      return null
+    } finally {
+      _refreshing = null
+    }
+  })()
+
+  return _refreshing
 }
 
 // State capital postcodes for approximation when actual postcode unavailable

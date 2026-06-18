@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   for (const tx of stuckTransactions) {
     try {
-      const newCount = await prisma.$transaction(async (db) => {
+      await prisma.$transaction(async (db) => {
         await db.swapTransaction.update({
           where: { id: tx.id },
           data: {
@@ -38,25 +38,18 @@ export async function GET(request: NextRequest) {
             resolvedAt: now,
           },
         })
-        const [updatedSeller, updatedBuyer] = await Promise.all([
-          db.user.update({
-            where: { id: tx.sellerId },
-            data: { successfulSwaps: { increment: 1 } },
-            select: { successfulSwaps: true },
-          }),
-          db.user.update({
-            where: { id: tx.buyerId },
-            data: { successfulSwaps: { increment: 1 } },
-            select: { successfulSwaps: true },
-          }),
+        // Fetch current counts then update score + verified in a single write per user
+        const [seller, buyer] = await Promise.all([
+          db.user.findUnique({ where: { id: tx.sellerId }, select: { successfulSwaps: true } }),
+          db.user.findUnique({ where: { id: tx.buyerId },  select: { successfulSwaps: true } }),
         ])
+        const sellerNewCount = (seller?.successfulSwaps ?? 0) + 1
+        const buyerNewCount  = (buyer?.successfulSwaps  ?? 0) + 1
         await Promise.all([
-          db.user.update({ where: { id: tx.sellerId }, data: { swapScore: Math.min(4.0 + updatedSeller.successfulSwaps * 0.1, 5.0), swapVerified: updatedSeller.successfulSwaps >= 5 } }),
-          db.user.update({ where: { id: tx.buyerId },  data: { swapScore: Math.min(4.0 + updatedBuyer.successfulSwaps * 0.1, 5.0),  swapVerified: updatedBuyer.successfulSwaps >= 5 } }),
+          db.user.update({ where: { id: tx.sellerId }, data: { successfulSwaps: { increment: 1 }, swapScore: Math.min(4.0 + sellerNewCount * 0.1, 5.0), swapVerified: sellerNewCount >= 5 } }),
+          db.user.update({ where: { id: tx.buyerId },  data: { successfulSwaps: { increment: 1 }, swapScore: Math.min(4.0 + buyerNewCount  * 0.1, 5.0), swapVerified: buyerNewCount  >= 5 } }),
         ])
-        return { seller: updatedSeller.successfulSwaps, buyer: updatedBuyer.successfulSwaps }
       })
-      void newCount
       try {
         await Promise.all([
           tx.seller.email && sendSwapCompletedEmail(tx.seller.email, tx.seller.name ?? 'Penjual', tx.listing.title),

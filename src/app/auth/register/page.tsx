@@ -48,6 +48,7 @@ export default function RegisterPage() {
   }
 
   async function handleGoogle() {
+    if (!agreed) { setError('Please agree to the Terms of Service and Privacy Policy first.'); return }
     await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -172,7 +173,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading || !agreed}
               className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-60 transition-all hover:scale-105 active:scale-95">
               {loading ? 'Registering...' : 'Register Now'}
             </button>

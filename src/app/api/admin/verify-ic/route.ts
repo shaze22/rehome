@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logAdminAction } from '@/lib/audit'
+import { rateLimit } from '@/lib/rate-limit'
 
 const Schema = z.object({
   userId: z.string().min(1),
@@ -16,6 +17,9 @@ export async function POST(request: NextRequest) {
 
   const admin = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
   if (admin?.role !== 'ADMIN') return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+
+  const { allowed } = await rateLimit('admin', user.id)
+  if (!allowed) return NextResponse.json({ error: 'Too many admin actions. Please slow down.' }, { status: 429 })
 
   let body: unknown
   try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }) }
