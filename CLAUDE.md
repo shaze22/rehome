@@ -541,7 +541,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/listings/[id]/cancel` | POST — seller cancel ACTIVE listing with 0 bids |
 | `/sell/edit/[id]` | Edit listing page — pre-filled form, mode switch (Flash↔Swap if 0 bids/offers), photo management |
 | `/api/listings/validate` | GET `?ids=id1,id2,...` — returns `{ valid: string[] }` of ACTIVE listing IDs (used by RecentlyViewed to purge stale localStorage entries) |
-| `/api/user/account` | DELETE — PDPA right to erasure: anonymize User record, delete push/watchlist/messages, delete Supabase auth user. Blocked if active escrow exists. |
+| `/api/user/account` | DELETE — PDPA right to erasure: anonymize User record, delete push/watchlist/messages, delete Supabase auth user. Blocked if active escrow exists. UI: `DeleteAccountButton.tsx` in dashboard Danger Zone. |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
@@ -628,7 +628,7 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-18 (Security Audit), 19 security fixes across 22 files. Commit 34819dc. Live: https://kassim.app
+2026-06-18 (Delete Account UI), commit 9cdf1bc. Live: https://kassim.app
 
 ### 2026-06-08 Session 7 Changes (commit 2e2facd)
 10 buy-flow UX improvements from expert review:
@@ -849,5 +849,5 @@ Admin panel: https://kassim.app/admin
 - ✅ All share/copy URLs hardcoded to kassim.app — no more window.location.href/origin (08a9767, 2026-06-06)
 - ✅ Security Audit 2026-06-18: 19 fixes deployed (34819dc) — 5 CRITICAL + 6 HIGH + 8 MEDIUM + 7 LOW
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
-- Add `DELETE /api/user/account` button in user settings page (backend done, UI pending)
+- ✅ Delete Account button in dashboard — `DeleteAccountButton.tsx`, Danger Zone section, typed "DELETE" gate (9cdf1bc, 2026-06-18)
 - Beta testing 100 users → LAUNCH 🚀
