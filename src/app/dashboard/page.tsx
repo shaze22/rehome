@@ -9,6 +9,7 @@ import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
 import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
 import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck } from 'lucide-react'
+import { DeleteAccountButton } from '@/components/dashboard/DeleteAccountButton'
 
 async function getDashboardData(userId: string) {
   const [user, myListings, myBids, transactions, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
@@ -380,6 +381,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
         </div>
       )}
+
+      {/* Danger Zone */}
+      <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Danger Zone</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Permanently delete your account and personal data (PDPA right to erasure)</p>
+          </div>
+          <DeleteAccountButton />
+        </div>
+      </div>
 
     </div>
   )
