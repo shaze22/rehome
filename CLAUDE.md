@@ -465,6 +465,7 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 ## Rate Limiting (`src/lib/rate-limit.ts`)
 - Upstash Redis sliding window
 - Bid: 30/5min · Offer: 10/hr · Listing: 5/hr · Feedback: 5/hr per IP
+- **Admin: 20/min** — applied to all 4 admin routes (mark-payout, verify-ic, feature-listing, resolve-dispute)
 
 ## Cron Schedule (vercel.json)
 | Route | Schedule | Function |
@@ -484,13 +485,20 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 - `CreditCheckoutButton`: shows discount preview before checkout
 
 ## Security
-- ✅ Admin routes have auth check (role === 'ADMIN')
-- ✅ Stripe webhook: validate metadata vs DB + idempotency check
+- ✅ Admin routes have auth check (role === 'ADMIN') + rate limit 20/min
+- ✅ Admin mark-payout: requires `tx.status === 'RELEASED'` before marking paid
+- ✅ Stripe webhook: return 500 (not 400) on signature failure so Stripe retries; P2002 catch for idempotency
 - ✅ Photo upload: 10MB size limit + MIME image/* check (SellForm, OfferModal, SwapEscrowPanel)
-- ✅ Rate limit: Upstash Redis sliding window
+- ✅ Offer/dispute photos: Zod validates URLs must start with `{SUPABASE_URL}/storage/v1/object/public/rehome-photos/`
+- ✅ Rate limit: Upstash Redis sliding window (public + admin routes)
 - ✅ Supabase RLS: enabled on ALL 12 tables with policies (migration: `enable_rls_all_tables`, 2026-06-01)
 - ✅ Bid race condition: SELECT FOR UPDATE inside Prisma $transaction (Fasa 19)
 - ✅ Delivery fee: recalculated server-side in checkout — client params ignored (Fasa 19)
+- ✅ Referral CSRF: set-cookie endpoint blocks sub-resource loads via `Sec-Fetch-Dest` header check
+- ✅ CRON_SECRET: header-only (query param fallback removed from expire-featured + retry-emails)
+- ✅ Unbounded queries: reviews/watchlist/messages all have `.take()` limits
+- ✅ SwapScore: resolve-dispute now updates `swapScore` + `swapVerified` (matches /receive route)
+- ✅ PDPA: `DELETE /api/user/account` — anonymize + delete personal data + Supabase auth user
 
 ## Supabase RLS Summary
 Prisma (DATABASE_URL) bypasses RLS as postgres superuser — all app writes are safe.
@@ -533,6 +541,7 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `/api/listings/[id]/cancel` | POST — seller cancel ACTIVE listing with 0 bids |
 | `/sell/edit/[id]` | Edit listing page — pre-filled form, mode switch (Flash↔Swap if 0 bids/offers), photo management |
 | `/api/listings/validate` | GET `?ids=id1,id2,...` — returns `{ valid: string[] }` of ACTIVE listing IDs (used by RecentlyViewed to purge stale localStorage entries) |
+| `/api/user/account` | DELETE — PDPA right to erasure: anonymize User record, delete push/watchlist/messages, delete Supabase auth user. Blocked if active escrow exists. |
 
 ## Sentry Error Tracking
 - `@sentry/nextjs` v10.55.0 installed
@@ -566,8 +575,12 @@ Shown when user has at least 1 listing:
 
 ## Audit Log (`src/lib/audit.ts`)
 - Table: `AuditLog` (Supabase, not Prisma — query via service role key)
-- `logAdminAction(adminId, action, targetId?, targetType?, details?)`
-- Called in: `verify-ic` (IC_APPROVED / IC_REJECTED), `resolve-dispute` (DISPUTE_COMPLETE / DISPUTE_CANCEL), `feature-listing` (LISTING_FEATURED / LISTING_UNFEATURED)
+- `logAdminAction(actorId, action, targetId?, targetType?, details?)` — actor can be admin OR user
+- Called in:
+  - `verify-ic`: IC_APPROVED / IC_REJECTED (admin)
+  - `resolve-dispute`: DISPUTE_COMPLETE / DISPUTE_CANCEL (admin)
+  - `feature-listing`: LISTING_FEATURED / LISTING_UNFEATURED (admin)
+  - `transactions/confirm`: BUYER_CONFIRMED_RECEIPT (buyer) — escrow release event
 - AdminPanel: "Audit Log" section loads via `/api/admin/audit-log` GET (50 latest)
 
 ## Dark Mode
@@ -615,7 +628,7 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-08 (session 7), 10 buy-flow UX expert improvements. Live: https://kassim.app
+2026-06-18 (Security Audit), 19 security fixes across 22 files. Commit 34819dc. Live: https://kassim.app
 
 ### 2026-06-08 Session 7 Changes (commit 2e2facd)
 10 buy-flow UX improvements from expert review:
@@ -834,5 +847,7 @@ Admin panel: https://kassim.app/admin
 - ✅ FPX minimum guard: checkout rejects total < RM 1 with ?payment=amount_too_low (293fafa, 2026-06-06)
 - ✅ WhatsApp share button on SellerListingCard (active listings only, Flash/Swap message variants) (8ccfce6, 2026-06-06)
 - ✅ All share/copy URLs hardcoded to kassim.app — no more window.location.href/origin (08a9767, 2026-06-06)
+- ✅ Security Audit 2026-06-18: 19 fixes deployed (34819dc) — 5 CRITICAL + 6 HIGH + 8 MEDIUM + 7 LOW
 - EasyParcel OAuth2 approval still pending ("Unauthorize Access") — fallback rates working fine
+- Add `DELETE /api/user/account` button in user settings page (backend done, UI pending)
 - Beta testing 100 users → LAUNCH 🚀
