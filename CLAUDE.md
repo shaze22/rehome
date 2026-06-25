@@ -449,10 +449,19 @@ Live URLs: `https://kassim.app/logo-512.png`, `https://kassim.app/logo.svg`
 Design: teal (#14b8a6) lightning bolt on dark (#0a0a0f) background
 Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.png` (PNG fallback)
 
-## Lalamove Integration
-- **REMOVED** (2026-06-03) — EasyParcel sudah cukup untuk parcel delivery
-- `lalamove.ts` + `/api/lalamove/webhook` dah delete
-- Kalau nak same-day delivery, boleh tambah balik kemudian
+## Lalamove Integration (RE-ADDED 2026-06-25, commit bf4d144)
+- `src/lib/lalamove.ts` — **API v3** HMAC signing: `Authorization: hmac <apiKey>:<ts>:<sig>`, rawSignature `${ts}\r\nPOST\r\n${path}\r\n\r\n${body}`, request body wrapped `{ data: {...} }`. Verified live: prod quotation HTTP 201 (KL→Shah Alam motorcycle RM24.30).
+- `getLalamoveQuote(sellerState, buyerState, weightKg, buyerPostcode?, buyerAddress?)` → `CourierRate` with 30% markup (same shape as EasyParcel) or null if route unserved.
+- `createLalamoveOrder(input)` → **re-quotes** for a fresh quotationId + stopIds (quotes expire ~5min) then `POST /v3/orders`. Returns `{ orderId, shareUrl }`.
+- `postcodeToState(postcode)` — Malaysian 5-digit postcode → state (postcode preferred over buyerState, which is unreliable/mirrors sellerState in post-win UI). `STATE_COORDS` = state-capital lat/lng (no full geocoding — we only collect postcode+state).
+- Service type by weight: MOTORCYCLE <3kg, CAR <25kg, VAN else. `isLalamoveService(id)` = id starts with `lalamove_`.
+- `getDeliveryQuote()` in easyparcel.ts runs EasyParcel + Lalamove in **parallel** (Promise.all), merges + sorts cheapest first.
+- Webhook auto-books Lalamove (else EasyParcel) when buyer picks a `lalamove_` option → stores `Transaction.lalamoveOrderId` + `deliveryTrackingUrl` (shareLink). Seller email on failure.
+- OrderCard shows Lalamove ID + "Track Lalamove driver (live)" link (both parties).
+- Env: `LALAMOVE_API_KEY` (pk_prod_), `LALAMOVE_API_SECRET` (sk_prod_), `LALAMOVE_SANDBOX=false` — set in Vercel prod + .env.local.
+- ⚠️ Real orders book real drivers + cost real money. Only quotation (read-only) was tested, not order placement.
+- Since EasyParcel OAuth still pending ("Unauthorize Access"), **Lalamove is now the working courier provider**.
+- Migration: `add_lalamove_delivery_fields` (Supabase MCP) — Transaction.lalamoveOrderId + deliveryTrackingUrl.
 
 ## SEO
 - `layout.tsx` — metadata template `'%s | KASSIM'`, OG default, Twitter card
