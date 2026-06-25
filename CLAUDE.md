@@ -212,16 +212,11 @@ getSwapSuggestions({ title, category, condition, estimatedValue })
 ```
 
 ## Delivery Revenue Model
-- kassim.app takes **30% markup ON TOP** of courier base price (not a cut from it)
-- Example: courier charges RM10 → buyer pays RM13 → kassim.app pays courier RM10, keeps RM3
-- `basePrice` = what courier charges · `markup` = 30% of base · `chargedPrice` = base + markup
-- Fallback hardcoded rates (when EasyParcel + Lalamove both unavailable):
-
-| Zone          | Base  | Markup | Buyer pays |
-|---------------|-------|--------|------------|
-| Same state    | RM8   | RM2.40 | RM10.40    |
-| Peninsular    | RM12  | RM3.60 | RM15.60    |
-| East Malaysia | RM20  | RM6.00 | RM26.00    |
+- **Delivery is Lalamove-only** (EasyParcel removed 2026-06-25 — OAuth never approved). See `src/lib/courier.ts` + `src/lib/lalamove.ts`.
+- kassim.app takes **30% markup ON TOP** of Lalamove's base price (not a cut from it)
+- Example: Lalamove charges RM10 → buyer pays RM13 → kassim.app pays Lalamove RM10, keeps RM3
+- `basePrice` = Lalamove total · `markup` = 30% of base · `chargedPrice` = base + markup
+- **No hardcoded fallback** — if Lalamove does not serve the route, the quote returns `covered: false` and the UI tells the buyer delivery is not available (must arrange collection with seller).
 
 ## Project Structure
 ```
@@ -426,16 +421,10 @@ Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
 
 > **Note:** `set-pickup` and `pickup-confirm` APIs still exist in codebase but are no longer called from UI.
 
-## EasyParcel Integration (OAuth2 — Fasa 6)
-- `src/lib/easyparcel.ts` — OAuth2 `client_credentials` (EASYPARCEL_CLIENT_ID + EASYPARCEL_CLIENT_SECRET)
-- In-memory token cache (1 hour TTL, auto-refresh 60s before expiry)
-- `getDeliveryQuote(sellerState, buyerState, weightKg, buyerPostcode?)` — returns rates with **30% markup applied**
-- `CourierRate`: `{ id, courierName, serviceName, basePrice, chargedPrice, markup, eta? }`
-- `createEasyParcelShipment(input)` — books courier after payment confirmed
-- EasyParcel + Lalamove run in parallel (Promise.all), combined + sorted cheapest first
-- Hardcoded fallback if both APIs unavailable
-- **Revenue**: platform keeps 30% delivery markup; pays courier base price
-- Webhook auto-books EasyParcel on `checkout.session.completed` + stores `easyparcelOrderId`
+## EasyParcel Integration — REMOVED (2026-06-25, commit b09… Lalamove-only)
+- `src/lib/easyparcel.ts` **deleted**. OAuth approval never came through ("Unauthorize Access" for weeks).
+- Delivery is now **Lalamove-only** (door-to-door pickup+drop-off fits the KASSIM C2C model better). See section below + `src/lib/courier.ts`.
+- `Transaction.easyparcelOrderId` column kept (historical orders only); no new writes.
 
 ## Logo Assets
 | File | Size | Use |
@@ -449,19 +438,19 @@ Live URLs: `https://kassim.app/logo-512.png`, `https://kassim.app/logo.svg`
 Design: teal (#14b8a6) lightning bolt on dark (#0a0a0f) background
 Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.png` (PNG fallback)
 
-## Lalamove Integration (RE-ADDED 2026-06-25, commit bf4d144)
-- `src/lib/lalamove.ts` — **API v3** HMAC signing: `Authorization: hmac <apiKey>:<ts>:<sig>`, rawSignature `${ts}\r\nPOST\r\n${path}\r\n\r\n${body}`, request body wrapped `{ data: {...} }`. Verified live: prod quotation HTTP 201 (KL→Shah Alam motorcycle RM24.30).
-- `getLalamoveQuote(sellerState, buyerState, weightKg, buyerPostcode?, buyerAddress?)` → `CourierRate` with 30% markup (same shape as EasyParcel) or null if route unserved.
-- `createLalamoveOrder(input)` → **re-quotes** for a fresh quotationId + stopIds (quotes expire ~5min) then `POST /v3/orders`. Returns `{ orderId, shareUrl }`.
-- `postcodeToState(postcode)` — Malaysian 5-digit postcode → state (postcode preferred over buyerState, which is unreliable/mirrors sellerState in post-win UI). `STATE_COORDS` = state-capital lat/lng (no full geocoding — we only collect postcode+state).
-- Service type by weight: MOTORCYCLE <3kg, CAR <25kg, VAN else. `isLalamoveService(id)` = id starts with `lalamove_`.
-- `getDeliveryQuote()` in easyparcel.ts runs EasyParcel + Lalamove in **parallel** (Promise.all), merges + sorts cheapest first.
-- Webhook auto-books Lalamove (else EasyParcel) when buyer picks a `lalamove_` option → stores `Transaction.lalamoveOrderId` + `deliveryTrackingUrl` (shareLink). Seller email on failure.
+## Lalamove Integration (SOLE delivery provider as of 2026-06-25)
+- `src/lib/courier.ts` — `getDeliveryQuote(sellerState, buyerState, weightKg, buyerPostcode?)` → `{ cheapest, couriers, source: 'lalamove'|'none', covered }`. **Lalamove-only, no fallback.** `covered:false` = route unservable. `CourierRate` + `DeliveryQuoteResult` live here now (was easyparcel.ts).
+- `src/lib/lalamove.ts` — **API v3** HMAC: `Authorization: hmac <apiKey>:<ts>:<sig>`, rawSignature `${ts}\r\nPOST\r\n${path}\r\n\r\n${body}`, body wrapped `{ data: {...} }`. Verified live (HTTP 201).
+- `getLalamoveQuote(...)` → `CourierRate` w/ 30% markup, or null if unserved. `createLalamoveOrder(input)` → **re-quotes** for fresh quotationId + stopIds (expire ~5min) then `POST /v3/orders` → `{ orderId, shareUrl }`.
+- **Service type by weight**: MOTORCYCLE <3kg, CAR <25kg, **LORRY_10FT** ≥25kg. (⚠️ `VAN` is NOT a valid Lalamove MY type — was a bug, fixed.) Valid types: MOTORCYCLE, CAR, 4X4, LORRY_10FT/14FT/17FT/20FT, OPEN_LORRY_*.
+- **MOTORCYCLE→CAR fallback** (`quoteWithFallback`): motorcycle has narrowest coverage (long-haul = `ERR_OUT_OF_SERVICE_AREA`). If primary motorcycle quote fails, retry CAR (serves inter-state, pricier). Keeps far routes open per business decision. `id = lalamove_<svc>`.
+- `postcodeToState(postcode)` — MY 5-digit postcode → state (preferred over buyerState which is unreliable/mirrors sellerState in post-win UI). `STATE_COORDS` = state-capital lat/lng (no geocoding — only postcode+state collected). So quotes are city-level approximations, not door-exact.
+- Webhook auto-books Lalamove on `checkout.session.completed` → stores `Transaction.lalamoveOrderId` + `deliveryTrackingUrl` (shareLink). On failure → `sendDeliveryFailureEmail` (seller + admin).
+- **Buyer UX** (`ListingDetailClient`): pre-bid estimate shows amber if `cheapest >= HIGH_DELIVERY` (RM50) "(far — inter-state)", red notice if `covered:false` ("Lalamove does not cover delivery to your area"). Post-win `DeliveryCheckout`: if not covered → red message + can't pay; if `chargedPrice >= RM50` → amber checkbox "Are you sure?" must be ticked before Pay enables.
 - OrderCard shows Lalamove ID + "Track Lalamove driver (live)" link (both parties).
-- Env: `LALAMOVE_API_KEY` (pk_prod_), `LALAMOVE_API_SECRET` (sk_prod_), `LALAMOVE_SANDBOX=false` — set in Vercel prod + .env.local.
-- ⚠️ Real orders book real drivers + cost real money. Only quotation (read-only) was tested, not order placement.
-- Since EasyParcel OAuth still pending ("Unauthorize Access"), **Lalamove is now the working courier provider**.
-- Migration: `add_lalamove_delivery_fields` (Supabase MCP) — Transaction.lalamoveOrderId + deliveryTrackingUrl.
+- Env: `LALAMOVE_API_KEY` (pk_prod_), `LALAMOVE_API_SECRET` (sk_prod_), `LALAMOVE_SANDBOX=false` — Vercel prod + .env.local.
+- ⚠️ Real orders book real drivers + cost real money. Only quotation (read-only) tested across routes, NOT order placement. Verified: KL→KL motor RM10.20, KL→Penang motor→CAR fallback RM326, 30kg KL→Shah LORRY RM93.70, KL→Sabah covered:false.
+- Migration: `add_lalamove_delivery_fields` — Transaction.lalamoveOrderId + deliveryTrackingUrl.
 
 ## SEO
 - `layout.tsx` — metadata template `'%s | KASSIM'`, OG default, Twitter card

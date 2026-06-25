@@ -105,6 +105,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface DCourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
 
+// Above this, delivery is flagged as expensive (typically inter-state) and the
+// buyer must explicitly acknowledge before paying.
+const HIGH_DELIVERY = 50
+
 function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, initialPostcode, initialAddress }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string; initialPostcode?: string; initialAddress?: string }) {
   const [credit, setCredit] = useState(0)
   const [postcode, setPostcode] = useState(initialPostcode ?? '')
@@ -113,6 +117,8 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
   const [quotes, setQuotes] = useState<DCourierRate[] | null>(null)
   const [quotesLoading, setQuotesLoading] = useState(false)
   const [selected, setSelected] = useState<DCourierRate | null>(null)
+  const [covered, setCovered] = useState(true)
+  const [ackHighCost, setAckHighCost] = useState(false)
 
   const step = !postcode || postcode.length < 5 ? 1
     : !selected ? 2
@@ -133,10 +139,12 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
     const t = setTimeout(() => {
       fetch(`/api/listings/${listingId}/delivery-quote?buyerState=${sellerState}&buyerPostcode=${postcode}`)
         .then(r => r.json())
-        .then((d: { couriers?: DCourierRate[] }) => {
+        .then((d: { couriers?: DCourierRate[]; covered?: boolean }) => {
           const list = d.couriers ?? []
           setQuotes(list)
           setSelected(list[0] ?? null)
+          setCovered(d.covered !== false)
+          setAckHighCost(false)
         })
         .catch(() => setQuotes(null))
         .finally(() => setQuotesLoading(false))
@@ -149,7 +157,8 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
   // Buyer pays: bid amount + delivery only. Platform fee (15%) is deducted from seller's payout, not charged to buyer.
   const total = bidAmount - discount + deliveryFee
 
-  const ready = selected !== null && phone.length >= 10 && address.length >= 10
+  const isHighCost = (selected?.chargedPrice ?? 0) >= HIGH_DELIVERY
+  const ready = selected !== null && phone.length >= 10 && address.length >= 10 && (!isHighCost || ackHighCost)
 
   const checkoutParams = new URLSearchParams({ listingId })
   if (selected) {
@@ -233,8 +242,10 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
             </div>
           )}
           {quotes && quotes.length === 0 && (
-            <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
-              No rates found. Try a different postcode.
+            <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
+              {covered
+                ? 'No rates found. Please double-check your postcode.'
+                : '⚠️ Lalamove does not deliver to this area. Please contact the seller via chat to arrange collection.'}
             </p>
           )}
 
@@ -283,6 +294,16 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
           </div>
           <p className="text-xs pt-1" style={{ color: 'var(--text-muted)' }}>15% platform fee is deducted from the seller's payout, not charged to you.</p>
         </div>
+      )}
+
+      {/* High delivery cost — require explicit acknowledgement before paying */}
+      {selected && isHighCost && (
+        <label className="flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs cursor-pointer" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)' }}>
+          <input type="checkbox" checked={ackHighCost} onChange={e => setAckHighCost(e.target.checked)} className="mt-0.5" style={{ accentColor: 'var(--yellow)' }} />
+          <span style={{ color: 'var(--text-secondary)' }}>
+            Delivery costs <strong style={{ color: 'var(--yellow)' }}>RM {deliveryFee.toFixed(2)}</strong> because the seller is far away (inter-state). Are you sure? Tick to confirm you want to proceed.
+          </span>
+        </label>
       )}
 
       <Link
@@ -380,14 +401,14 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const isSwap = initialListing.mode === 'SWAP'
 
   // Auto-fetch delivery estimate from user's saved state (silent, no user action needed)
-  const [autoDeliveryEst, setAutoDeliveryEst] = useState<number | null>(null)
+  const [autoDelivery, setAutoDelivery] = useState<{ cheapest: number | null; covered: boolean } | null>(null)
   useEffect(() => {
     if (!currentUserState || isSwap) return
     if (initialListing.status !== 'ACTIVE') return
     if (initialUserId === initialListing.seller.id) return
     fetch(`/api/listings/${initialListing.id}/delivery-quote?buyerState=${encodeURIComponent(currentUserState)}`)
       .then(r => r.json())
-      .then((d: { cheapest?: number }) => setAutoDeliveryEst(d.cheapest ?? null))
+      .then((d: { cheapest?: number; covered?: boolean }) => setAutoDelivery({ cheapest: d.cheapest ?? null, covered: d.covered !== false }))
       .catch(() => {})
   }, [initialListing.id, currentUserState, isSwap, initialListing.status, initialUserId, initialListing.seller.id])
 
@@ -1015,15 +1036,22 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     </div>
 
                     {/* Auto delivery estimate — silent, from user's saved state */}
-                    <div className="mb-3 flex items-center justify-between text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                      <div className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                        <Truck className="w-3.5 h-3.5" />
-                        <span>Est. delivery to your address</span>
+                    {autoDelivery && !autoDelivery.covered ? (
+                      <div className="mb-3 flex items-start gap-1.5 text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        <span>Lalamove does not cover delivery to your area. You can still bid, but you may need to arrange collection with the seller.</span>
                       </div>
-                      <span className="font-mono font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        {autoDeliveryEst !== null ? `~RM ${autoDeliveryEst.toFixed(2)}` : currentUserState ? '...' : 'Login to see estimate'}
-                      </span>
-                    </div>
+                    ) : (
+                      <div className="mb-3 flex items-center justify-between text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: autoDelivery && autoDelivery.cheapest !== null && autoDelivery.cheapest >= HIGH_DELIVERY ? 'rgba(251,191,36,0.1)' : 'var(--bg-elevated)', border: autoDelivery && autoDelivery.cheapest !== null && autoDelivery.cheapest >= HIGH_DELIVERY ? '1px solid rgba(251,191,36,0.4)' : '1px solid var(--border)' }}>
+                        <div className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                          <Truck className="w-3.5 h-3.5" />
+                          <span>Est. delivery to your address{autoDelivery && autoDelivery.cheapest !== null && autoDelivery.cheapest >= HIGH_DELIVERY ? ' (far — inter-state)' : ''}</span>
+                        </div>
+                        <span className="font-mono font-medium" style={{ color: autoDelivery && autoDelivery.cheapest !== null && autoDelivery.cheapest >= HIGH_DELIVERY ? 'var(--yellow)' : 'var(--text-secondary)' }}>
+                          {autoDelivery && autoDelivery.cheapest !== null ? `~RM ${autoDelivery.cheapest.toFixed(2)}` : currentUserState ? '...' : 'Login to see estimate'}
+                        </span>
+                      </div>
+                    )}
                   </>
                 )}
 

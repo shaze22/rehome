@@ -253,7 +253,7 @@ export async function sendReferralRewardEmail(to: string, name: string, friendNa
   ))
 }
 
-export async function sendEasyParcelFailureEmail(
+export async function sendDeliveryFailureEmail(
   sellerEmail: string, sellerName: string,
   listingTitle: string, listingId: string,
   errorMsg: string
@@ -263,17 +263,17 @@ export async function sendEasyParcelFailureEmail(
 
   // Notify seller — book manually
   await safeSend(sellerEmail, `Action needed: Book delivery for "${listingTitle}"`, baseTemplate(
-    'Please Book Delivery Manually',
+    'Please Arrange Delivery Manually',
     `<p>Hi ${sellerName},</p>
      <p>Great news — your item <strong>${listingTitle}</strong> has been sold and payment received!</p>
      <p style="background:#2d1515;border:1px solid #ef444430;padding:16px;border-radius:8px;color:#fca5a5">
-       Our automatic courier booking encountered an issue. Please arrange delivery manually.
+       Our automatic Lalamove booking encountered an issue. Please arrange delivery manually.
      </p>
      <p>Steps:</p>
      <ol>
        <li>Log in to your dashboard</li>
        <li>Go to Orders and find this item</li>
-       <li>Book a courier via EasyParcel, J&amp;T, or any courier</li>
+       <li>Book a Lalamove pickup (or any courier) to the buyer's address shown there</li>
        <li>Enter the tracking number in your dashboard</li>
      </ol>
      <p style="color:#94a3b8;font-size:13px">Contact support via WhatsApp if you need help: +60189899495</p>`,
@@ -281,9 +281,9 @@ export async function sendEasyParcelFailureEmail(
   ))
 
   // Alert admin
-  await safeSend(adminEmail, `[KASSIM] EasyParcel booking failed — ${listingTitle}`, `
+  await safeSend(adminEmail, `[KASSIM] Lalamove booking failed — ${listingTitle}`, `
     <div style="font-family:monospace;padding:16px">
-      <h3>EasyParcel Auto-Booking Failed</h3>
+      <h3>Lalamove Auto-Booking Failed</h3>
       <p><b>Listing:</b> ${listingTitle}</p>
       <p><b>Listing ID:</b> ${listingId}</p>
       <p><b>Seller:</b> ${sellerName} (${sellerEmail})</p>

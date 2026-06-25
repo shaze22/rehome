@@ -1,7 +1,9 @@
 import crypto from 'crypto'
-import type { CourierRate } from './easyparcel'
+import type { CourierRate } from './courier'
 
 const MARKUP = 0.30
+
+type LalaSvc = 'MOTORCYCLE' | 'CAR' | 'LORRY_10FT'
 
 // State capital coordinates — used as pickup/dropoff approximation since we only
 // collect postcode + state (no full geocoding). Lalamove requires lat/lng per stop.
@@ -52,16 +54,16 @@ export function postcodeToState(postcode?: string | null): string | null {
   return null
 }
 
-function serviceType(weightKg: number): 'MOTORCYCLE' | 'CAR' | 'VAN' {
+function serviceType(weightKg: number): LalaSvc {
   if (weightKg < 3) return 'MOTORCYCLE'
   if (weightKg < 25) return 'CAR'
-  return 'VAN'
+  return 'LORRY_10FT'
 }
 
-function serviceLabel(svc: 'MOTORCYCLE' | 'CAR' | 'VAN'): string {
+function serviceLabel(svc: LalaSvc): string {
   if (svc === 'MOTORCYCLE') return 'Motorcycle'
   if (svc === 'CAR') return 'Car'
-  return 'Van'
+  return 'Lorry'
 }
 
 function baseUrl(): string {
@@ -98,6 +100,8 @@ function toE164(phone: string | null | undefined): string {
   return `+60${digits.replace(/^0/, '')}`
 }
 
+interface Coords { lat: string; lng: string; city: string }
+
 interface QuotationData {
   quotationId: string
   priceTotal: number
@@ -106,9 +110,9 @@ interface QuotationData {
 }
 
 async function requestQuotation(
-  svc: 'MOTORCYCLE' | 'CAR' | 'VAN',
-  pickup: { lat: string; lng: string; city: string },
-  dropoff: { lat: string; lng: string; city: string; address: string },
+  svc: LalaSvc,
+  pickup: Coords,
+  dropoff: Coords & { address?: string },
 ): Promise<QuotationData | null> {
   const path = '/v3/quotations'
   const payload = {
@@ -158,10 +162,36 @@ async function requestQuotation(
   }
 }
 
+// Quote for the weight-appropriate vehicle, falling back from MOTORCYCLE to CAR.
+// MOTORCYCLE has the narrowest coverage (no long-haul / inter-state — returns
+// ERR_OUT_OF_SERVICE_AREA), while CAR serves inter-state routes. Falling back keeps
+// the delivery option open for far buyers (more expensive, by design).
+async function quoteWithFallback(
+  weightKg: number,
+  pickup: Coords,
+  dropoff: Coords & { address?: string },
+): Promise<{ svc: LalaSvc; quote: QuotationData } | null> {
+  const primary = serviceType(weightKg)
+  const q = await requestQuotation(primary, pickup, dropoff)
+  if (q) return { svc: primary, quote: q }
+  if (primary === 'MOTORCYCLE') {
+    const car = await requestQuotation('CAR', pickup, dropoff)
+    if (car) return { svc: 'CAR', quote: car }
+  }
+  return null
+}
+
+function resolveCoords(state: string, postcode: string | undefined): Coords | undefined {
+  // Postcode is the most reliable buyer location (buyerState is sometimes unset or
+  // mirrors sellerState in the post-win UI), so resolve from postcode first.
+  const resolved = postcodeToState(postcode) ?? (STATE_COORDS[state] ? state : null)
+  return resolved ? STATE_COORDS[resolved] : undefined
+}
+
 /**
  * Get a Lalamove same-day quote as a CourierRate (with 30% markup applied),
- * matching the EasyParcel courier shape so it merges into the picker.
- * Returns null if Lalamove is unconfigured or does not serve the route.
+ * matching the picker shape. Returns null if Lalamove does not serve the route
+ * (caller treats this as "delivery not covered").
  */
 export async function getLalamoveQuote(
   sellerState: string,
@@ -170,23 +200,19 @@ export async function getLalamoveQuote(
   buyerPostcode?: string,
   buyerAddress?: string,
 ): Promise<CourierRate | null> {
-  // Postcode is the most reliable buyer location (buyerState is sometimes unset or
-  // mirrors sellerState in the post-win UI), so resolve from postcode first.
-  const effectiveBuyerState = postcodeToState(buyerPostcode) ?? (STATE_COORDS[buyerState] ? buyerState : null)
   const pickup = STATE_COORDS[sellerState]
-  const dropoff = effectiveBuyerState ? STATE_COORDS[effectiveBuyerState] : undefined
+  const dropoff = resolveCoords(buyerState, buyerPostcode)
   if (!pickup || !dropoff) return null
 
-  const svc = serviceType(weightKg)
-  const quote = await requestQuotation(svc, pickup, { ...dropoff, address: buyerAddress ?? dropoff.city })
-  if (!quote) return null
+  const result = await quoteWithFallback(weightKg, pickup, { ...dropoff, address: buyerAddress })
+  if (!result) return null
 
-  const base = Math.round(quote.priceTotal * 100) / 100
+  const base = Math.round(result.quote.priceTotal * 100) / 100
   const markup = Math.round(base * MARKUP * 100) / 100
   return {
-    id: `lalamove_${svc}`,
+    id: `lalamove_${result.svc}`,
     courierName: 'Lalamove',
-    serviceName: `Same-Day Express (${serviceLabel(svc)})`,
+    serviceName: `Same-Day Express (${serviceLabel(result.svc)})`,
     basePrice: base,
     chargedPrice: Math.round((base + markup) * 100) / 100,
     markup,
@@ -218,31 +244,29 @@ export interface LalamoveOrderResult {
  * Returns null on any failure (caller should fall back to manual booking email).
  */
 export async function createLalamoveOrder(input: LalamoveOrderInput): Promise<LalamoveOrderResult | null> {
-  const effectiveBuyerState = postcodeToState(input.buyerPostcode) ?? (STATE_COORDS[input.buyerState] ? input.buyerState : null)
   const pickup = STATE_COORDS[input.sellerState]
-  const dropoff = effectiveBuyerState ? STATE_COORDS[effectiveBuyerState] : undefined
+  const dropoff = resolveCoords(input.buyerState, input.buyerPostcode)
   if (!pickup || !dropoff) return null
-
-  const svc = serviceType(input.weightKg)
-  const quote = await requestQuotation(svc, pickup, { ...dropoff, address: input.toAddress || dropoff.city })
-  if (!quote) return null
 
   const fromPhone = toE164(input.fromPhone)
   const toPhone = toE164(input.toPhone)
   if (!fromPhone || !toPhone) return null
 
+  const result = await quoteWithFallback(input.weightKg, pickup, { ...dropoff, address: input.toAddress })
+  if (!result) return null
+
   const path = '/v3/orders'
   const payload = {
     data: {
-      quotationId: quote.quotationId,
+      quotationId: result.quote.quotationId,
       sender: {
-        stopId: quote.stops[0].stopId,
+        stopId: result.quote.stops[0].stopId,
         name: input.fromName.slice(0, 100),
         phone: fromPhone,
       },
       recipients: [
         {
-          stopId: quote.stops[1].stopId,
+          stopId: result.quote.stops[1].stopId,
           name: input.toName.slice(0, 100),
           phone: toPhone,
           remarks: (input.remarks ?? '').slice(0, 100),
@@ -273,8 +297,4 @@ export async function createLalamoveOrder(input: LalamoveOrderInput): Promise<La
     console.error('[lalamove] placeOrder error:', err)
     return null
   }
-}
-
-export function isLalamoveService(courierServiceId?: string | null): boolean {
-  return !!courierServiceId && courierServiceId.startsWith('lalamove_')
 }

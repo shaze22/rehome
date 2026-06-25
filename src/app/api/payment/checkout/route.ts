@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getStripe, calculateFees } from '@/lib/stripe'
-import { getDeliveryQuote } from '@/lib/easyparcel'
+import { getDeliveryQuote } from '@/lib/courier'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
