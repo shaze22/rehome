@@ -389,12 +389,19 @@ Top-level namespaces: `nav`, `home`, `listing`, `errors`, `sell`, `dashboard`, `
 - Login link: `/auth/login?next=/listings/[id]` (returns to listing after login)
 
 **Post-win (auction ended, user won):**
-- `DeliveryCheckout` component: **courier only** (self-pickup removed)
+- `DeliveryCheckout` component: Lalamove courier by default; **self-pickup offered as fallback when Lalamove returns `covered:false`** (e.g. Sabah — no service)
 - Pre-populates phone from `currentUserPhone` (saved in profile)
 - Buyer enters postcode → sees EasyParcel rates → selects courier → enters phone + address → Stripe checkout
 - Checkout URL includes all delivery params → Stripe line items → webhook books EasyParcel
 
-## Flash: Delivery Flow (Self-Pickup Removed)
+## Self-Pickup Fallback (Lalamove-uncovered areas, 2026-06-25)
+- Lalamove does NOT serve all of Malaysia. **Verified: Sarawak (Kuching) works; Sabah (Kota Kinabalu) = out-of-service.** Quote returns `covered:false` for unservable routes.
+- When `covered:false`, `DeliveryCheckout` shows a "Self-pickup instead" option: buyer collects from seller, **no delivery fee**, payment held in escrow.
+- Flow: buyer picks self-pickup → checkout `?pickup=1` (deliveryFee 0, metadata.pickupMethod=PICKUP) → Stripe charges bid only. **Free win (RM0 bid) skips Stripe** — checkout route creates the escrow Transaction directly + emails seller.
+- Webhook sets `Transaction.pickupMethod=PICKUP`, skips Lalamove booking, sends `sendPickupArrangeEmail` (with buyer phone) instead of ship-now.
+- Both parties coordinate via WhatsApp (seller.phone / buyerPhone) or listing chat. Buyer clicks **"Confirm Item Collected"** (listing detail PICKUP panel or dashboard OrderCard) → `confirm` route (allows PICKUP without a "shipped" step) → RELEASED.
+
+## Flash: Delivery Flow (Lalamove + Self-Pickup Fallback)
 After Stripe payment, buyer redirects to listing page (`?payment=success`).
 Webhook auto-sets `pickupMethod = 'DELIVERY'` on Transaction creation.
 
