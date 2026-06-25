@@ -26,6 +26,8 @@ model User {
   creditBalance   Float       @default(0)
   postcode        String?
   savedAddress    String?
+  stripeAccountId String?     @unique  // Stripe Connect (Express) account for seller payouts
+  stripeOnboarded Boolean     @default(false)  // true once Stripe onboarding completed (payouts enabled)
   referrals         Referral[]         @relation("ReferrerReferrals")
   referredBy        Referral?          @relation("ReferredUser")
   pushSubscriptions PushSubscription[]
@@ -139,6 +141,7 @@ model Transaction {
   easyparcelOrderId     String?
   lalamoveOrderId       String?           // Lalamove order id (when booked via Lalamove)
   deliveryTrackingUrl   String?           // Lalamove shareLink / courier tracking URL
+  stripeTransferId      String?           // Stripe Connect transfer id (seller payout)
   buyerPostcode         String?
   buyerPhone            String?
   buyerAddress          String?

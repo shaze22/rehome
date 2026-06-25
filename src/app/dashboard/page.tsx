@@ -8,6 +8,7 @@ import { IcUploadForm } from '@/components/dashboard/IcUploadForm'
 import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
 import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
+import { PayoutsSection } from '@/components/dashboard/PayoutsSection'
 import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck } from 'lucide-react'
 import { DeleteAccountButton } from '@/components/dashboard/DeleteAccountButton'
 
@@ -348,6 +349,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </div>
 
       {/* Orders */}
+      {(myListings.length > 0 || dbUser.stripeAccountId) && (
+        <PayoutsSection onboarded={!!dbUser.stripeOnboarded} hasAccount={!!dbUser.stripeAccountId} />
+      )}
+
       {(sellerOrders.length > 0 || buyerOrders.length > 0) && (
         <div className="mt-8">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">

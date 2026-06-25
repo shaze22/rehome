@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendPaymentReceivedEmail } from '@/lib/resend'
 import { logAdminAction } from '@/lib/audit'
+import { transferToSeller } from '@/lib/connect'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ listingId: string }> }) {
   const { listingId } = await params
@@ -33,6 +34,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     data: { rehomeScore: { increment: 5 } },
   })
 
+  // Auto-payout via Stripe Connect (separate charges & transfers). Non-onboarded
+  // sellers fall back to the manual admin "Mark Paid" flow.
+  const payout = await transferToSeller(listingId).catch(() => ({ ok: false as const, reason: 'error' as const }))
+
   // Notify seller
   try {
     const seller = await prisma.user.findUnique({ where: { id: tx.sellerId }, select: { email: true, name: true } })
@@ -45,7 +50,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   void logAdminAction(user.id, 'BUYER_CONFIRMED_RECEIPT', listingId, 'Transaction', {
     sellerId: tx.sellerId,
     sellerPayout: tx.sellerPayout,
+    payout: payout.ok ? 'sent' : payout.reason,
   })
 
-  return NextResponse.json({ success: true, sellerPayout: tx.sellerPayout })
+  return NextResponse.json({ success: true, sellerPayout: tx.sellerPayout, payout: payout.ok ? 'sent' : payout.reason })
 }

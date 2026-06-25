@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
+import { transferToSeller } from '@/lib/connect'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -22,10 +23,24 @@ export async function POST(request: NextRequest) {
   if (tx.sellerPaid) return NextResponse.json({ error: 'Already marked as paid.' }, { status: 400 })
   if (tx.status !== 'RELEASED') return NextResponse.json({ error: 'Transaction must be RELEASED before payout can be marked.' }, { status: 400 })
 
+  // Onboarded sellers are paid via Stripe Connect Transfer; this is the admin override
+  // (auto-payout normally fires when the buyer confirms receipt).
+  const seller = await prisma.user.findUnique({ where: { id: tx.sellerId }, select: { stripeOnboarded: true } })
+  if (seller?.stripeOnboarded) {
+    const result = await transferToSeller(tx.listingId)
+    if (result.ok) {
+      if (note) await prisma.transaction.update({ where: { id: transactionId }, data: { payoutNote: note } })
+      return NextResponse.json({ success: true, method: 'stripe' })
+    }
+    if (result.reason === 'error') return NextResponse.json({ error: result.message ?? 'Stripe transfer failed.' }, { status: 502 })
+    // result.reason === 'already_paid' falls through to the manual marker below
+  }
+
+  // Manual payout (non-onboarded seller — admin made a bank transfer)
   const updated = await prisma.transaction.update({
     where: { id: transactionId },
     data: { sellerPaid: true, sellerPaidAt: new Date(), payoutNote: note ?? null },
   })
 
-  return NextResponse.json({ success: true, sellerPaidAt: updated.sellerPaidAt })
+  return NextResponse.json({ success: true, method: 'manual', sellerPaidAt: updated.sellerPaidAt })
 }

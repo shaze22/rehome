@@ -143,6 +143,9 @@ export async function GET(request: NextRequest) {
     payment_method_types: ['card', 'fpx'],
     customer_email: user.email ?? undefined,
     line_items: lineItems,
+    // Group the charge so the seller payout (Stripe Connect Transfer) can be tied to it
+    // on escrow release (separate charges & transfers).
+    payment_intent_data: { transfer_group: `listing_${listingId}` },
     metadata: {
       listingId,
       buyerId: user.id,
