@@ -142,18 +142,37 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      {/* Urgent: seller needs to ship */}
-      {sellerOrders.length > 0 && (
-        <div className="mb-6 rounded-2xl overflow-hidden" style={{ border: '2px solid var(--teal)', boxShadow: '0 0 24px rgba(20,184,166,0.15)' }}>
-          <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(20,184,166,0.1)' }}>
-            <Truck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--teal)' }} />
-            <p className="font-bold text-sm" style={{ color: 'var(--teal)' }}>Action required: Ship {sellerOrders.length === 1 ? 'your item' : `${sellerOrders.length} items`} to the buyer.</p>
-          </div>
-          <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)' }}>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Buyer has paid. Pack your item and enter the tracking number below in Orders.</p>
-          </div>
-        </div>
-      )}
+      {/* Urgent: seller action — ship (delivery) vs arrange meet-up (self-pickup) */}
+      {(() => {
+        const shipOrders = (sellerOrders as { pickupMethod?: string | null }[]).filter(o => o.pickupMethod !== 'PICKUP')
+        const pickupOrders = (sellerOrders as { pickupMethod?: string | null }[]).filter(o => o.pickupMethod === 'PICKUP')
+        return (
+          <>
+            {shipOrders.length > 0 && (
+              <div className="mb-6 rounded-2xl overflow-hidden" style={{ border: '2px solid var(--teal)', boxShadow: '0 0 24px rgba(20,184,166,0.15)' }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(20,184,166,0.1)' }}>
+                  <Truck className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--teal)' }} />
+                  <p className="font-bold text-sm" style={{ color: 'var(--teal)' }}>Action required: Ship {shipOrders.length === 1 ? 'your item' : `${shipOrders.length} items`} to the buyer.</p>
+                </div>
+                <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Buyer has paid. Pack your item and enter the tracking number below in Orders.</p>
+                </div>
+              </div>
+            )}
+            {pickupOrders.length > 0 && (
+              <div className="mb-6 rounded-2xl overflow-hidden" style={{ border: '2px solid var(--green)', boxShadow: '0 0 24px rgba(0,217,165,0.15)' }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(0,217,165,0.1)' }}>
+                  <Package className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--green)' }} />
+                  <p className="font-bold text-sm" style={{ color: 'var(--green)' }}>Action required: Arrange pickup for {pickupOrders.length === 1 ? 'your sold item' : `${pickupOrders.length} sold items`}.</p>
+                </div>
+                <div className="px-5 py-3" style={{ backgroundColor: 'var(--bg-card)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Buyer has paid and will collect in person (Lalamove does not cover their area). Contact the buyer in Orders to arrange a safe meet-up.</p>
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
