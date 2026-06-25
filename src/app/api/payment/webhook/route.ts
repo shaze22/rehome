@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendPaymentReceivedEmail, sendShipNowEmail, sendDeliveryFailureEmail } from '@/lib/resend'
+import { sendPaymentReceivedEmail, sendShipNowEmail, sendDeliveryFailureEmail, sendPickupArrangeEmail } from '@/lib/resend'
 import { createLalamoveOrder } from '@/lib/lalamove'
 
 export async function POST(request: NextRequest) {
@@ -30,10 +30,11 @@ export async function POST(request: NextRequest) {
     const meta = session.metadata as Record<string, string>
     const {
       listingId, buyerId, sellerId, platformFee, sellerPayout, creditUsed,
-      deliveryFee, deliveryBase, deliveryMarkup,
+      deliveryFee, deliveryBase, deliveryMarkup, pickupMethod,
       courierName, courierService, courierServiceId,
       buyerPostcode, buyerPhone, buyerAddress,
     } = meta
+    const isPickup = pickupMethod === 'PICKUP'
 
     // Validate metadata against DB to prevent tampering
     const [listing, existingTx] = await Promise.all([
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
             sellerPayout: parseFloat(sellerPayout),
             stripePaymentId: session.payment_intent as string,
             status: 'ESCROWED',
-            pickupMethod: 'DELIVERY', // self-pickup removed — all orders use platform delivery
+            pickupMethod: isPickup ? 'PICKUP' : 'DELIVERY', // PICKUP = Lalamove-uncovered area, buyer collects from seller
             deliveryFee: dFee,
             deliveryBase: dBase,
             deliveryMarkup: dMarkup,
@@ -140,10 +141,14 @@ export async function POST(request: NextRequest) {
       const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
       if (seller?.email && listing) {
         await sendPaymentReceivedEmail(seller.email, seller.name ?? 'Seller', listing.title, parseFloat(sellerPayout))
-        await sendShipNowEmail(
-          seller.email, seller.name ?? 'Seller', listing.title, listingId,
-          courierName || null, buyerPostcode || null, null, // easyparcelOrderId saved async later
-        )
+        if (isPickup) {
+          await sendPickupArrangeEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, buyerPhone || null)
+        } else {
+          await sendShipNowEmail(
+            seller.email, seller.name ?? 'Seller', listing.title, listingId,
+            courierName || null, buyerPostcode || null, null, // delivery order id saved async later
+          )
+        }
       }
     } catch {}
   }

@@ -253,6 +253,25 @@ export async function sendReferralRewardEmail(to: string, name: string, friendNa
   ))
 }
 
+export async function sendPickupArrangeEmail(
+  sellerEmail: string, sellerName: string,
+  listingTitle: string, listingId: string,
+  buyerPhone: string | null,
+) {
+  await safeSend(sellerEmail, `Self-pickup: arrange collection for "${listingTitle}"`, baseTemplate(
+    'Buyer Will Collect This Item',
+    `<p>Hi ${sellerName},</p>
+     <p>Your item <strong>${listingTitle}</strong> has been sold and payment is held safely in escrow.</p>
+     <p style="background:#15241f;border:1px solid #00d9a530;padding:16px;border-radius:8px;color:#6ee7b7">
+       Lalamove does not cover the buyer's area, so they chose <strong>self-pickup</strong>. Please contact the buyer to arrange a safe meet-up.
+     </p>
+     ${buyerPhone ? `<p>Buyer phone / WhatsApp: <strong style="font-family:monospace">${buyerPhone}</strong></p>` : '<p>Contact the buyer via the listing chat to arrange collection.</p>'}
+     <p>Once the buyer collects the item and confirms receipt in their dashboard, your payout is released.</p>
+     <p style="color:#94a3b8;font-size:13px">Tip: meet in a public place. Need help? WhatsApp support: +60189899495</p>`,
+    'Go to Dashboard', `${BASE}/dashboard`
+  ))
+}
+
 export async function sendDeliveryFailureEmail(
   sellerEmail: string, sellerName: string,
   listingTitle: string, listingId: string,

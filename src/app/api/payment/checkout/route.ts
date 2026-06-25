@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getStripe, calculateFees } from '@/lib/stripe'
 import { getDeliveryQuote } from '@/lib/courier'
+import { sendPaymentReceivedEmail, sendPickupArrangeEmail } from '@/lib/resend'
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
   const buyerAddress = p.get('buyerAddress') ?? ''
   const courierName = p.get('courierName') ?? ''
   const courierService = p.get('courierService') ?? ''
+  // Self-pickup fallback (for areas Lalamove does not cover): no courier, no delivery fee.
+  const isPickup = p.get('pickup') === '1'
 
   const [listing, dbUser] = await Promise.all([
     prisma.listing.findUnique({
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   // Re-calculate delivery fee server-side — never trust client-provided fee values
   let serverDeliveryFee = 0, serverDeliveryBase = 0, serverDeliveryMarkup = 0
-  if (courierServiceId && buyerPostcode) {
+  if (!isPickup && courierServiceId && buyerPostcode) {
     try {
       const quote = await getDeliveryQuote(listing.state, '', listing.weightKg, buyerPostcode)
       const selected = quote.couriers.find(c => c.id === courierServiceId)
@@ -72,13 +75,38 @@ export async function GET(request: NextRequest) {
   const creditToUse = Math.min(creditAvailable, Math.max(0, listing.currentBid - 1))
   const chargeAmount = listing.currentBid - creditToUse
 
-  // FPX minimum is RM 1.00 — enforce before creating Stripe session
+  const { platformFee, sellerPayout } = calculateFees(chargeAmount)
+
+  // FPX minimum is RM 1.00. A free win (RM0 bid) collected via self-pickup has nothing
+  // to charge — Stripe can't create a RM0 session — so record the escrow directly and
+  // let the parties coordinate collection + the buyer confirm receipt.
   const totalCents = Math.round(chargeAmount * 100) + Math.round(serverDeliveryFee * 100)
   if (totalCents < 100) {
+    if (isPickup && chargeAmount === 0) {
+      try {
+        await prisma.$transaction([
+          prisma.listing.update({ where: { id: listingId }, data: { status: 'SOLD' } }),
+          prisma.transaction.create({
+            data: {
+              listingId, buyerId: user.id, sellerId: listing.sellerId,
+              amount: 0, platformFee: 0, sellerPayout: 0,
+              status: 'ESCROWED', pickupMethod: 'PICKUP',
+              buyerPhone: buyerPhone || null,
+            },
+          }),
+        ])
+        const seller = listing.seller
+        if (seller?.email) {
+          await sendPickupArrangeEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, buyerPhone || null)
+        }
+      } catch (e: unknown) {
+        // P2002 = transaction already exists (double submit) — fine, fall through to success
+        if ((e as { code?: string }).code !== 'P2002') throw e
+      }
+      return NextResponse.redirect(new URL(`/listings/${listingId}?payment=success`, request.url))
+    }
     return NextResponse.redirect(new URL(`/listings/${listingId}?payment=amount_too_low`, request.url))
   }
-
-  const { platformFee, sellerPayout } = calculateFees(chargeAmount)
 
   const lineItems = []
 
@@ -125,6 +153,7 @@ export async function GET(request: NextRequest) {
       deliveryFee: serverDeliveryFee.toString(),
       deliveryBase: serverDeliveryBase.toString(),
       deliveryMarkup: serverDeliveryMarkup.toString(),
+      pickupMethod: isPickup ? 'PICKUP' : 'DELIVERY',
       courierName,
       courierService,
       courierServiceId,

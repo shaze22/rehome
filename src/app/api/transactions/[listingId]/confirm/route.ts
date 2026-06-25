@@ -13,7 +13,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const tx = await prisma.transaction.findUnique({ where: { listingId } })
   if (!tx) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
   if (tx.buyerId !== user.id) return NextResponse.json({ error: 'Not the buyer.' }, { status: 403 })
-  if (tx.shippingStatus !== 'SHIPPED') return NextResponse.json({ error: 'Item has not been shipped by the seller yet.' }, { status: 400 })
+  // Self-pickup has no "shipped" step — the buyer confirms once they have collected the item.
+  if (tx.pickupMethod !== 'PICKUP' && tx.shippingStatus !== 'SHIPPED') return NextResponse.json({ error: 'Item has not been shipped by the seller yet.' }, { status: 400 })
   if (tx.deliveryConfirmed) return NextResponse.json({ error: 'Already confirmed.' }, { status: 400 })
 
   // Release escrow → mark delivered + released

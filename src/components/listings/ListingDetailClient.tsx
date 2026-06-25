@@ -30,6 +30,7 @@ interface FlashTransaction {
   deliveryConfirmed: boolean
   pickupMethod: string | null
   sellerPickupConfirmed: boolean
+  buyerPhone: string | null
 }
 
 interface Bid {
@@ -119,8 +120,10 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
   const [selected, setSelected] = useState<DCourierRate | null>(null)
   const [covered, setCovered] = useState(true)
   const [ackHighCost, setAckHighCost] = useState(false)
+  const [pickup, setPickup] = useState(false)  // self-pickup fallback for Lalamove-uncovered areas
 
   const step = !postcode || postcode.length < 5 ? 1
+    : pickup ? (phone.length < 10 ? 3 : 4)
     : !selected ? 2
     : !phone || phone.length < 10 || !address || address.length < 10 ? 3
     : 4
@@ -145,6 +148,7 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
           setSelected(list[0] ?? null)
           setCovered(d.covered !== false)
           setAckHighCost(false)
+          setPickup(false)
         })
         .catch(() => setQuotes(null))
         .finally(() => setQuotesLoading(false))
@@ -153,15 +157,21 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
   }, [postcode, listingId, sellerState])
 
   const discount = Math.min(credit, Math.max(0, bidAmount - 1))
-  const deliveryFee = selected?.chargedPrice ?? 0
+  const deliveryFee = pickup ? 0 : (selected?.chargedPrice ?? 0)
   // Buyer pays: bid amount + delivery only. Platform fee (15%) is deducted from seller's payout, not charged to buyer.
   const total = bidAmount - discount + deliveryFee
 
-  const isHighCost = (selected?.chargedPrice ?? 0) >= HIGH_DELIVERY
-  const ready = selected !== null && phone.length >= 10 && address.length >= 10 && (!isHighCost || ackHighCost)
+  const isHighCost = !pickup && (selected?.chargedPrice ?? 0) >= HIGH_DELIVERY
+  const ready = pickup
+    ? phone.length >= 10
+    : (selected !== null && phone.length >= 10 && address.length >= 10 && (!isHighCost || ackHighCost))
 
   const checkoutParams = new URLSearchParams({ listingId })
-  if (selected) {
+  if (pickup) {
+    checkoutParams.set('pickup', '1')
+    checkoutParams.set('buyerPhone', phone)
+    if (postcode) checkoutParams.set('buyerPostcode', postcode)
+  } else if (selected) {
     checkoutParams.set('deliveryFee', selected.chargedPrice.toString())
     checkoutParams.set('deliveryBase', selected.basePrice.toString())
     checkoutParams.set('deliveryMarkup', selected.markup.toString())
@@ -241,12 +251,32 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
               </div>
             </div>
           )}
-          {quotes && quotes.length === 0 && (
+          {quotes && quotes.length === 0 && covered && !pickup && (
             <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
-              {covered
-                ? 'No rates found. Please double-check your postcode.'
-                : '⚠️ Lalamove does not deliver to this area. Please contact the seller via chat to arrange collection.'}
+              No rates found. Please double-check your postcode.
             </p>
+          )}
+          {quotes && quotes.length === 0 && !covered && !pickup && (
+            <div className="space-y-2">
+              <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
+                ⚠️ Lalamove does not deliver to your area.
+              </p>
+              <button type="button" onClick={() => setPickup(true)}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs text-left"
+                style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--text-primary)' }}>
+                <Package className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--green)' }} />
+                <span><strong>Self-pickup instead</strong> — collect the item from the seller. No delivery fee. Tap to choose.</span>
+              </button>
+            </div>
+          )}
+          {pickup && (
+            <div className="px-3 py-2.5 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.3)' }}>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--green)' }}><Package className="w-3.5 h-3.5" /> Self-Pickup selected</span>
+                <button type="button" onClick={() => setPickup(false)} className="underline" style={{ color: 'var(--text-muted)' }}>change</button>
+              </div>
+              <p style={{ color: 'var(--text-secondary)' }}>Arrange a meet-up with the seller after payment. Your payment stays in escrow until you confirm you have collected the item. No delivery fee.</p>
+            </div>
           )}
 
           {/* Contact & address */}
@@ -259,20 +289,22 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
               style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             />
           </div>
-          <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Delivery address</label>
-            <textarea
-              value={address} onChange={e => setAddress(e.target.value)}
-              placeholder="Full address including unit, street, city"
-              rows={2}
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            />
-          </div>
+          {!pickup && (
+            <div>
+              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Delivery address</label>
+              <textarea
+                value={address} onChange={e => setAddress(e.target.value)}
+                placeholder="Full address including unit, street, city"
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              />
+            </div>
+          )}
         </div>
 
       {/* Payment summary */}
-      {selected && (
+      {(selected || pickup) && (
         <div className="rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div className="flex justify-between">
             <span style={{ color: 'var(--text-muted)' }}>Winning bid</span>
@@ -285,8 +317,8 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
             </div>
           )}
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-muted)' }}>Delivery ({selected.courierName})</span>
-            <span className="font-mono">RM {deliveryFee.toFixed(2)}</span>
+            <span style={{ color: 'var(--text-muted)' }}>{pickup ? 'Self-pickup' : `Delivery (${selected?.courierName ?? ''})`}</span>
+            <span className="font-mono">{pickup ? 'Free' : `RM ${deliveryFee.toFixed(2)}`}</span>
           </div>
           <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
             <span>Total you pay</span>
@@ -310,7 +342,11 @@ function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, ini
         href={ready ? `/api/payment/checkout?${checkoutParams.toString()}` : '#'}
         className={`block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal ${!ready ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        {!ready ? 'Fill in delivery details' : `Proceed to Payment: RM ${total.toFixed(2)}`}
+        {!ready
+          ? (pickup ? 'Enter your phone number' : 'Fill in delivery details')
+          : total === 0
+            ? 'Confirm Self-Pickup (Free)'
+            : `Proceed to Payment: RM ${total.toFixed(2)}`}
       </Link>
     </div>
   )
@@ -1279,7 +1315,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
 
           {justPaid && isBuyer && (
             <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style={{ backgroundColor: 'rgba(0,217,165,0.1)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--green)' }}>
-              Payment successful! Your courier has been booked. Waiting for seller to ship.
+              {flashTx.pickupMethod === 'PICKUP'
+                ? 'Confirmed! Contact the seller below to arrange collection. Confirm receipt once you have the item.'
+                : 'Payment successful! Your courier has been booked. Waiting for seller to ship.'}
             </div>
           )}
 
@@ -1355,6 +1393,52 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Self-pickup mode — Lalamove-uncovered area, buyer collects from seller */}
+          {flashTx.pickupMethod === 'PICKUP' && (
+            <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-2 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <Package className="w-4 h-4" style={{ color: 'var(--green)' }} />
+                <span className="text-sm font-semibold">Self-Pickup</span>
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{
+                  backgroundColor: flashTx.status === 'RELEASED' ? 'rgba(0,217,165,0.1)' : 'rgba(251,191,36,0.1)',
+                  color: flashTx.status === 'RELEASED' ? 'var(--green)' : 'var(--yellow)',
+                }}>
+                  {flashTx.status === 'RELEASED' ? 'Completed' : 'Awaiting Collection'}
+                </span>
+              </div>
+
+              <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
+                Lalamove does not cover this area, so this order is self-pickup. {isBuyer ? 'Contact the seller to arrange a safe meet-up, then confirm once you have the item.' : isSeller ? 'Contact the buyer to arrange a safe meet-up.' : ''}
+              </p>
+
+              {isBuyer && (
+                listing.seller.phone ? (
+                  <a href={`https://wa.me/60${listing.seller.phone.replace(/^0/, '')}?text=${encodeURIComponent(`Hi, I won "${listing.title}" on KASSIM. Let's arrange pickup.`)}`} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium mb-3" style={{ backgroundColor: '#25D36622', color: '#25D366' }}>
+                    <Share2 className="w-4 h-4" /> WhatsApp the seller ({listing.seller.phone})
+                  </a>
+                ) : (
+                  <p className="text-xs mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>Use the chat below to arrange pickup with the seller.</p>
+                )
+              )}
+              {isSeller && (
+                <p className="text-xs mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
+                  Buyer contact: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{flashTx.buyerPhone ?? 'see chat below'}</span>
+                </p>
+              )}
+
+              {isBuyer && !flashTx.deliveryConfirmed && (
+                <button onClick={handleConfirmReceive} disabled={receiveConfirming}
+                  className="w-full py-2.5 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 text-sm">
+                  {receiveConfirming ? 'Confirming...' : 'Confirm Item Collected'}
+                </button>
+              )}
+              {flashTx.deliveryConfirmed && (
+                <p className="text-xs" style={{ color: 'var(--green)' }}>Collected · Payment released to seller</p>
+              )}
             </div>
           )}
 

@@ -23,6 +23,7 @@ interface Order {
   easyparcelOrderId?: string | null
   lalamoveOrderId?: string | null
   deliveryTrackingUrl?: string | null
+  pickupMethod?: string | null
 }
 
 interface Props { order: Order }
@@ -36,6 +37,7 @@ export function OrderCard({ order }: Props) {
   const [comment, setComment] = useState('')
   const [reviewed, setReviewed] = useState(false)
   const [error, setError] = useState('')
+  const isPickup = localOrder.pickupMethod === 'PICKUP'
 
   async function handleShip() {
     setLoading(true); setError('')
@@ -128,8 +130,30 @@ export function OrderCard({ order }: Props) {
         </div>
       )}
 
+      {/* Self-pickup (Lalamove-uncovered area) — no courier, parties meet up */}
+      {isPickup && localOrder.status !== 'RELEASED' && (
+        <div className="mb-3 px-3 py-2 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.3)' }}>
+          <p className="font-medium flex items-center gap-1.5" style={{ color: 'var(--green)' }}><Package className="w-3.5 h-3.5" /> Self-Pickup</p>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {localOrder.isSeller
+              ? `Buyer collects from you. Contact: ${localOrder.buyerPhone ?? 'see listing chat'}`
+              : 'Arrange a meet-up with the seller, then confirm once you have the item.'}
+          </p>
+        </div>
+      )}
+
+      {/* Buyer: confirm self-pickup collection */}
+      {!localOrder.isSeller && isPickup && localOrder.status === 'ESCROWED' && !localOrder.deliveryConfirmed && (
+        <button onClick={handleConfirm} disabled={loading}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-white"
+          style={{ background: 'linear-gradient(135deg, var(--green), var(--teal))' }}>
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+          Confirm Item Collected
+        </button>
+      )}
+
       {/* Seller actions */}
-      {localOrder.isSeller && localOrder.shippingStatus === 'PENDING' && localOrder.status === 'ESCROWED' && (
+      {!isPickup && localOrder.isSeller && localOrder.shippingStatus === 'PENDING' && localOrder.status === 'ESCROWED' && (
         showTracking ? (
           <div className="space-y-2">
             <input value={tracking} onChange={e => setTracking(e.target.value)} placeholder="No. pengesanan (optional)"
