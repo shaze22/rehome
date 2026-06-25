@@ -424,7 +424,18 @@ Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
 ```
 
 **Payout fields on Transaction:** `sellerPaid Boolean @default(false)`, `sellerPaidAt DateTime?`, `payoutNote String?`
-**No Stripe Connect** — manual bank transfer for beta. Upgrade to Stripe Connect for auto-payout post-launch.
+## Stripe Connect — Seller Payouts (2026-06-25, commit be99fa6)
+- **Express accounts**, **separate charges & transfers** (escrow model): buyer's payment lands in the platform balance, held during escrow; on RELEASED a `Transfer` moves `sellerPayout` to the seller's connected account. Platform keeps 15% fee + delivery markup automatically (only `sellerPayout` is transferred).
+- `src/lib/connect.ts`: `getOrCreateConnectAccount` (Express, country MY, `transfers` capability), `createOnboardingLink`, `createLoginLink`, `refreshOnboardStatus` (sets `User.stripeOnboarded` from `payouts_enabled`), `transferToSeller(listingId)` (idempotent; returns `not_onboarded` to fall back to manual flow).
+- Routes: `/api/connect/onboard` (create Express acct + hosted onboarding redirect), `/api/connect/return` (refresh status → `/dashboard?payouts=done`), `/api/connect/login` (Express dashboard), `/api/connect/status` (GET JSON, re-check + persist).
+- **Auto-payout**: `transactions/[id]/confirm` calls `transferToSeller` after RELEASED. Non-onboarded sellers → manual `admin/mark-payout` (which now also fires a Stripe transfer if the seller is onboarded — admin override).
+- `checkout`: `payment_intent_data.transfer_group = listing_<id>` ties charge ↔ payout.
+- Schema: `User.stripeAccountId` (unique) + `stripeOnboarded`, `Transaction.stripeTransferId`. Migration `add_stripe_connect_fields`.
+- Dashboard: `PayoutsSection.tsx` — Set up / Finish / Manage / refresh status.
+- **transferToSeller short-circuits on the DB `stripeOnboarded` flag before any Stripe call** — so nothing happens until a seller onboards (safe pre-Connect-enable).
+- ⚠️ PREREQUISITE: **Connect must be enabled in the Stripe Dashboard** (Connect → Get started) + platform profile; Stripe may review. Without it, `accounts.create` fails → onboard redirects `?payouts=error`.
+- ⚠️ Separate transfers need **available** platform balance. If a buyer pays + confirms before funds settle (FPX/card pending), the transfer can fail → caught, seller stays unpaid → retry via admin Mark Paid once settled.
+- Swap escrow is item-for-item (no Stripe charge) → no Connect transfer. Connect covers Flash transactions only.
 
 > **Note:** `set-pickup` and `pickup-confirm` APIs still exist in codebase but are no longer called from UI.
 
