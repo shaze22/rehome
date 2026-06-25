@@ -21,6 +21,8 @@ interface Order {
   buyerAddress?: string | null
   deliveryFee?: number | null
   easyparcelOrderId?: string | null
+  lalamoveOrderId?: string | null
+  deliveryTrackingUrl?: string | null
 }
 
 interface Props { order: Order }
@@ -100,8 +102,18 @@ export function OrderCard({ order }: Props) {
           {localOrder.buyerPhone && <p style={{ color: 'var(--text-muted)' }}>Buyer phone: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{localOrder.buyerPhone}</span></p>}
           {localOrder.buyerAddress && <p style={{ color: 'var(--text-muted)' }}>Address: <span style={{ color: 'var(--text-primary)' }}>{localOrder.buyerAddress}</span></p>}
           {localOrder.easyparcelOrderId && <p style={{ color: 'var(--text-muted)' }}>EasyParcel ID: <span className="font-mono" style={{ color: 'var(--teal)' }}>{localOrder.easyparcelOrderId}</span></p>}
+          {localOrder.lalamoveOrderId && <p style={{ color: 'var(--text-muted)' }}>Lalamove ID: <span className="font-mono" style={{ color: 'var(--teal)' }}>{localOrder.lalamoveOrderId}</span></p>}
           {localOrder.deliveryFee && <p style={{ color: 'var(--text-muted)' }}>Delivery charged: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>RM {localOrder.deliveryFee.toFixed(2)}</span></p>}
         </div>
+      )}
+
+      {/* Lalamove live tracking link (both buyer + seller) */}
+      {localOrder.deliveryTrackingUrl && (
+        <a href={localOrder.deliveryTrackingUrl} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs mb-3 px-3 py-2 rounded-lg font-medium"
+          style={{ backgroundColor: 'rgba(249,115,22,0.1)', color: 'var(--orange)', border: '1px solid var(--orange)' }}>
+          <Truck className="w-3.5 h-3.5" /> Track Lalamove driver (live)
+        </a>
       )}
 
       {localOrder.trackingNumber && (

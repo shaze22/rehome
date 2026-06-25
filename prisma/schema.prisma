@@ -135,8 +135,10 @@ model Transaction {
   deliveryMarkup        Float?            // platform's 30% cut
   courierName           String?
   courierService        String?
-  courierServiceId      String?           // EasyParcel service_id for booking
+  courierServiceId      String?           // EasyParcel service_id / Lalamove "lalamove_<SERVICETYPE>" for booking
   easyparcelOrderId     String?
+  lalamoveOrderId       String?           // Lalamove order id (when booked via Lalamove)
+  deliveryTrackingUrl   String?           // Lalamove shareLink / courier tracking URL
   buyerPostcode         String?
   buyerPhone            String?
   buyerAddress          String?

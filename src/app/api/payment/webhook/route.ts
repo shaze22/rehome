@@ -3,6 +3,7 @@ import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { sendPaymentReceivedEmail, sendShipNowEmail, sendEasyParcelFailureEmail } from '@/lib/resend'
 import { createEasyParcelShipment, STATE_POSTCODE } from '@/lib/easyparcel'
+import { createLalamoveOrder, isLalamoveService } from '@/lib/lalamove'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -96,14 +97,48 @@ export async function POST(request: NextRequest) {
       throw e
     }
 
-    // Auto-book EasyParcel shipment (fire-and-forget — does not block webhook response)
+    // Auto-book delivery (fire-and-forget — does not block webhook response)
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {
       const sellerUser = listing.seller
       const sellerState = sellerUser?.state ?? 'Kuala Lumpur'
       // Use seller's saved postcode, fall back to state capital postcode
       const sellerPostcode = sellerUser?.postcode ?? STATE_POSTCODE[sellerState] ?? '50000'
 
-      createEasyParcelShipment({
+      if (isLalamoveService(courierServiceId)) {
+        // Lalamove same-day — re-quotes internally for a fresh quotationId before placing.
+        createLalamoveOrder({
+          sellerState,
+          buyerState: '',
+          buyerPostcode,
+          weightKg: listing.weightKg,
+          fromName: sellerUser?.name ?? 'KASSIM Seller',
+          fromPhone: sellerUser?.phone ?? '',
+          toName: 'KASSIM Buyer',
+          toPhone: buyerPhone,
+          toAddress: buyerAddress,
+          remarks: listing.title,
+        }).then(async (order) => {
+          if (order?.orderId) {
+            await prisma.transaction.update({
+              where: { listingId },
+              data: { lalamoveOrderId: order.orderId, deliveryTrackingUrl: order.shareUrl },
+            })
+          } else {
+            console.error('[webhook] Lalamove returned no orderId for listingId:', listingId)
+            const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+            if (seller?.email) {
+              await sendEasyParcelFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, 'Lalamove booking failed — please arrange pickup manually')
+            }
+          }
+        }).catch(async (err: Error) => {
+          console.error('[webhook] Lalamove booking error:', err.message)
+          const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+          if (seller?.email) {
+            await sendEasyParcelFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Lalamove booking error')
+          }
+        })
+      } else {
+        createEasyParcelShipment({
         fromName: sellerUser?.name ?? 'KASSIM Seller',
         fromPhone: sellerUser?.phone ?? '0123456789',
         fromAddress: sellerState,
@@ -132,8 +167,9 @@ export async function POST(request: NextRequest) {
         const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
         if (seller?.email) {
           await sendEasyParcelFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Unknown error')
-        }
-      })
+          }
+        })
+      }
     }
 
     // Notify seller — payment received + ship instructions

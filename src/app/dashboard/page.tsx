@@ -366,6 +366,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 buyerPostcode: o.buyerPostcode, buyerPhone: o.buyerPhone,
                 buyerAddress: o.buyerAddress, deliveryFee: o.deliveryFee,
                 easyparcelOrderId: o.easyparcelOrderId,
+                lalamoveOrderId: o.lalamoveOrderId, deliveryTrackingUrl: o.deliveryTrackingUrl,
               }} />
             ))}
             {(buyerOrders as any[]).map(o => (
@@ -376,6 +377,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 trackingNumber: o.trackingNumber, deliveryConfirmed: o.deliveryConfirmed,
                 isSeller: false,
                 courierName: o.courierName, deliveryFee: o.deliveryFee,
+                deliveryTrackingUrl: o.deliveryTrackingUrl,
               }} />
             ))}
           </div>
