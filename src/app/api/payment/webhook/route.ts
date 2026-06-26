@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       prisma.listing.findUnique({
         where: { id: listingId },
         select: {
-          currentBidder: true, sellerId: true, title: true, weightKg: true, state: true,
+          currentBidder: true, sellerId: true, title: true, weightKg: true, state: true, category: true,
           seller: { select: { name: true, email: true, state: true, phone: true, postcode: true, savedAddress: true } },
         },
       }),
@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
             postcode: buyerPostcode,
           },
           weightKg: listing.weightKg,
+          category: listing.category,
           itemDescription: listing.title,
           merchantOrderNumber: `KSM-${listingId}`,
         }).then(async (order) => {

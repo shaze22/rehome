@@ -86,6 +86,33 @@ function toE164(phone: string | null | undefined): string {
   return `+60${digits.replace(/^0/, '')}`
 }
 
+// ── Volumetric weight ─────────────────────────────────────────────────────────
+// Pos bills on actual OR volumetric weight, whichever is higher (volumetric =
+// L×W×H / 5000). We don't collect exact dimensions, so estimate a typical parcel
+// size per category — this gives a volumetric floor that protects against bulky,
+// light items (e.g. a lampshade) without overpricing small dense items (a phone),
+// since cheap zones charge a flat rate for the first 2kg anyway.
+export const CATEGORY_DIMENSIONS: Record<string, { l: number; w: number; h: number }> = {
+  FURNITURE: { l: 50, w: 40, h: 30 },
+  ELECTRONICS: { l: 25, w: 20, h: 10 },
+  FASHION: { l: 30, w: 22, h: 6 },
+  BOOKS: { l: 25, w: 18, h: 4 },
+  SPORTS: { l: 40, w: 30, h: 15 },
+  KITCHEN: { l: 30, w: 25, h: 20 },
+  OTHERS: { l: 30, w: 25, h: 12 },
+}
+export function dimsFor(category?: string) {
+  return CATEGORY_DIMENSIONS[category ?? 'OTHERS'] ?? CATEGORY_DIMENSIONS.OTHERS
+}
+function volumetricKg(category?: string): number {
+  const d = dimsFor(category)
+  return (d.l * d.w * d.h) / 5000
+}
+// Chargeable weight = max(actual, volumetric) — what Pos (and a sensible courier) bills on.
+export function chargeableWeight(category: string | undefined, weightKg: number): number {
+  return Math.max(weightKg || 1, volumetricKg(category))
+}
+
 // ── Quote — Pos Malaysia contract rates (UVW Group quotation, 23 Jun 2026, Appendix A) ──
 // No live rate API exists, so we compute from the signed contract rate card.
 const FUEL_SURCHARGE = 0.15  // domestic fuel surcharge (reviewed weekly — update from pos.com.my)
@@ -152,6 +179,7 @@ export interface SendParcelOrderInput {
   sender: SendParcelParty
   receiver: SendParcelParty
   weightKg: number
+  category?: string             // drives the declared parcel dimensions
   itemDescription: string
   merchantOrderNumber: string   // unique per merchant (listing id)
   declaredValue?: number
@@ -209,7 +237,9 @@ export async function createSendParcelOrder(input: SendParcelOrderInput): Promis
     parcel_details: [
       {
         weight: Math.min(30, Math.max(0.1, input.weightKg || 1)),
-        length: 20, width: 15, height: 10,
+        length: dimsFor(input.category).l,   // declared dimensions by category (cm)
+        width: dimsFor(input.category).w,
+        height: dimsFor(input.category).h,
         item_count: 1,
         parcel_notes: '',
         item_category_details: '02',    // Sale of goods

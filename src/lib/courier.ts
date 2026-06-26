@@ -1,5 +1,5 @@
 import { getLalamoveQuote, postcodeToState } from './lalamove'
-import { getSendParcelQuote } from './sendparcel'
+import { getSendParcelQuote, chargeableWeight } from './sendparcel'
 
 export interface CourierRate {
   id: string
@@ -30,10 +30,13 @@ export async function getDeliveryQuote(
   buyerState: string,
   weightKg: number,
   buyerPostcode?: string,
+  category?: string,
 ): Promise<DeliveryQuoteResult> {
   const effBuyerState = (buyerState && buyerState.trim()) || postcodeToState(buyerPostcode) || ''
-  const lalamove = await getLalamoveQuote(sellerState, buyerState, weightKg, buyerPostcode)
-  const pos = getSendParcelQuote(sellerState, effBuyerState, weightKg)
+  // Charge on the heavier of actual vs volumetric weight (Pos bills the max).
+  const billableKg = chargeableWeight(category, weightKg)
+  const lalamove = await getLalamoveQuote(sellerState, buyerState, billableKg, buyerPostcode)
+  const pos = getSendParcelQuote(sellerState, effBuyerState, billableKg)
 
   const couriers = [lalamove, pos].filter(Boolean) as CourierRate[]
   couriers.sort((a, b) => a.chargedPrice - b.chargedPrice)
