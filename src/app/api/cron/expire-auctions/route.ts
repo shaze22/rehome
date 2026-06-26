@@ -22,30 +22,36 @@ export async function GET(request: NextRequest) {
     take: 1000,
   })
 
-  for (const listing of expiredListings) {
-    try {
-      if (listing.currentBidder) {
-        await prisma.listing.update({ where: { id: listing.id }, data: { status: 'ENDED' } })
-        try {
-          const winner = await prisma.user.findUnique({
-            where: { id: listing.currentBidder },
-            select: { email: true, name: true },
-          })
+  if (expiredListings.length > 0) {
+    // Batch: one updateMany for the status flip + one findMany for all winners (was 2N queries).
+    await prisma.listing.updateMany({
+      where: { id: { in: expiredListings.map(l => l.id) } },
+      data: { status: 'ENDED' },
+    }).catch(err => errors.push(`expire-batch: ${err}`))
+
+    const winnerIds = [...new Set(expiredListings.map(l => l.currentBidder).filter((x): x is string => !!x))]
+    const winners = winnerIds.length
+      ? await prisma.user.findMany({ where: { id: { in: winnerIds } }, select: { id: true, email: true, name: true } })
+      : []
+    const winnerMap = new Map(winners.map(w => [w.id, w]))
+
+    for (const listing of expiredListings) {
+      try {
+        if (listing.currentBidder) {
+          const winner = winnerMap.get(listing.currentBidder)
           await Promise.all([
             winner?.email
-              ? sendAuctionWonEmail(winner.email, winner.name ?? 'Penawar', listing.title, listing.currentBid, listing.id)
+              ? sendAuctionWonEmail(winner.email, winner.name ?? 'Penawar', listing.title, listing.currentBid, listing.id).catch(() => {})
               : Promise.resolve(),
             listing.seller.email
-              ? sendAuctionExpiredSellerEmail(listing.seller.email, listing.seller.name ?? 'Penjual', listing.title, listing.currentBid, listing.id)
+              ? sendAuctionExpiredSellerEmail(listing.seller.email, listing.seller.name ?? 'Penjual', listing.title, listing.currentBid, listing.id).catch(() => {})
               : Promise.resolve(),
           ])
-        } catch { /* email failure non-critical */ }
-      } else {
-        await prisma.listing.update({ where: { id: listing.id }, data: { status: 'ENDED' } })
+        }
+        processed++
+      } catch (err) {
+        errors.push(`expire:${listing.id}: ${err}`)
       }
-      processed++
-    } catch (err) {
-      errors.push(`expire:${listing.id}: ${err}`)
     }
   }
 

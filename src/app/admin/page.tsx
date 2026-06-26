@@ -4,13 +4,17 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { AdminPanel } from '@/components/admin/AdminPanel'
 
-export default async function AdminPage() {
+const USERS_PER_PAGE = 50
+
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ upage?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
   if (dbUser?.role !== 'ADMIN') redirect('/dashboard')
+
+  const userPage = Math.max(1, parseInt((await searchParams).upage ?? '1', 10) || 1)
 
   const [
     pendingICs, recentListings,
@@ -43,10 +47,11 @@ export default async function AdminPage() {
       orderBy: { createdAt: 'desc' }, take: 5,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, createdAt: true },
     }),
-    // All beta users — ordered by join date, limited to 200
+    // Beta users — paginated by join date (50/page)
     prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 200,
+      skip: (userPage - 1) * USERS_PER_PAGE,
+      take: USERS_PER_PAGE,
       select: { id: true, name: true, email: true, role: true, rehomeScore: true, swapScore: true, icVerified: true, createdAt: true, _count: { select: { listings: true } } },
     }),
     // Disputed swap transactions
@@ -126,6 +131,8 @@ export default async function AdminPage() {
       recentListings={recentListings as any}
       recentUsers={recentUsers as any}
       allUsers={allUsers as any}
+      userPage={userPage}
+      userTotalPages={Math.max(1, Math.ceil(totalUsers / USERS_PER_PAGE))}
       disputedSwaps={disputedSwaps as any}
       pendingPayouts={enrichedPayouts as any}
       stats={{

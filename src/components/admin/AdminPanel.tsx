@@ -62,6 +62,8 @@ interface Props {
   recentListings: Listing[]
   recentUsers: RecentUser[]
   allUsers: BetaUser[]
+  userPage: number
+  userTotalPages: number
   disputedSwaps: DisputedSwap[]
   pendingPayouts: PendingPayout[]
   stats: Stats
@@ -214,7 +216,7 @@ interface AuditEntry {
   details: Record<string, unknown> | null; createdAt: string
 }
 
-export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, disputedSwaps, pendingPayouts, stats }: Props) {
+export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, userPage, userTotalPages, disputedSwaps, pendingPayouts, stats }: Props) {
   const [verifying, setVerifying] = useState<string | null>(null)
   const [localPending, setLocalPending] = useState(pendingICs)
   const [localDisputes, setLocalDisputes] = useState(disputedSwaps)
@@ -468,7 +470,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Users className="w-5 h-5" style={{ color: 'var(--purple)' }} />
-          Semua Beta Users ({allUsers.length})
+          Semua Beta Users {userTotalPages > 1 ? `— Page ${userPage}/${userTotalPages}` : `(${allUsers.length})`}
         </h2>
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="overflow-x-auto">
@@ -505,6 +507,17 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
             </table>
           </div>
         </div>
+        {userTotalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-4">
+            {userPage > 1
+              ? <a href={`?upage=${userPage - 1}`} className="text-xs px-4 py-2 rounded-lg" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>← Prev</a>
+              : <span className="text-xs px-4 py-2 rounded-lg opacity-40" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}>← Prev</span>}
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Page {userPage} of {userTotalPages}</span>
+            {userPage < userTotalPages
+              ? <a href={`?upage=${userPage + 1}`} className="text-xs px-4 py-2 rounded-lg" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Next →</a>
+              : <span className="text-xs px-4 py-2 rounded-lg opacity-40" style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}>Next →</span>}
+          </div>
+        )}
       </div>
 
       {/* Audit Log */}
