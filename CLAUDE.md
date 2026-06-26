@@ -428,10 +428,12 @@ Buyer wins → fills courier + address in DeliveryCheckout → Stripe payment
 ```
 
 **Payout fields on Transaction:** `sellerPaid Boolean @default(false)`, `sellerPaidAt DateTime?`, `payoutNote String?`
-## Stripe Connect — Seller Payouts (2026-06-25, commit be99fa6)
-- **Express accounts**, **separate charges & transfers** (escrow model): buyer's payment lands in the platform balance, held during escrow; on RELEASED a `Transfer` moves `sellerPayout` to the seller's connected account. Platform keeps 15% fee + delivery markup automatically (only `sellerPayout` is transferred).
-- `src/lib/connect.ts`: `getOrCreateConnectAccount` (Express, country MY, `transfers` capability), `createOnboardingLink`, `createLoginLink`, `refreshOnboardStatus` (sets `User.stripeOnboarded` from `payouts_enabled`), `transferToSeller(listingId)` (idempotent; returns `not_onboarded` to fall back to manual flow).
-- Routes: `/api/connect/onboard` (create Express acct + hosted onboarding redirect), `/api/connect/return` (refresh status → `/dashboard?payouts=done`), `/api/connect/login` (Express dashboard), `/api/connect/status` (GET JSON, re-check + persist).
+## Stripe Connect — Seller Payouts (2026-06-25; Standard accounts 2026-06-26)
+- ⚠️ **STANDARD accounts, NOT Express.** Malaysia platforms cannot be loss-liable (Stripe risk control), and Express *requires* the platform to be loss-liable → `accounts.create({type:'express'})` fails for MY with "platform cannot create accounts where the platform is loss-liable". Standard works (Stripe/the seller owns loss-liability + KYC; seller gets the full Stripe dashboard).
+- **Separate charges & transfers** (escrow): buyer's payment lands in the platform balance, held during escrow; on RELEASED a `Transfer` moves `sellerPayout` to the seller's Standard account. Platform keeps 15% fee + delivery markup (only `sellerPayout` is transferred). Charges are on the PLATFORM account, so dispute/loss liability for charges is the platform's regardless — the connected-account loss setting only concerns the seller's own negative balances.
+- `src/lib/connect.ts`: `getOrCreateConnectAccount` (`type:'standard'`, country MY — no capabilities/business_type params), `createOnboardingLink` (hosted account_onboarding — works for Standard), `sellerDashboardUrl` (→ dashboard.stripe.com; login links are Express/Custom-only), `refreshOnboardStatus` (sets `User.stripeOnboarded` from `payouts_enabled`), `transferToSeller(listingId)` (idempotent; `not_onboarded` → manual fallback).
+- Routes: `/api/connect/onboard` (create Standard acct + hosted onboarding redirect), `/api/connect/return` (refresh status → `/dashboard?payouts=done`), `/api/connect/login` (→ dashboard.stripe.com), `/api/connect/status` (GET JSON, re-check + persist).
+- Verified prod: `type=standard` account create + onboarding link succeed (Express + controller-full both rejected for MY).
 - **Auto-payout**: `transactions/[id]/confirm` calls `transferToSeller` after RELEASED. Non-onboarded sellers → manual `admin/mark-payout` (which now also fires a Stripe transfer if the seller is onboarded — admin override).
 - `checkout`: `payment_intent_data.transfer_group = listing_<id>` ties charge ↔ payout.
 - Schema: `User.stripeAccountId` (unique) + `stripeOnboarded`, `Transaction.stripeTransferId`. Migration `add_stripe_connect_fields`.

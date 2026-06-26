@@ -4,19 +4,19 @@ import { prisma } from './prisma'
 const APP = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
 
 /**
- * Get the seller's Stripe Connect (Express) account, creating one if needed.
- * Express = Stripe-hosted onboarding + KYC + payout dashboard. We only request the
- * `transfers` capability — funds reach the seller via Transfer on escrow release.
+ * Get the seller's Stripe Connect account, creating one if needed.
+ * **Standard** accounts — Malaysia platforms cannot be loss-liable (Stripe risk
+ * control), and Express requires the platform to be loss-liable, so Standard is the
+ * only option: Stripe owns onboarding/KYC/loss-liability and the seller gets a full
+ * Stripe dashboard. Funds reach the seller via Transfer on escrow release.
  */
 export async function getOrCreateConnectAccount(user: { id: string; email: string; stripeAccountId: string | null }): Promise<string> {
   if (user.stripeAccountId) return user.stripeAccountId
 
   const account = await getStripe().accounts.create({
-    type: 'express',
+    type: 'standard',
     country: 'MY',
     email: user.email,
-    business_type: 'individual',
-    capabilities: { transfers: { requested: true } },
     metadata: { userId: user.id },
   })
 
@@ -35,10 +35,12 @@ export async function createOnboardingLink(accountId: string): Promise<string> {
   return link.url
 }
 
-/** Express dashboard login link (seller views their payouts). */
-export async function createLoginLink(accountId: string): Promise<string> {
-  const link = await getStripe().accounts.createLoginLink(accountId)
-  return link.url
+/**
+ * Where a seller manages payouts & bank details. Standard accounts use the full
+ * Stripe dashboard (login links are Express/Custom-only), so we send them there.
+ */
+export function sellerDashboardUrl(): string {
+  return 'https://dashboard.stripe.com'
 }
 
 /** Pull live status from Stripe and persist `stripeOnboarded` (payouts enabled). */
