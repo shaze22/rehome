@@ -56,10 +56,11 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
     const supabase = createClient()
     const ext = file.name.split('.').pop()
     const path = `ic/${userId}/${Date.now()}.${ext}`
-    const { data, error: uploadError } = await supabase.storage.from('rehome-photos').upload(path, file)
+    // Private bucket — IC is sensitive PDPA data, not world-readable. Store the PATH; admins
+    // view it via a short-lived signed URL.
+    const { data, error: uploadError } = await supabase.storage.from('ic-verification').upload(path, file)
     if (uploadError) { setError('Failed to upload photo. Please try again.'); setUploading(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('rehome-photos').getPublicUrl(data.path)
-    setPhotoUrl(publicUrl)
+    setPhotoUrl(data.path)
     setUploading(false)
   }
 
@@ -71,7 +72,7 @@ export function IcUploadForm({ userId, currentStatus, currentIcPhoto }: Props) {
       const res = await fetch('/api/user/ic-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ icPhotoUrl: photoUrl }),
+        body: JSON.stringify({ icPath: photoUrl }),
       })
       if (res.ok) {
         setLocalStatus('PENDING')

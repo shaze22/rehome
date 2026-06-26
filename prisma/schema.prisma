@@ -152,8 +152,13 @@ model Transaction {
   sellerPaid            Boolean           @default(false)
   sellerPaidAt          DateTime?
   payoutNote            String?
+  disputed              Boolean           @default(false)  // Stripe chargeback/dispute opened — blocks auto-payout
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
+
+  @@index([sellerId, status])
+  @@index([buyerId])
+  @@index([status, sellerPaid])
 }
 
 model Message {

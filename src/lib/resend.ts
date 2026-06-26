@@ -253,6 +253,23 @@ export async function sendReferralRewardEmail(to: string, name: string, friendNa
   ))
 }
 
+export async function sendChargebackAlertEmail(
+  listingId: string, listingTitle: string, amount: number, reason: string, alreadyPaidOut: boolean,
+) {
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'syedshazni@todak.com'
+  await safeSend(adminEmail, `[KASSIM] ⚠️ Chargeback opened — ${listingTitle}`, `
+    <div style="font-family:monospace;padding:16px">
+      <h3>Card dispute / chargeback created</h3>
+      <p><b>Listing:</b> ${listingTitle} (${listingId})</p>
+      <p><b>Amount:</b> RM ${amount.toFixed(2)}</p>
+      <p><b>Reason:</b> ${reason}</p>
+      <p><b>Seller already paid out:</b> ${alreadyPaidOut ? 'YES — funds already transferred, recovery needed' : 'No — auto-payout is now blocked for this transaction'}</p>
+      <p><a href="${BASE}/listings/${listingId}">View listing</a> · <a href="https://dashboard.stripe.com/disputes">Stripe disputes</a></p>
+      <p>Action: respond to the dispute in Stripe with evidence (tracking, delivery confirmation). Payout for this transaction is held.</p>
+    </div>
+  `)
+}
+
 export async function sendPickupArrangeEmail(
   sellerEmail: string, sellerName: string,
   listingTitle: string, listingId: string,

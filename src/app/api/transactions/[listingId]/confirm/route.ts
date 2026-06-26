@@ -18,17 +18,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (tx.pickupMethod !== 'PICKUP' && tx.shippingStatus !== 'SHIPPED') return NextResponse.json({ error: 'Item has not been shipped by the seller yet.' }, { status: 400 })
   if (tx.deliveryConfirmed) return NextResponse.json({ error: 'Already confirmed.' }, { status: 400 })
 
-  // Release escrow → mark delivered + released
-  await prisma.transaction.update({
-    where: { listingId },
-    data: {
-      shippingStatus: 'DELIVERED',
-      deliveryConfirmed: true,
-      status: 'RELEASED',
-    },
+  // Atomically claim the confirmation: only the first of any racing requests (double-click,
+  // retry, two tabs) flips deliveryConfirmed false->true. Prevents double score + double payout.
+  const claim = await prisma.transaction.updateMany({
+    where: { listingId, deliveryConfirmed: false },
+    data: { shippingStatus: 'DELIVERED', deliveryConfirmed: true, status: 'RELEASED' },
   })
+  if (claim.count === 0) {
+    return NextResponse.json({ success: true, sellerPayout: tx.sellerPayout, payout: 'already_confirmed' })
+  }
 
-  // Update Ballout Score for seller (+5)
+  // We own the release — award the seller's score once.
   await prisma.user.update({
     where: { id: tx.sellerId },
     data: { rehomeScore: { increment: 5 } },

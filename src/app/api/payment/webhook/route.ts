@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendPaymentReceivedEmail, sendShipNowEmail, sendDeliveryFailureEmail, sendPickupArrangeEmail } from '@/lib/resend'
+import { sendPaymentReceivedEmail, sendShipNowEmail, sendDeliveryFailureEmail, sendPickupArrangeEmail, sendChargebackAlertEmail } from '@/lib/resend'
 import { createLalamoveOrder, postcodeToState } from '@/lib/lalamove'
 import { createSendParcelOrder, isSendParcelService } from '@/lib/sendparcel'
 
@@ -99,14 +99,15 @@ export async function POST(request: NextRequest) {
       throw e
     }
 
-    // Auto-book delivery (fire-and-forget — does not block webhook response).
+    // Auto-book delivery AFTER the response — after() keeps the serverless function alive
+    // (Vercel waitUntil) so booking + failure-email run even though we already replied 200.
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {
       const sellerUser = listing.seller
       const sellerState = sellerUser?.state ?? 'Kuala Lumpur'
 
       if (isSendParcelService(courierServiceId)) {
         // Pos Laju (SendParcel) — standard nationwide parcel, courier pickup from seller.
-        createSendParcelOrder({
+        after(() => createSendParcelOrder({
           sender: {
             name: sellerUser?.name ?? 'KASSIM Seller',
             phone: sellerUser?.phone ?? '',
@@ -145,10 +146,10 @@ export async function POST(request: NextRequest) {
           if (seller?.email) {
             await sendDeliveryFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Pos Laju booking error')
           }
-        })
+        }))
       } else {
       // Lalamove same-day — re-quotes internally for a fresh quotationId before placing.
-      createLalamoveOrder({
+      after(() => createLalamoveOrder({
         sellerState,
         buyerState: '',
         buyerPostcode,
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
         if (seller?.email) {
           await sendDeliveryFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Lalamove booking error')
         }
-      })
+      }))
       }
     }
 
@@ -197,6 +198,26 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch {}
+  }
+
+  // Chargeback / dispute opened — flag the transaction (blocks auto-payout) + alert admin.
+  if (event.type === 'charge.dispute.created') {
+    const dispute = event.data.object
+    const pi = typeof dispute.payment_intent === 'string' ? dispute.payment_intent : (dispute.payment_intent?.id ?? null)
+    if (pi) {
+      const tx = await prisma.transaction.findFirst({
+        where: { stripePaymentId: pi },
+        select: { id: true, listingId: true, sellerPaid: true },
+      })
+      if (tx) {
+        await prisma.transaction.update({ where: { id: tx.id }, data: { disputed: true } })
+        const listing = await prisma.listing.findUnique({ where: { id: tx.listingId }, select: { title: true } })
+        await sendChargebackAlertEmail(
+          tx.listingId, listing?.title ?? tx.listingId,
+          (dispute.amount ?? 0) / 100, dispute.reason ?? 'unknown', tx.sellerPaid,
+        ).catch(() => {})
+      }
+    }
   }
 
   return NextResponse.json({ received: true })

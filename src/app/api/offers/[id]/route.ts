@@ -67,14 +67,14 @@ export async function PUT(
   if (data.action === 'accept') {
     if (!isSeller) return NextResponse.json({ error: 'Only the listing owner can accept offers.' }, { status: 403 })
 
-    // Reject all other pending offers for this listing
-    await prisma.offer.updateMany({
-      where: { listingId: offer.listingId, id: { not: id }, status: { in: ['PENDING', 'COUNTERED'] } },
-      data: { status: 'REJECTED' },
-    })
-
-    // Accept offer + create SwapTransaction + mark listing as SOLD (no more offers)
-    const [updated] = await prisma.$transaction([
+    // Accept + reject siblings + mark SOLD + create escrow — ALL atomic. Rejecting the other
+    // offers must be inside the transaction so a failure (e.g. a concurrent accept hitting the
+    // SwapTransaction.listingId unique constraint) rolls the rejections back too.
+    const [, updated] = await prisma.$transaction([
+      prisma.offer.updateMany({
+        where: { listingId: offer.listingId, id: { not: id }, status: { in: ['PENDING', 'COUNTERED'] } },
+        data: { status: 'REJECTED' },
+      }),
       prisma.offer.update({ where: { id }, data: { status: 'ACCEPTED' } }),
       prisma.listing.update({ where: { id: offer.listing.id }, data: { status: 'SOLD' } }),
       prisma.swapTransaction.create({

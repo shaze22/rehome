@@ -36,6 +36,7 @@ async function getDashboardData(userId: string) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 50,
     }),
     prisma.transaction.findMany({
       where: { sellerId: userId, status: 'RELEASED' },

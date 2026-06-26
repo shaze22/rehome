@@ -65,6 +65,7 @@ export async function transferToSeller(listingId: string): Promise<TransferResul
   const tx = await prisma.transaction.findUnique({ where: { listingId } })
   if (!tx) return { ok: false, reason: 'error', message: 'Transaction not found' }
   if (tx.stripeTransferId || tx.sellerPaid) return { ok: false, reason: 'already_paid' }
+  if (tx.disputed) return { ok: false, reason: 'error', message: 'Transaction is disputed — payout held' }
 
   const seller = await prisma.user.findUnique({
     where: { id: tx.sellerId },
@@ -72,26 +73,37 @@ export async function transferToSeller(listingId: string): Promise<TransferResul
   })
   if (!seller?.stripeOnboarded || !seller.stripeAccountId) return { ok: false, reason: 'not_onboarded' }
 
-  // Nothing to pay (e.g. free win) — mark settled without a Transfer.
+  // Concurrency lock: atomically claim the payout. Only the FIRST of any racing callers
+  // (double confirm, confirm vs admin mark-payout) flips sellerPaid false->true and proceeds.
+  const claim = await prisma.transaction.updateMany({
+    where: { listingId, sellerPaid: false, stripeTransferId: null },
+    data: { sellerPaid: true },
+  })
+  if (claim.count === 0) return { ok: false, reason: 'already_paid' }
+
+  // Nothing to pay (e.g. free win) — settled by the claim above, no Transfer needed.
   if (tx.sellerPayout <= 0) {
-    await prisma.transaction.update({ where: { listingId }, data: { sellerPaid: true, sellerPaidAt: new Date() } })
+    await prisma.transaction.update({ where: { listingId }, data: { sellerPaidAt: new Date() } })
     return { ok: true, transferId: null, skipped: true }
   }
 
   try {
+    // idempotencyKey is belt-and-suspenders: even if this runs twice, Stripe makes ONE transfer.
     const transfer = await getStripe().transfers.create({
       amount: Math.round(tx.sellerPayout * 100),
       currency: 'myr',
       destination: seller.stripeAccountId,
       transfer_group: `listing_${listingId}`,
       metadata: { listingId, sellerId: tx.sellerId },
-    })
+    }, { idempotencyKey: `transfer_${listingId}` })
     await prisma.transaction.update({
       where: { listingId },
-      data: { stripeTransferId: transfer.id, sellerPaid: true, sellerPaidAt: new Date() },
+      data: { stripeTransferId: transfer.id, sellerPaidAt: new Date() },
     })
     return { ok: true, transferId: transfer.id }
   } catch (err) {
+    // Release the claim so the payout can be retried (admin Mark Paid / next confirm).
+    await prisma.transaction.update({ where: { listingId }, data: { sellerPaid: false } }).catch(() => {})
     console.error('[connect] transfer failed for', listingId, err)
     return { ok: false, reason: 'error', message: (err as Error).message }
   }

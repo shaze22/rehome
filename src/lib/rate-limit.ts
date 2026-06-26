@@ -21,6 +21,7 @@ const limiters = {
   listing:  () => makeRatelimiter(5,  '1 h',  'rl:listing'),
   feedback: () => makeRatelimiter(5,  '1 h',  'rl:feedback'),
   admin:    () => makeRatelimiter(20, '1 m',  'rl:admin'),
+  ai:       () => makeRatelimiter(30, '1 h',  'rl:ai'),
 } as const
 
 type LimiterKey = keyof typeof limiters

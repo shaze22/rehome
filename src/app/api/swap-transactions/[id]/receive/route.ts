@@ -43,27 +43,31 @@ export async function POST(
   // For CASH, seller doesn't need to confirm receiving (buyer received is enough)
   if (isSeller && tx.offerType === 'CASH') return NextResponse.json({ error: 'This confirmation is not required for cash offers.' }, { status: 400 })
 
-  const update: Record<string, unknown> = {}
-  if (isBuyer) update.buyerItemReceived = true
-  if (isSeller) update.sellerItemReceived = true
+  // Atomically claim THIS actor's receipt (only flips false->true once, even on double-submit).
+  const receiptClaim = isBuyer
+    ? await prisma.swapTransaction.updateMany({ where: { id, buyerItemReceived: false }, data: { buyerItemReceived: true } })
+    : await prisma.swapTransaction.updateMany({ where: { id, sellerItemReceived: false }, data: { sellerItemReceived: true } })
+  if (receiptClaim.count === 0) return NextResponse.json({ error: 'You have already confirmed receipt.' }, { status: 400 })
 
-  // Determine if completed
-  const newBuyerReceived = isBuyer ? true : tx.buyerItemReceived
-  const newSellerReceived = isSeller ? true : tx.sellerItemReceived
+  // Re-read fresh state, then decide completion from authoritative values.
+  const updated = await prisma.swapTransaction.findUnique({ where: { id } })
+  if (!updated) return NextResponse.json({ error: 'Transaction not found.' }, { status: 404 })
+  const allReceived = updated.offerType === 'CASH'
+    ? updated.buyerItemReceived
+    : updated.buyerItemReceived && updated.sellerItemReceived
 
-  const allReceived = tx.offerType === 'CASH'
-    ? newBuyerReceived
-    : newBuyerReceived && newSellerReceived
-
+  // Atomically claim the COMPLETED transition — only the finisher awards stats (no double-count).
+  let completedNow = false
   if (allReceived) {
-    update.escrowStatus = 'COMPLETED'
-    update.resolvedAt = new Date()
+    const completeClaim = await prisma.swapTransaction.updateMany({
+      where: { id, escrowStatus: { not: 'COMPLETED' } },
+      data: { escrowStatus: 'COMPLETED', resolvedAt: new Date() },
+    })
+    completedNow = completeClaim.count === 1
   }
 
-  const updated = await prisma.swapTransaction.update({ where: { id }, data: update })
-
-  // On completion: update swap scores, verified badge, send emails
-  if (allReceived) {
+  // On completion: update swap scores, verified badge, send emails (once)
+  if (completedNow) {
     const [seller, buyer] = await Promise.all([
       prisma.user.findUnique({ where: { id: tx.sellerId }, select: { email: true, name: true, successfulSwaps: true } }),
       prisma.user.findUnique({ where: { id: tx.buyerId }, select: { email: true, name: true, successfulSwaps: true } }),

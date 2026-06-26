@@ -157,9 +157,11 @@ export async function GET(request: NextRequest) {
       counterOffers: {
         orderBy: { createdAt: 'desc' },
         include: { bidder: { select: { name: true } } },
+        take: 10,
       },
     },
     orderBy: { createdAt: 'desc' },
+    take: 100,
   })
 
   return NextResponse.json({ offers })

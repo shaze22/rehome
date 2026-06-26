@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { AdminPanel } from '@/components/admin/AdminPanel'
@@ -104,9 +105,24 @@ export default async function AdminPage() {
     buyer: { id: row.buyer_id, name: row.buyer_name, email: row.buyer_email },
   }))
 
+  // IC photos live in a PRIVATE bucket — generate short-lived signed URLs (service role) so
+  // only admins can view them. Legacy public URLs (old uploads) pass through unchanged.
+  const supabaseAdmin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const pendingICsSigned = await Promise.all(pendingICs.map(async (u) => {
+    let icPhotoUrl: string | null = null
+    if (u.icPhoto) {
+      if (u.icPhoto.startsWith('http')) icPhotoUrl = u.icPhoto
+      else {
+        const { data } = await supabaseAdmin.storage.from('ic-verification').createSignedUrl(u.icPhoto, 3600)
+        icPhotoUrl = data?.signedUrl ?? null
+      }
+    }
+    return { ...u, icPhotoUrl }
+  }))
+
   return (
     <AdminPanel
-      pendingICs={pendingICs as any}
+      pendingICs={pendingICsSigned as any}
       recentListings={recentListings as any}
       recentUsers={recentUsers as any}
       allUsers={allUsers as any}

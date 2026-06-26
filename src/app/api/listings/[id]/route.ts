@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
+
+const trustedPhotoUrl = z.string().url().refine((url) => {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  return base ? url.startsWith(`${base}/storage/v1/object/public/rehome-photos/`) : true
+}, { message: 'Photos must be uploaded to KASSIM.' })
+
+// All fields optional — a PATCH may update any subset. Mirrors the create-listing bounds.
+const EditSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(5000).optional(),
+  category: z.enum(['FURNITURE', 'ELECTRONICS', 'FASHION', 'BOOKS', 'SPORTS', 'KITCHEN', 'OTHERS']).optional(),
+  condition: z.coerce.number().int().min(1).max(10).optional(),
+  originalPrice: z.coerce.number().min(0).optional(),
+  state: z.string().min(1).max(100).optional(),
+  weightKg: z.coerce.number().min(0.1).max(30).optional(),
+  lengthCm: z.coerce.number().int().min(1).max(200).optional(),
+  widthCm: z.coerce.number().int().min(1).max(200).optional(),
+  heightCm: z.coerce.number().int().min(1).max(200).optional(),
+  mode: z.enum(['FLASH', 'SWAP']).optional(),
+  photos: z.array(trustedPhotoUrl).max(10).optional(),
+  swapWantedItem: z.string().max(200).nullish(),
+  swapWantedCategory: z.string().max(100).nullish(),
+  swapOpenOffers: z.boolean().optional(),
+  swapAcceptCash: z.boolean().optional(),
+  swapMinCashTopup: z.coerce.number().min(0).nullish(),
+  hasScratch: z.boolean().optional(),
+  isFunctional: z.boolean().optional(),
+  hasCompleteParts: z.boolean().optional(),
+  hasOriginalBox: z.boolean().optional(),
+  hasWarranty: z.boolean().optional(),
+})
 
 export async function PATCH(
   request: NextRequest,
@@ -23,10 +55,13 @@ export async function PATCH(
   if (listing.sellerId !== user.id) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
   if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Only active listings can be edited' }, { status: 400 })
 
-  const body = await request.json()
+  let body: unknown
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }) }
+  const parsed = EditSchema.safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid data.' }, { status: 400 })
   const { title, description, category, condition, originalPrice, state, weightKg, lengthCm, widthCm, heightCm, mode, photos,
     swapWantedItem, swapWantedCategory, swapOpenOffers, swapAcceptCash, swapMinCashTopup,
-    hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty } = body
+    hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty } = parsed.data
 
   const newMode = mode ?? listing.mode
   if (newMode !== listing.mode) {
@@ -53,20 +88,20 @@ export async function PATCH(
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
       ...(category !== undefined && { category }),
-      ...(condition !== undefined && { condition: Number(condition) }),
-      ...(originalPrice !== undefined && { originalPrice: parseFloat(originalPrice) }),
+      ...(condition !== undefined && { condition }),
+      ...(originalPrice !== undefined && { originalPrice }),
       ...(state !== undefined && { state }),
-      ...(weightKg !== undefined && { weightKg: parseFloat(weightKg) }),
-      ...(lengthCm !== undefined && { lengthCm: Number(lengthCm) || null }),
-      ...(widthCm !== undefined && { widthCm: Number(widthCm) || null }),
-      ...(heightCm !== undefined && { heightCm: Number(heightCm) || null }),
+      ...(weightKg !== undefined && { weightKg }),
+      ...(lengthCm !== undefined && { lengthCm: lengthCm ?? null }),
+      ...(widthCm !== undefined && { widthCm: widthCm ?? null }),
+      ...(heightCm !== undefined && { heightCm: heightCm ?? null }),
       ...(mode !== undefined && { mode }),
       ...(photos !== undefined && { photos }),
       ...(swapWantedItem !== undefined && { swapWantedItem: swapWantedItem || null }),
       ...(swapWantedCategory !== undefined && { swapWantedCategory: swapWantedCategory || null }),
       ...(swapOpenOffers !== undefined && { swapOpenOffers }),
       ...(swapAcceptCash !== undefined && { swapAcceptCash }),
-      ...(swapMinCashTopup !== undefined && { swapMinCashTopup: swapMinCashTopup ? parseFloat(swapMinCashTopup) : null }),
+      ...(swapMinCashTopup !== undefined && { swapMinCashTopup: swapMinCashTopup ?? null }),
       ...(hasScratch !== undefined && { hasScratch }),
       ...(isFunctional !== undefined && { isFunctional }),
       ...(hasCompleteParts !== undefined && { hasCompleteParts }),

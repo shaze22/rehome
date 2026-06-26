@@ -56,7 +56,9 @@ export async function DELETE(_request: NextRequest) {
     prisma.message.deleteMany({ where: { senderId: userId } }),
   ])
 
-  // 4. Anonymize user record — keep row for FK integrity (transactions, bids, reviews)
+  // 4. Anonymize user record — keep row for FK integrity (transactions, bids, reviews).
+  //    Capture the IC photo first so we can purge the sensitive file from storage.
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: { icPhoto: true } })
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -67,14 +69,27 @@ export async function DELETE(_request: NextRequest) {
       postcode: null,
       savedAddress: null,
       referralCode: null,
+      icPhoto: null,
+      icVerified: false,
+      icStatus: 'UNVERIFIED',
     },
   })
 
-  // 5. Delete Supabase auth account (service role required)
+  // 5. Delete Supabase auth account + purge the IC image (service role required)
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+  if (before?.icPhoto) {
+    try {
+      if (before.icPhoto.startsWith('http')) {
+        const m = before.icPhoto.split('/rehome-photos/')[1]   // legacy public upload
+        if (m) await admin.storage.from('rehome-photos').remove([m])
+      } else {
+        await admin.storage.from('ic-verification').remove([before.icPhoto])
+      }
+    } catch (e) { console.error('[account-delete] IC purge failed:', e) }
+  }
   const { error: deleteAuthError } = await admin.auth.admin.deleteUser(userId)
   if (deleteAuthError) {
     console.error('[account-delete] auth deletion failed:', deleteAuthError.message)

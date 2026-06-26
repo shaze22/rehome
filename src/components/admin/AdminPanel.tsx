@@ -9,7 +9,7 @@ import {
 
 interface PendingIC {
   id: string; name: string | null; email: string
-  icPhoto: string | null; icStatus: string; createdAt: string
+  icPhoto: string | null; icPhotoUrl: string | null; icStatus: string; createdAt: string
 }
 
 interface Listing {
@@ -316,8 +316,8 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                     <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{user.email}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {user.icPhoto && (
-                      <a href={user.icPhoto} target="_blank" rel="noreferrer"
+                    {user.icPhotoUrl && (
+                      <a href={user.icPhotoUrl} target="_blank" rel="noreferrer"
                         className="p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
                         <Eye className="w-4 h-4" />
                       </a>

@@ -36,11 +36,13 @@ export async function POST(request: NextRequest) {
     // result.reason === 'already_paid' falls through to the manual marker below
   }
 
-  // Manual payout (non-onboarded seller — admin made a bank transfer)
-  const updated = await prisma.transaction.update({
-    where: { id: transactionId },
+  // Manual payout (non-onboarded seller — admin made a bank transfer). Conditional so two
+  // admins / a confirm race can't double-mark.
+  const marked = await prisma.transaction.updateMany({
+    where: { id: transactionId, sellerPaid: false },
     data: { sellerPaid: true, sellerPaidAt: new Date(), payoutNote: note ?? null },
   })
+  if (marked.count === 0) return NextResponse.json({ error: 'Already marked as paid.' }, { status: 400 })
 
-  return NextResponse.json({ success: true, method: 'manual', sellerPaidAt: updated.sellerPaidAt })
+  return NextResponse.json({ success: true, method: 'manual' })
 }
