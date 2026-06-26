@@ -140,7 +140,8 @@ model Transaction {
   courierServiceId      String?           // EasyParcel service_id / Lalamove "lalamove_<SERVICETYPE>" for booking
   easyparcelOrderId     String?
   lalamoveOrderId       String?           // Lalamove order id (when booked via Lalamove)
-  deliveryTrackingUrl   String?           // Lalamove shareLink / courier tracking URL
+  deliveryTrackingUrl   String?           // Lalamove shareLink / Pos tracking_url
+  posLabelUrl           String?           // Pos Laju consignment label (PDF) for seller to print
   stripeTransferId      String?           // Stripe Connect transfer id (seller payout)
   buyerPostcode         String?
   buyerPhone            String?

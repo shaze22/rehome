@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { sendPaymentReceivedEmail, sendShipNowEmail, sendDeliveryFailureEmail, sendPickupArrangeEmail } from '@/lib/resend'
-import { createLalamoveOrder } from '@/lib/lalamove'
+import { createLalamoveOrder, postcodeToState } from '@/lib/lalamove'
+import { createSendParcelOrder, isSendParcelService } from '@/lib/sendparcel'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
         where: { id: listingId },
         select: {
           currentBidder: true, sellerId: true, title: true, weightKg: true, state: true,
-          seller: { select: { name: true, email: true, state: true, phone: true, postcode: true } },
+          seller: { select: { name: true, email: true, state: true, phone: true, postcode: true, savedAddress: true } },
         },
       }),
       prisma.transaction.findUnique({ where: { listingId } }),
@@ -97,12 +98,53 @@ export async function POST(request: NextRequest) {
       throw e
     }
 
-    // Auto-book Lalamove same-day delivery (fire-and-forget — does not block webhook response).
-    // Lalamove re-quotes internally for a fresh quotationId before placing the order.
+    // Auto-book delivery (fire-and-forget — does not block webhook response).
     if (dFee > 0 && courierServiceId && buyerPostcode && buyerPhone && buyerAddress) {
       const sellerUser = listing.seller
       const sellerState = sellerUser?.state ?? 'Kuala Lumpur'
 
+      if (isSendParcelService(courierServiceId)) {
+        // Pos Laju (SendParcel) — standard nationwide parcel, courier pickup from seller.
+        createSendParcelOrder({
+          sender: {
+            name: sellerUser?.name ?? 'KASSIM Seller',
+            phone: sellerUser?.phone ?? '',
+            address1: sellerUser?.savedAddress ?? '',
+            state: sellerState,
+            postcode: sellerUser?.postcode ?? '',
+          },
+          receiver: {
+            name: 'KASSIM Buyer',
+            phone: buyerPhone,
+            address1: buyerAddress,
+            state: postcodeToState(buyerPostcode) ?? sellerState,
+            postcode: buyerPostcode,
+          },
+          weightKg: listing.weightKg,
+          itemDescription: listing.title,
+          merchantOrderNumber: `KSM-${listingId}`,
+        }).then(async (order) => {
+          if (order?.trackingNo) {
+            await prisma.transaction.update({
+              where: { listingId },
+              data: { trackingNumber: order.trackingNo, deliveryTrackingUrl: order.trackingUrl, posLabelUrl: order.labelUrl },
+            })
+          } else {
+            console.error('[webhook] Pos/SendParcel returned no tracking for listingId:', listingId)
+            const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+            if (seller?.email) {
+              await sendDeliveryFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, 'Pos Laju booking failed — please arrange shipping manually')
+            }
+          }
+        }).catch(async (err: Error) => {
+          console.error('[webhook] Pos/SendParcel booking error:', err.message)
+          const seller = await prisma.user.findUnique({ where: { id: sellerId }, select: { email: true, name: true } })
+          if (seller?.email) {
+            await sendDeliveryFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Pos Laju booking error')
+          }
+        })
+      } else {
+      // Lalamove same-day — re-quotes internally for a fresh quotationId before placing.
       createLalamoveOrder({
         sellerState,
         buyerState: '',
@@ -134,6 +176,7 @@ export async function POST(request: NextRequest) {
           await sendDeliveryFailureEmail(seller.email, seller.name ?? 'Seller', listing.title, listingId, err.message ?? 'Lalamove booking error')
         }
       })
+      }
     }
 
     // Notify seller — payment received + ship instructions

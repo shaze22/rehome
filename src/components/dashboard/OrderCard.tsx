@@ -23,6 +23,7 @@ interface Order {
   easyparcelOrderId?: string | null
   lalamoveOrderId?: string | null
   deliveryTrackingUrl?: string | null
+  posLabelUrl?: string | null
   pickupMethod?: string | null
 }
 
@@ -109,12 +110,21 @@ export function OrderCard({ order }: Props) {
         </div>
       )}
 
-      {/* Lalamove live tracking link (both buyer + seller) */}
+      {/* Tracking link (both buyer + seller) — Lalamove live driver or Pos parcel */}
       {localOrder.deliveryTrackingUrl && (
         <a href={localOrder.deliveryTrackingUrl} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-xs mb-3 px-3 py-2 rounded-lg font-medium"
           style={{ backgroundColor: 'rgba(249,115,22,0.1)', color: 'var(--orange)', border: '1px solid var(--orange)' }}>
-          <Truck className="w-3.5 h-3.5" /> Track Lalamove driver (live)
+          <Truck className="w-3.5 h-3.5" /> {localOrder.lalamoveOrderId ? 'Track Lalamove driver (live)' : 'Track parcel (Pos Laju)'}
+        </a>
+      )}
+
+      {/* Pos Laju consignment label — seller prints + sticks on parcel */}
+      {localOrder.isSeller && localOrder.posLabelUrl && (
+        <a href={localOrder.posLabelUrl} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs mb-3 px-3 py-2 rounded-lg font-medium"
+          style={{ backgroundColor: 'rgba(79,140,255,0.1)', color: 'var(--blue)', border: '1px solid var(--blue)' }}>
+          <Package className="w-3.5 h-3.5" /> Print Pos Laju label (PDF)
         </a>
       )}
 

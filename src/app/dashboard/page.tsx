@@ -391,6 +391,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 buyerAddress: o.buyerAddress, deliveryFee: o.deliveryFee,
                 easyparcelOrderId: o.easyparcelOrderId,
                 lalamoveOrderId: o.lalamoveOrderId, deliveryTrackingUrl: o.deliveryTrackingUrl,
+                posLabelUrl: o.posLabelUrl,
                 pickupMethod: o.pickupMethod,
               }} />
             ))}

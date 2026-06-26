@@ -1,4 +1,5 @@
-import { getLalamoveQuote } from './lalamove'
+import { getLalamoveQuote, postcodeToState } from './lalamove'
+import { getSendParcelQuote } from './sendparcel'
 
 export interface CourierRate {
   id: string
@@ -13,15 +14,16 @@ export interface CourierRate {
 export interface DeliveryQuoteResult {
   cheapest: number              // chargedPrice of cheapest option (0 when uncovered)
   couriers: CourierRate[]
-  source: 'lalamove' | 'none'
-  covered: boolean              // false = Lalamove does not serve this route
+  source: 'lalamove' | 'pos' | 'mixed' | 'none'
+  covered: boolean              // false = no courier serves this route
 }
 
 /**
- * Delivery is Lalamove-only (door-to-door pickup + drop-off, fits the KASSIM model).
- * EasyParcel was removed — its OAuth approval never came through.
- * Lalamove rejects unservable routes (e.g. cross-sea), in which case covered=false
- * and the UI tells the buyer delivery is not available to their area.
+ * Two delivery providers run in parallel and the buyer picks:
+ *  - Lalamove — same-day, door-to-door, intra-city (premium; no Sabah coverage).
+ *  - Pos Laju (SendParcel) — standard parcel, cheaper, nationwide incl. Sabah/Sarawak.
+ * Pos has no rate API (fixed contract estimate). If NEITHER serves the route,
+ * covered=false and the UI offers self-pickup.
  */
 export async function getDeliveryQuote(
   sellerState: string,
@@ -29,9 +31,16 @@ export async function getDeliveryQuote(
   weightKg: number,
   buyerPostcode?: string,
 ): Promise<DeliveryQuoteResult> {
+  const effBuyerState = (buyerState && buyerState.trim()) || postcodeToState(buyerPostcode) || ''
   const lalamove = await getLalamoveQuote(sellerState, buyerState, weightKg, buyerPostcode)
-  if (lalamove) {
-    return { cheapest: lalamove.chargedPrice, couriers: [lalamove], source: 'lalamove', covered: true }
+  const pos = getSendParcelQuote(sellerState, effBuyerState, weightKg)
+
+  const couriers = [lalamove, pos].filter(Boolean) as CourierRate[]
+  couriers.sort((a, b) => a.chargedPrice - b.chargedPrice)
+
+  if (couriers.length === 0) {
+    return { cheapest: 0, couriers: [], source: 'none', covered: false }
   }
-  return { cheapest: 0, couriers: [], source: 'none', covered: false }
+  const source = lalamove && pos ? 'mixed' as const : pos ? 'pos' as const : 'lalamove' as const
+  return { cheapest: couriers[0].chargedPrice, couriers, source, covered: true }
 }
