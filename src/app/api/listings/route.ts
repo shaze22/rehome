@@ -92,8 +92,21 @@ export async function POST(request: NextRequest) {
       role: 'SELLER',
     },
     update: { role: 'SELLER' },
-    select: { icVerified: true },
+    select: { icVerified: true, phone: true, state: true, postcode: true, savedAddress: true },
   })
+
+  // Seller must have a complete pickup/return address — required to generate shipping labels.
+  const missing: string[] = []
+  if (!dbUser.phone?.trim()) missing.push('phone number')
+  if (!dbUser.state?.trim()) missing.push('state')
+  if (!dbUser.postcode?.trim()) missing.push('postcode')
+  if (!dbUser.savedAddress || dbUser.savedAddress.trim().length < 5) missing.push('full address')
+  if (missing.length > 0) {
+    return NextResponse.json({
+      error: `Complete your address before listing (${missing.join(', ')}). It is printed on the shipping label so couriers know where the parcel comes from.`,
+      code: 'INCOMPLETE_ADDRESS',
+    }, { status: 400 })
+  }
 
   let aiSuggestedMin: number | null = null
   let aiSuggestedMax: number | null = null

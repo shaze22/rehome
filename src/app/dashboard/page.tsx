@@ -269,7 +269,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      {/* Profile — phone required for EasyParcel delivery booking */}
+      {/* Profile — phone + address required for courier label/booking */}
+      <div id="profile" />
       <ProfileEditForm
         initialName={dbUser?.name ?? ''}
         initialPhone={dbUser?.phone ?? ''}

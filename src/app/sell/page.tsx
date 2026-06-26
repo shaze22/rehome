@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
 import { SellForm } from '@/components/sell/SellForm'
 import type { Metadata } from 'next'
 
@@ -17,6 +19,31 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
 
   const params = await searchParams
   const isWelcome = params.welcome === '1'
+
+  // Sellers need a complete address — it's printed on the shipping label (sender/return).
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { phone: true, state: true, postcode: true, savedAddress: true },
+  })
+  const addressIncomplete = !dbUser?.phone?.trim() || !dbUser?.state?.trim() ||
+    !dbUser?.postcode?.trim() || !dbUser?.savedAddress || dbUser.savedAddress.trim().length < 5
+
+  if (addressIncomplete) {
+    return (
+      <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <h1 className="text-2xl font-bold mb-2">One step before you sell</h1>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+            Add your <strong>phone number, state, postcode, and full address</strong> to your profile first. We print it on the shipping label so couriers know where each parcel is sent from. It only takes a minute.
+          </p>
+          <Link href="/dashboard#profile"
+            className="inline-block px-5 py-2.5 rounded-xl font-semibold text-white gradient-teal">
+            Complete my address
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
