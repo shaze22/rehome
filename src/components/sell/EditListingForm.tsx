@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { dimsFor } from '@/lib/parcelDimensions'
 import { useRouter } from 'next/navigation'
 import { Upload, Loader2, X, Zap, ArrowLeftRight } from 'lucide-react'
 import { MALAYSIAN_STATES } from '@/lib/delivery'
@@ -26,6 +27,9 @@ interface Props {
     originalPrice: number
     state: string
     weightKg: number
+    lengthCm: number | null
+    widthCm: number | null
+    heightCm: number | null
     mode: string
     photos: string[]
     swapWantedItem: string | null
@@ -54,6 +58,18 @@ export function EditListingForm({ listing, userId }: Props) {
   const [originalPrice, setOriginalPrice] = useState(String(listing.originalPrice))
   const [state, setState] = useState(listing.state)
   const [weightKg, setWeightKg] = useState(String(listing.weightKg))
+  const _hasDims = !!(listing.lengthCm && listing.widthCm && listing.heightCm)
+  const _initDims = _hasDims ? { l: listing.lengthCm!, w: listing.widthCm!, h: listing.heightCm! } : dimsFor(listing.category)
+  const [lengthCm, setLengthCm] = useState(String(_initDims.l))
+  const [widthCm, setWidthCm] = useState(String(_initDims.w))
+  const [heightCm, setHeightCm] = useState(String(_initDims.h))
+  const [dimsTouched, setDimsTouched] = useState(_hasDims)
+  // Re-fill from category default only while the seller hasn't set dimensions.
+  useEffect(() => {
+    if (dimsTouched) return
+    const d = dimsFor(category)
+    setLengthCm(String(d.l)); setWidthCm(String(d.w)); setHeightCm(String(d.h))
+  }, [category, dimsTouched])
   const [photos, setPhotos] = useState<string[]>(listing.photos)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [swapWantedItem, setSwapWantedItem] = useState(listing.swapWantedItem ?? '')
@@ -134,7 +150,7 @@ export function EditListingForm({ listing, userId }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title, description, category, condition, originalPrice, state,
-          weightKg, mode, photos,
+          weightKg, lengthCm, widthCm, heightCm, mode, photos,
           swapWantedItem, swapWantedCategory, swapOpenOffers, swapAcceptCash,
           swapMinCashTopup: swapMinCashTopup || null,
           hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty,
@@ -222,6 +238,27 @@ export function EditListingForm({ listing, userId }: Props) {
               {Number(weightKg).toFixed(1)} kg
             </span>
           </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+            Parcel size (cm) — for accurate delivery
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {([['Length', lengthCm, setLengthCm], ['Width', widthCm, setWidthCm], ['Height', heightCm, setHeightCm]] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
+              <div key={lbl}>
+                <span className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{lbl}</span>
+                <input
+                  type="number" inputMode="numeric" min={1} max={200} value={val}
+                  onChange={e => { set(e.target.value); setDimsTouched(true) }}
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                  style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
+            Adjust for bulky or oversized items — couriers charge by parcel size as well as weight.
+          </p>
         </div>
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Original Price (RM) *</label>

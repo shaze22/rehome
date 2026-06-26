@@ -24,7 +24,7 @@ export async function PATCH(
   if (listing.status !== 'ACTIVE') return NextResponse.json({ error: 'Only active listings can be edited' }, { status: 400 })
 
   const body = await request.json()
-  const { title, description, category, condition, originalPrice, state, weightKg, mode, photos,
+  const { title, description, category, condition, originalPrice, state, weightKg, lengthCm, widthCm, heightCm, mode, photos,
     swapWantedItem, swapWantedCategory, swapOpenOffers, swapAcceptCash, swapMinCashTopup,
     hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty } = body
 
@@ -57,6 +57,9 @@ export async function PATCH(
       ...(originalPrice !== undefined && { originalPrice: parseFloat(originalPrice) }),
       ...(state !== undefined && { state }),
       ...(weightKg !== undefined && { weightKg: parseFloat(weightKg) }),
+      ...(lengthCm !== undefined && { lengthCm: Number(lengthCm) || null }),
+      ...(widthCm !== undefined && { widthCm: Number(widthCm) || null }),
+      ...(heightCm !== undefined && { heightCm: Number(heightCm) || null }),
       ...(mode !== undefined && { mode }),
       ...(photos !== undefined && { photos }),
       ...(swapWantedItem !== undefined && { swapWantedItem: swapWantedItem || null }),
