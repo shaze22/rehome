@@ -92,14 +92,18 @@ function toE164(phone: string | null | undefined): string {
 // size per category — this gives a volumetric floor that protects against bulky,
 // light items (e.g. a lampshade) without overpricing small dense items (a phone),
 // since cheap zones charge a flat rate for the first 2kg anyway.
+// Moderate, conservative estimates — sized so typical light items in cheap zones are
+// unaffected (Pos is flat for the first 2kg) while bulky categories get a volumetric
+// floor. Tune per category as real data comes in.
+//                                              volumetric (L×W×H/5000)
 export const CATEGORY_DIMENSIONS: Record<string, { l: number; w: number; h: number }> = {
-  FURNITURE: { l: 50, w: 40, h: 30 },
-  ELECTRONICS: { l: 25, w: 20, h: 10 },
-  FASHION: { l: 30, w: 22, h: 6 },
-  BOOKS: { l: 25, w: 18, h: 4 },
-  SPORTS: { l: 40, w: 30, h: 15 },
-  KITCHEN: { l: 30, w: 25, h: 20 },
-  OTHERS: { l: 30, w: 25, h: 12 },
+  FURNITURE: { l: 45, w: 35, h: 25 },   // ~7.9 kg
+  ELECTRONICS: { l: 25, w: 20, h: 10 }, // ~1.0 kg
+  FASHION: { l: 30, w: 22, h: 6 },      // ~0.8 kg
+  BOOKS: { l: 25, w: 18, h: 4 },        // ~0.4 kg
+  SPORTS: { l: 40, w: 30, h: 15 },      // ~3.6 kg
+  KITCHEN: { l: 30, w: 25, h: 18 },     // ~2.7 kg
+  OTHERS: { l: 25, w: 20, h: 10 },      // ~1.0 kg (neutral)
 }
 export function dimsFor(category?: string) {
   return CATEGORY_DIMENSIONS[category ?? 'OTHERS'] ?? CATEGORY_DIMENSIONS.OTHERS
