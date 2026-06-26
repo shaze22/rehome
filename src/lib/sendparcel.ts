@@ -187,9 +187,10 @@ export async function createSendParcelOrder(input: SendParcelOrderInput): Promis
       merchant_order_number: input.merchantOrderNumber.slice(0, 50),
       merchant_reference_number: input.merchantOrderNumber.slice(0, 50),
     },
+    // Drop-off model: seller prints the consignment label and drops the parcel at any
+    // Pos office. (Per-seller courier pickup is impractical for scattered C2C sellers.)
     pickup: {
-      required: true,
-      timeslot: { start_time: '09:00', end_time: '18:00' },
+      required: false,
     },
     sender: { display_address: '', hide_sender_address: false, ...party(input.sender) },
     receiver: party(input.receiver),

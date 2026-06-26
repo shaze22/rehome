@@ -119,13 +119,18 @@ export function OrderCard({ order }: Props) {
         </a>
       )}
 
-      {/* Pos Laju consignment label — seller prints + sticks on parcel */}
+      {/* Pos Laju consignment label — seller prints, sticks on parcel, drops at Pos */}
       {localOrder.isSeller && localOrder.posLabelUrl && (
-        <a href={localOrder.posLabelUrl} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-xs mb-3 px-3 py-2 rounded-lg font-medium"
-          style={{ backgroundColor: 'rgba(79,140,255,0.1)', color: 'var(--blue)', border: '1px solid var(--blue)' }}>
-          <Package className="w-3.5 h-3.5" /> Print Pos Laju label (PDF)
-        </a>
+        <div className="mb-3">
+          <a href={localOrder.posLabelUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-medium"
+            style={{ backgroundColor: 'rgba(79,140,255,0.1)', color: 'var(--blue)', border: '1px solid var(--blue)' }}>
+            <Package className="w-3.5 h-3.5" /> Print Pos Laju label (PDF)
+          </a>
+          <p className="text-xs mt-1 px-1" style={{ color: 'var(--text-muted)' }}>
+            Print it, stick on your parcel, then drop off at any Pos Malaysia / Pos Laju branch. Then mark as shipped below.
+          </p>
+        </div>
       )}
 
       {localOrder.trackingNumber && (
