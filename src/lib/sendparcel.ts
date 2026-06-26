@@ -1,7 +1,5 @@
 import type { CourierRate } from './courier'
 
-const MARKUP = 0.30
-
 function baseUrl(): string {
   return process.env.SENDPARCEL_ENV === 'production'
     ? 'https://posapi.pos.com.my'
@@ -91,26 +89,32 @@ function toE164(phone: string | null | undefined): string {
 // ── Quote — Pos Malaysia contract rates (UVW Group quotation, 23 Jun 2026, Appendix A) ──
 // No live rate API exists, so we compute from the signed contract rate card.
 const FUEL_SURCHARGE = 0.15  // domestic fuel surcharge (reviewed weekly — update from pos.com.my)
+const SST = 0.08             // service tax on courier services (Pos bills this on top)
 
-// Raw Pos base rate (RM, before fuel surcharge & SST) by zone + chargeable weight.
-function posRawRate(sellerState: string, buyerState: string, billedKg: number): number {
+// Tiered markup: higher % on cheap routes (small absolute RM, conversion-insensitive);
+// lighter % on already-expensive Sabah/Sarawak routes to keep East Malaysia affordable.
+const MARKUP_CHEAP = 0.40    // Zone 1/2/3
+const MARKUP_EAST = 0.28     // Zone 4/5
+
+// Raw Pos base rate (RM, before fuel + SST) and the markup tier, by zone + chargeable weight.
+function posQuoteParts(sellerState: string, buyerState: string, billedKg: number): { raw: number; markupRate: number } {
   const sEast = EAST_MALAYSIA.includes(sellerState)
   const bEast = EAST_MALAYSIA.includes(buyerState)
   // Zone 1/2/3 — within Klang Valley, between Peninsular states, or within the SAME state
   // (incl. within-state Sabah/Sarawak). First 2kg RM5.50, +RM1.00/kg thereafter.
   if (sellerState === buyerState || (!sEast && !bEast)) {
-    return 5.50 + Math.max(0, billedKg - 2) * 1.00
+    return { raw: 5.50 + Math.max(0, billedKg - 2) * 1.00, markupRate: MARKUP_CHEAP }
   }
   // Zone 4 — Peninsular → Sabah/Sarawak. First 1kg RM12.50, +RM10.00/kg.
-  if (!sEast && bEast) return 12.50 + (billedKg - 1) * 10.00
+  if (!sEast && bEast) return { raw: 12.50 + (billedKg - 1) * 10.00, markupRate: MARKUP_EAST }
   // Zone 5 — Sabah/Sarawak → Peninsular, or between Sabah & Sarawak. First 1kg RM11.50, +RM8.00/kg.
-  return 11.50 + (billedKg - 1) * 8.00
+  return { raw: 11.50 + (billedKg - 1) * 8.00, markupRate: MARKUP_EAST }
 }
 
 /**
  * Pos Laju standard domestic quote as a CourierRate, matching the courier picker shape.
- * Covers ALL of Malaysia incl. Sabah/Sarawak. basePrice = contract rate + 15% fuel
- * surcharge (platform's cost; 8% SST is absorbed by the 30% markup). Max 30kg.
+ * Covers ALL of Malaysia incl. Sabah/Sarawak. basePrice = contract rate + fuel surcharge
+ * + SST (the platform's true cost). markup = tiered margin on top. Max 30kg.
  */
 export function getSendParcelQuote(sellerState: string, buyerState: string, weightKg: number): CourierRate | null {
   // Only offer Pos when configured — otherwise the quote would show but booking
@@ -120,9 +124,9 @@ export function getSendParcelQuote(sellerState: string, buyerState: string, weig
   if ((weightKg || 1) > 30) return null  // Pos rejects > 30kg — leave it to Lalamove (lorry)
 
   const billedKg = Math.min(30, Math.max(1, Math.ceil(weightKg || 1)))
-  const raw = posRawRate(sellerState, buyerState, billedKg)
-  const base = Math.round(raw * (1 + FUEL_SURCHARGE) * 100) / 100
-  const markup = Math.round(base * MARKUP * 100) / 100
+  const { raw, markupRate } = posQuoteParts(sellerState, buyerState, billedKg)
+  const base = Math.round(raw * (1 + FUEL_SURCHARGE) * (1 + SST) * 100) / 100  // platform's true cost
+  const markup = Math.round(base * markupRate * 100) / 100
   return {
     id: 'pos_standard',
     courierName: 'Pos Laju',
