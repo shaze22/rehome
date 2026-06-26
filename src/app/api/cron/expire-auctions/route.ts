@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   const expiredListings = await prisma.listing.findMany({
     where: { status: 'ACTIVE', endsAt: { not: null, lt: now } },
     include: { seller: { select: { email: true, name: true } } },
+    take: 1000,
   })
 
   for (const listing of expiredListings) {
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
       endsAt: { not: null, lt: cutoff24h },
     },
     include: { seller: { select: { email: true, name: true } } },
+    take: 1000,
   })
 
   for (const listing of unpaidEnded) {
@@ -96,6 +98,7 @@ export async function GET(request: NextRequest) {
       endsAt: null,
       createdAt: { lt: cutoff14d },
     },
+    take: 1000,
   })
 
   for (const listing of staleFlash) {

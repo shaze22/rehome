@@ -3,12 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapOfferAcceptedEmail, sendSwapOfferCounteredEmail } from '@/lib/resend'
 import { sendPushToUser } from '@/lib/push'
+import { trustedPhotoUrl } from '@/lib/photoUrl'
 import { z } from 'zod'
 
 const CounterSchema = z.object({
   action: z.literal('counter'),
   offeredCashAmount: z.number().min(0).optional(),
-  offeredItemPhotos: z.array(z.string().url()).max(5).optional(),
+  offeredItemPhotos: z.array(trustedPhotoUrl).max(5).optional(),
   offeredItemDesc: z.string().max(1000).optional(),
   offeredItemValue: z.number().min(0).optional(),
   message: z.string().max(500).optional(),

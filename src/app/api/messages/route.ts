@@ -43,6 +43,20 @@ export async function GET(request: NextRequest) {
   const listingId = request.nextUrl.searchParams.get('listingId')
   if (!listingId) return NextResponse.json({ error: 'listingId is required.' }, { status: 400 })
 
+  // Only the seller or a chat participant (someone who messaged / bid / offered on this
+  // listing) may read the private negotiation — otherwise any logged-in user could enumerate
+  // listing ids and read everyone's chats (phone numbers, addresses shared there).
+  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { sellerId: true } })
+  if (!listing) return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
+  if (listing.sellerId !== user.id) {
+    const [m, b, o] = await Promise.all([
+      prisma.message.findFirst({ where: { listingId, senderId: user.id }, select: { id: true } }),
+      prisma.bid.findFirst({ where: { listingId, bidderId: user.id }, select: { id: true } }),
+      prisma.offer.findFirst({ where: { listingId, bidderId: user.id }, select: { id: true } }),
+    ])
+    if (!m && !b && !o) return NextResponse.json({ error: 'Access denied.' }, { status: 403 })
+  }
+
   // Fetch last 100 messages desc, reverse to restore chronological order for client
   const raw = await prisma.message.findMany({
     where: { listingId },

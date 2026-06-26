@@ -3,10 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendSwapItemShippedEmail } from '@/lib/resend'
 import { sendPushToUser } from '@/lib/push'
+import { trustedPhotoUrl } from '@/lib/photoUrl'
 import { z } from 'zod'
 
 const ShipSchema = z.object({
-  photos: z.array(z.string().url()).min(1).max(5),
+  photos: z.array(trustedPhotoUrl).min(1).max(5),
   trackingNumber: z.string().min(1).max(100).optional(),
   courier: z.string().max(50).optional(),
 })

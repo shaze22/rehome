@@ -10,6 +10,11 @@ const Schema = z.object({
   page: z.string().max(200).optional(),
 })
 
+// Escape user text before placing it in the HTML email (anti-injection/phishing).
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
   const { allowed } = await rateLimit('feedback', ip)
@@ -34,9 +39,9 @@ export async function POST(request: NextRequest) {
       html: `
         <div style="font-family:sans-serif;max-width:560px">
           <h2 style="color:#14b8a6">Beta Feedback — ${type}</h2>
-          <p><strong>Dari:</strong> ${from}</p>
-          ${page ? `<p><strong>Halaman:</strong> ${page}</p>` : ''}
-          <div style="background:#f1f5f9;padding:16px;border-radius:8px;margin-top:12px;white-space:pre-wrap">${message}</div>
+          <p><strong>Dari:</strong> ${esc(from)}</p>
+          ${page ? `<p><strong>Halaman:</strong> ${esc(page)}</p>` : ''}
+          <div style="background:#f1f5f9;padding:16px;border-radius:8px;margin-top:12px;white-space:pre-wrap">${esc(message)}</div>
         </div>
       `,
     })

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getAIPriceSuggestion } from '@/lib/gemini'
 import { calculateCO2Saved } from '@/lib/co2'
 import { rateLimit } from '@/lib/rate-limit'
+import { trustedPhotoUrl } from '@/lib/photoUrl'
 import { z } from 'zod'
 
 const FlashListingSchema = z.object({
@@ -18,7 +19,7 @@ const FlashListingSchema = z.object({
   lengthCm: z.number().int().min(1).max(200).optional(),
   widthCm: z.number().int().min(1).max(200).optional(),
   heightCm: z.number().int().min(1).max(200).optional(),
-  photos: z.array(z.string().url()).max(5),
+  photos: z.array(trustedPhotoUrl).max(5),
   state: z.string().min(1),
   hasScratch: z.boolean(),
   isFunctional: z.boolean(),

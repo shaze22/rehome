@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       seller: { select: { email: true, name: true } },
       buyer:  { select: { email: true, name: true } },
     },
+    take: 1000,
   })
 
   for (const tx of stuckTransactions) {
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
   const pendingShipment = await prisma.swapTransaction.findMany({
     where: { escrowStatus: 'PENDING', createdAt: { lt: threeDaysAgo } },
+    take: 1000,
     include: {
       listing: { select: { id: true, title: true } },
       seller: { select: { email: true, name: true } },
@@ -97,6 +99,7 @@ export async function GET(request: NextRequest) {
       listing: { status: { not: 'ACTIVE' } },
     },
     select: { id: true },
+    take: 2000,
   })
 
   if (staleOffers.length > 0) {

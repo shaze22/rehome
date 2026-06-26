@@ -37,15 +37,18 @@ export async function processEmailQueue(): Promise<{ processed: number; failed: 
     const raw = await redis.rpop(QUEUE_KEY)
     if (!raw) break
 
-    const item: QueuedEmail = typeof raw === 'string' ? JSON.parse(raw) : (raw as QueuedEmail)
-
+    let item: QueuedEmail | null = null
     try {
-      await resend.emails.send({ from: FROM, to: item.to, subject: item.subject, html: item.html })
+      item = typeof raw === 'string' ? JSON.parse(raw) : (raw as QueuedEmail)
+      const sent = await resend.emails.send({ from: FROM, to: item!.to, subject: item!.subject, html: item!.html })
+      // Resend can resolve with an `{ error }` object instead of throwing — treat that as failure.
+      if (sent?.error) throw new Error(sent.error.message)
       processed++
     } catch {
       failed++
-      if (item.retries < MAX_RETRIES) {
-        await redis.lpush(QUEUE_KEY, JSON.stringify({ ...item, retries: item.retries + 1 }))
+      // Re-queue (within a retry budget) so a send/parse failure doesn't silently lose the email.
+      if (item && item.retries < MAX_RETRIES) {
+        await redis.lpush(QUEUE_KEY, JSON.stringify({ ...item, retries: item.retries + 1 })).catch(() => {})
         requeued++
       }
     }

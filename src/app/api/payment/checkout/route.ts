@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getStripe, calculateFees } from '@/lib/stripe'
 import { getDeliveryQuote } from '@/lib/courier'
+import { getSendParcelQuote } from '@/lib/sendparcel'
+import { postcodeToState } from '@/lib/lalamove'
 import { sendPaymentReceivedEmail, sendPickupArrangeEmail } from '@/lib/resend'
 
 export async function GET(request: NextRequest) {
@@ -65,10 +67,14 @@ export async function GET(request: NextRequest) {
         serverDeliveryMarkup = quote.couriers[0].markup
       }
     } catch {
-      // If quote fails entirely, require delivery fee from client as last resort (capped)
-      serverDeliveryFee = Math.min(parseFloat(p.get('deliveryFee') ?? '0'), 200)
-      serverDeliveryBase = Math.min(parseFloat(p.get('deliveryBase') ?? '0'), 160)
-      serverDeliveryMarkup = Math.min(parseFloat(p.get('deliveryMarkup') ?? '0'), 60)
+      // Quote infra failed — fall back to a SERVER-computed Pos Laju rate (pure, no API call).
+      // Never trust the client's fee values: a buyer could send 0 and get free delivery.
+      const pos = getSendParcelQuote(listing.state, postcodeToState(buyerPostcode) ?? listing.state, listing.weightKg)
+      if (pos) {
+        serverDeliveryFee = pos.chargedPrice
+        serverDeliveryBase = pos.basePrice
+        serverDeliveryMarkup = pos.markup
+      }
     }
   }
 

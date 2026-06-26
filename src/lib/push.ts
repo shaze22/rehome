@@ -37,8 +37,9 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         json
       ).catch(err => {
-        // 410 Gone or 404 = expired subscription
+        // 410 Gone / 404 = expired subscription → clean up. Log other failures for visibility.
         if (err.statusCode === 410 || err.statusCode === 404) stale.push(sub.endpoint)
+        else console.error('[push] send failed:', err.statusCode, err.body ?? err.message)
       })
     )
   )
