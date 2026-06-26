@@ -494,7 +494,7 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 
 ## Rate Limiting (`src/lib/rate-limit.ts`)
 - Upstash Redis sliding window
-- Bid: 30/5min · Offer: 10/hr · Listing: 5/hr · Feedback: 5/hr per IP
+- Bid: 30/5min · Offer: 10/hr · Listing: 5/hr · Feedback: 5/hr per IP · **AI: 30/hr** (gemini/analyze, price, swap-suggest — per user)
 - **Admin: 20/min** — applied to all 4 admin routes (mark-payout, verify-ic, feature-listing, resolve-dispute)
 
 ## Cron Schedule (vercel.json)
@@ -534,10 +534,13 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 Prisma (DATABASE_URL) bypasses RLS as postgres superuser — all app writes are safe.
 RLS protects direct Supabase REST/client API access (anon key vectors).
 
+**RLS PERF STANDARD (audit 2026-06-26):** ALWAYS write `(select auth.uid())`, never bare `auth.uid()`, in policy expressions — the subquery is evaluated once per query instead of once per row (`auth_rls_initplan`). Keep ONE permissive policy per (table, role, command) to avoid `multiple_permissive_policies`. Migration: `rls_perf_select_auth_uid`.
+
 | Table | RLS | Key Rules |
 |-------|-----|-----------|
 | `User` | ✅ | authenticated can read any; update own only |
-| `Listing` | ✅ | anon+auth can read ACTIVE; seller: read/update/delete own |
+| `Listing` | ✅ | single SELECT policy: read ACTIVE **OR** own (seller); seller update/delete own |
+| `AuditLog` | ✅ | RLS enabled, 0 policies — no client access (admin reads via Prisma) |
 | `Bid` | ✅ | public read; authenticated create as own bidder |
 | `Offer` | ✅ | seller+bidder read; authenticated create as own |
 | `SwapTransaction` | ✅ | seller+buyer read+update only |
@@ -548,6 +551,20 @@ RLS protects direct Supabase REST/client API access (anon key vectors).
 | `Referral` | ✅ | referrer+referred read own |
 | `PushSubscription` | ✅ | own CRUD only |
 | `_prisma_migrations` | ✅ | no client access (0 policies) |
+
+## Security & Concurrency Standards (audit 2026-06-26)
+Full audit (CRITICAL×2 + HIGH×9 + MEDIUM×9 + LOW) — all fixed & live. Patterns to follow for any new code:
+
+- **Money / one-shot state transitions = atomic claim, never read-then-write.** Use a conditional `updateMany({ where: { ...id, flag: false }, data: { flag: true } })` and act only if `count === 1`. Applied in: `transferToSeller` (connect.ts), confirm-receipt, mark-payout, offer-accept, swap-receive. Prevents double-payout / double-score under concurrent requests.
+- **Stripe transfers carry `idempotencyKey: \`transfer_${listingId}\`** — belt-and-suspenders on top of the DB claim.
+- **Chargebacks:** `charge.dispute.created` webhook → set `Transaction.disputed = true` (blocks `transferToSeller`) + `sendChargebackAlertEmail`. The Stripe endpoint is subscribed to this event.
+- **Post-response work in webhooks uses `after()`** (from `next/server`) — keeps the serverless function alive (Vercel waitUntil) so courier booking + emails complete after the 200. Never fire-and-forget a bare promise.
+- **All user-supplied photo URLs validate via `trustedPhotoUrl`** (`src/lib/photoUrl.ts`) — must start with `{SUPABASE_URL}/storage/v1/object/public/rehome-photos/`. Blocks SSRF + off-platform URLs. Used in listing-create, PATCH, offers, counter, swap-ship, gemini/analyze.
+- **IC photos live in the PRIVATE `ic-verification` bucket** — store the PATH, not a public URL. Sellers upload to `ic/<uid>/...` (own folder, INSERT-only policy). Admin views via short-lived signed URL (service role in `admin/page.tsx`). Account-delete purges the object + clears `icPhoto`. NEVER put IC in the public `rehome-photos` bucket.
+- **Public bucket `rehome-photos` has NO broad SELECT policy** — public URLs serve images regardless; a SELECT policy would only let clients enumerate all files.
+- **AI routes (`gemini/*`) require auth + `rateLimit('ai', user.id)`** (30/hr) — paid API, no anon access.
+- **List/aggregate, don't load-all:** sums use `aggregate({ _sum })`; list queries + crons have `.take()` caps; crons batch (`updateMany` + `findMany` + map) instead of N+1 loops.
+- **Admin Beta Users list is server-paginated** (`?upage=N`, 50/page).
 
 ## All Routes
 | Route | Purpose |
