@@ -88,32 +88,40 @@ function toE164(phone: string | null | undefined): string {
   return `+60${digits.replace(/^0/, '')}`
 }
 
-// ── Quote (no rate API — fixed Pos Laju estimate by zone + weight) ─────────────
-// Tune these to your actual SendParcel contract rate card. Buyer pays the quote;
-// platform pays Pos the contract rate; the 30% markup absorbs the variance.
-const POS_BASE = { peninsular: 7, mixed: 11, east: 9 }   // first 1 kg
-const POS_PERKG = { peninsular: 2, mixed: 5, east: 3 }   // each additional kg
+// ── Quote — Pos Malaysia contract rates (UVW Group quotation, 23 Jun 2026, Appendix A) ──
+// No live rate API exists, so we compute from the signed contract rate card.
+const FUEL_SURCHARGE = 0.15  // domestic fuel surcharge (reviewed weekly — update from pos.com.my)
 
-function zone(sellerState: string, buyerState: string): 'peninsular' | 'mixed' | 'east' {
+// Raw Pos base rate (RM, before fuel surcharge & SST) by zone + chargeable weight.
+function posRawRate(sellerState: string, buyerState: string, billedKg: number): number {
   const sEast = EAST_MALAYSIA.includes(sellerState)
   const bEast = EAST_MALAYSIA.includes(buyerState)
-  if (sEast && bEast) return 'east'
-  if (sEast || bEast) return 'mixed'
-  return 'peninsular'
+  // Zone 1/2/3 — within Klang Valley, between Peninsular states, or within the SAME state
+  // (incl. within-state Sabah/Sarawak). First 2kg RM5.50, +RM1.00/kg thereafter.
+  if (sellerState === buyerState || (!sEast && !bEast)) {
+    return 5.50 + Math.max(0, billedKg - 2) * 1.00
+  }
+  // Zone 4 — Peninsular → Sabah/Sarawak. First 1kg RM12.50, +RM10.00/kg.
+  if (!sEast && bEast) return 12.50 + (billedKg - 1) * 10.00
+  // Zone 5 — Sabah/Sarawak → Peninsular, or between Sabah & Sarawak. First 1kg RM11.50, +RM8.00/kg.
+  return 11.50 + (billedKg - 1) * 8.00
 }
 
 /**
- * Pos Laju standard domestic quote as a CourierRate (with 30% markup), matching
- * the courier picker shape. Covers ALL of Malaysia incl. Sabah/Sarawak.
+ * Pos Laju standard domestic quote as a CourierRate, matching the courier picker shape.
+ * Covers ALL of Malaysia incl. Sabah/Sarawak. basePrice = contract rate + 15% fuel
+ * surcharge (platform's cost; 8% SST is absorbed by the 30% markup). Max 30kg.
  */
 export function getSendParcelQuote(sellerState: string, buyerState: string, weightKg: number): CourierRate | null {
   // Only offer Pos when configured — otherwise the quote would show but booking
   // (which needs the OAuth creds) would fail. Keeps Pos hidden until creds are set.
   if (!process.env.SENDPARCEL_CLIENT_ID) return null
   if (!sellerState || !buyerState) return null
-  const z = zone(sellerState, buyerState)
+  if ((weightKg || 1) > 30) return null  // Pos rejects > 30kg — leave it to Lalamove (lorry)
+
   const billedKg = Math.min(30, Math.max(1, Math.ceil(weightKg || 1)))
-  const base = POS_BASE[z] + (billedKg - 1) * POS_PERKG[z]
+  const raw = posRawRate(sellerState, buyerState, billedKg)
+  const base = Math.round(raw * (1 + FUEL_SURCHARGE) * 100) / 100
   const markup = Math.round(base * MARKUP * 100) / 100
   return {
     id: 'pos_standard',
