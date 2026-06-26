@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
   let serverDeliveryFee = 0, serverDeliveryBase = 0, serverDeliveryMarkup = 0
   if (!isPickup && courierServiceId && buyerPostcode) {
     try {
-      const quote = await getDeliveryQuote(listing.state, '', listing.weightKg, buyerPostcode, listing.category)
+      const quote = await getDeliveryQuote(listing.state, '', listing.weightKg, buyerPostcode, listing.category,
+        { l: listing.lengthCm ?? 0, w: listing.widthCm ?? 0, h: listing.heightCm ?? 0 })
       const selected = quote.couriers.find(c => c.id === courierServiceId)
       if (selected) {
         serverDeliveryFee = selected.chargedPrice

@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         where: { id: listingId },
         select: {
           currentBidder: true, sellerId: true, title: true, weightKg: true, state: true, category: true,
+          lengthCm: true, widthCm: true, heightCm: true,
           seller: { select: { name: true, email: true, state: true, phone: true, postcode: true, savedAddress: true } },
         },
       }),
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
           },
           weightKg: listing.weightKg,
           category: listing.category,
+          dims: { l: listing.lengthCm ?? 0, w: listing.widthCm ?? 0, h: listing.heightCm ?? 0 },
           itemDescription: listing.title,
           merchantOrderNumber: `KSM-${listingId}`,
         }).then(async (order) => {

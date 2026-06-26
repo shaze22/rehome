@@ -13,13 +13,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { state: true, weightKg: true, category: true },
+    select: { state: true, weightKg: true, category: true, lengthCm: true, widthCm: true, heightCm: true },
   })
 
   if (!listing) {
     return NextResponse.json({ error: 'Listing not found.' }, { status: 404 })
   }
 
-  const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg, buyerPostcode, listing.category)
+  const result = await getDeliveryQuote(listing.state, buyerState, listing.weightKg, buyerPostcode, listing.category,
+    { l: listing.lengthCm ?? 0, w: listing.widthCm ?? 0, h: listing.heightCm ?? 0 })
   return NextResponse.json({ ...result, sellerState: listing.state, buyerState, buyerPostcode })
 }

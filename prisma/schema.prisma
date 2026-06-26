@@ -75,6 +75,9 @@ model Listing {
   offers             Offer[]
   swapTransaction    SwapTransaction?
   weightKg           Float         @default(1)
+  lengthCm           Int?          // parcel dimensions (cm) for volumetric weight
+  widthCm            Int?
+  heightCm           Int?
   aiSuggestedMin     Float?
   aiSuggestedMax     Float?
   aiReasoning        String?

@@ -1,5 +1,6 @@
 import { getLalamoveQuote, postcodeToState } from './lalamove'
-import { getSendParcelQuote, chargeableWeight } from './sendparcel'
+import { getSendParcelQuote } from './sendparcel'
+import { chargeableWeight, type Dims } from './parcelDimensions'
 
 export interface CourierRate {
   id: string
@@ -31,10 +32,11 @@ export async function getDeliveryQuote(
   weightKg: number,
   buyerPostcode?: string,
   category?: string,
+  dims?: Partial<Dims> | null,
 ): Promise<DeliveryQuoteResult> {
   const effBuyerState = (buyerState && buyerState.trim()) || postcodeToState(buyerPostcode) || ''
   // Charge on the heavier of actual vs volumetric weight (Pos bills the max).
-  const billableKg = chargeableWeight(category, weightKg)
+  const billableKg = chargeableWeight(category, weightKg, dims)
   const lalamove = await getLalamoveQuote(sellerState, buyerState, billableKg, buyerPostcode)
   const pos = getSendParcelQuote(sellerState, effBuyerState, billableKg)
 

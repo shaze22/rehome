@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bot, Upload, Loader2, AlertCircle, Info, Zap, ArrowLeftRight, Sparkles, RotateCcw, ChevronDown } from 'lucide-react'
 import { MALAYSIAN_STATES } from '@/lib/delivery'
+import { dimsFor } from '@/lib/parcelDimensions'
 import { createClient } from '@/lib/supabase/client'
 
 const CATEGORIES = [
@@ -52,6 +53,16 @@ export function SellForm({ userId }: Props) {
 
   // Common
   const [weightKg, setWeightKg] = useState('0.5')
+  const [lengthCm, setLengthCm] = useState(String(dimsFor('ELECTRONICS').l))
+  const [widthCm, setWidthCm] = useState(String(dimsFor('ELECTRONICS').w))
+  const [heightCm, setHeightCm] = useState(String(dimsFor('ELECTRONICS').h))
+  const [dimsTouched, setDimsTouched] = useState(false)
+  // Pre-fill dimensions from the category default until the seller edits them.
+  useEffect(() => {
+    if (dimsTouched) return
+    const d = dimsFor(category)
+    setLengthCm(String(d.l)); setWidthCm(String(d.w)); setHeightCm(String(d.h))
+  }, [category, dimsTouched])
 
   // Flash-only fields
   const [startingBid, setStartingBid] = useState('0')
@@ -237,6 +248,9 @@ export function SellForm({ userId }: Props) {
         title, description, category, condition,
         originalPrice: Number(originalPrice),
         weightKg: Number(weightKg) || 1,
+        lengthCm: Number(lengthCm) || undefined,
+        widthCm: Number(widthCm) || undefined,
+        heightCm: Number(heightCm) || undefined,
         photos, state,
         hasScratch, isFunctional, hasCompleteParts, hasOriginalBox, hasWarranty,
       }
@@ -558,6 +572,28 @@ export function SellForm({ userId }: Props) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Parcel size (cm) — for accurate delivery
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {([['Length', lengthCm, setLengthCm], ['Width', widthCm, setWidthCm], ['Height', heightCm, setHeightCm]] as [string, string, (v: string) => void][]).map(([lbl, val, set]) => (
+                <div key={lbl}>
+                  <span className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{lbl}</span>
+                  <input
+                    type="number" inputMode="numeric" min={1} max={200} value={val}
+                    onChange={e => { set(e.target.value); setDimsTouched(true) }}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
+              Auto-filled from category. Adjust for bulky or oversized items — couriers charge by parcel size as well as weight.
+            </p>
           </div>
 
           <div>

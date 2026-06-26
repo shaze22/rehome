@@ -1,4 +1,5 @@
 import type { CourierRate } from './courier'
+import { effectiveDims } from './parcelDimensions'
 
 function baseUrl(): string {
   return process.env.SENDPARCEL_ENV === 'production'
@@ -86,37 +87,6 @@ function toE164(phone: string | null | undefined): string {
   return `+60${digits.replace(/^0/, '')}`
 }
 
-// ── Volumetric weight ─────────────────────────────────────────────────────────
-// Pos bills on actual OR volumetric weight, whichever is higher (volumetric =
-// L×W×H / 5000). We don't collect exact dimensions, so estimate a typical parcel
-// size per category — this gives a volumetric floor that protects against bulky,
-// light items (e.g. a lampshade) without overpricing small dense items (a phone),
-// since cheap zones charge a flat rate for the first 2kg anyway.
-// Moderate, conservative estimates — sized so typical light items in cheap zones are
-// unaffected (Pos is flat for the first 2kg) while bulky categories get a volumetric
-// floor. Tune per category as real data comes in.
-//                                              volumetric (L×W×H/5000)
-export const CATEGORY_DIMENSIONS: Record<string, { l: number; w: number; h: number }> = {
-  FURNITURE: { l: 45, w: 35, h: 25 },   // ~7.9 kg
-  ELECTRONICS: { l: 25, w: 20, h: 10 }, // ~1.0 kg
-  FASHION: { l: 30, w: 22, h: 6 },      // ~0.8 kg
-  BOOKS: { l: 25, w: 18, h: 4 },        // ~0.4 kg
-  SPORTS: { l: 40, w: 30, h: 15 },      // ~3.6 kg
-  KITCHEN: { l: 30, w: 25, h: 18 },     // ~2.7 kg
-  OTHERS: { l: 25, w: 20, h: 10 },      // ~1.0 kg (neutral)
-}
-export function dimsFor(category?: string) {
-  return CATEGORY_DIMENSIONS[category ?? 'OTHERS'] ?? CATEGORY_DIMENSIONS.OTHERS
-}
-function volumetricKg(category?: string): number {
-  const d = dimsFor(category)
-  return (d.l * d.w * d.h) / 5000
-}
-// Chargeable weight = max(actual, volumetric) — what Pos (and a sensible courier) bills on.
-export function chargeableWeight(category: string | undefined, weightKg: number): number {
-  return Math.max(weightKg || 1, volumetricKg(category))
-}
-
 // ── Quote — Pos Malaysia contract rates (UVW Group quotation, 23 Jun 2026, Appendix A) ──
 // No live rate API exists, so we compute from the signed contract rate card.
 const FUEL_SURCHARGE = 0.15  // domestic fuel surcharge (reviewed weekly — update from pos.com.my)
@@ -183,7 +153,8 @@ export interface SendParcelOrderInput {
   sender: SendParcelParty
   receiver: SendParcelParty
   weightKg: number
-  category?: string             // drives the declared parcel dimensions
+  category?: string             // fallback dimensions when dims not provided
+  dims?: { l: number; w: number; h: number } | null  // seller-entered parcel dimensions (cm)
   itemDescription: string
   merchantOrderNumber: string   // unique per merchant (listing id)
   declaredValue?: number
@@ -241,9 +212,9 @@ export async function createSendParcelOrder(input: SendParcelOrderInput): Promis
     parcel_details: [
       {
         weight: Math.min(30, Math.max(0.1, input.weightKg || 1)),
-        length: dimsFor(input.category).l,   // declared dimensions by category (cm)
-        width: dimsFor(input.category).w,
-        height: dimsFor(input.category).h,
+        length: effectiveDims(input.category, input.dims).l,   // seller dims, else category default (cm)
+        width: effectiveDims(input.category, input.dims).w,
+        height: effectiveDims(input.category, input.dims).h,
         item_count: 1,
         parcel_notes: '',
         item_category_details: '02',    // Sale of goods
