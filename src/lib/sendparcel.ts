@@ -188,6 +188,7 @@ export async function createSendParcelOrder(input: SendParcelOrderInput): Promis
   const token = await getToken()
   if (!token) return null
 
+  const dims = effectiveDims(input.category, input.dims)  // seller dims, else category default (cm)
   const payload = {
     account_number: process.env.SENDPARCEL_ACCOUNT_NO,
     product_code: '80000000',           // Pos Laju standard domestic
@@ -212,9 +213,9 @@ export async function createSendParcelOrder(input: SendParcelOrderInput): Promis
     parcel_details: [
       {
         weight: Math.min(30, Math.max(0.1, input.weightKg || 1)),
-        length: effectiveDims(input.category, input.dims).l,   // seller dims, else category default (cm)
-        width: effectiveDims(input.category, input.dims).w,
-        height: effectiveDims(input.category, input.dims).h,
+        length: dims.l,
+        width: dims.w,
+        height: dims.h,
         item_count: 1,
         parcel_notes: '',
         item_category_details: '02',    // Sale of goods

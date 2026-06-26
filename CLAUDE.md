@@ -307,11 +307,15 @@ GEMINI_API_KEY
 NEXT_PUBLIC_APP_URL=https://kassim.app   ← set in Vercel Production
 CRON_SECRET=rehome-cron-2026
 ADMIN_EMAIL=syedshazni@todak.com
-EASYPARCEL_CLIENT_ID=        ← ✅ set in Vercel (OAuth2, pending EP activation)
-EASYPARCEL_CLIENT_SECRET=    ← ✅ set in Vercel (OAuth2, pending EP activation)
-LALAMOVE_API_KEY=            ← from developers.lalamove.com
-LALAMOVE_API_SECRET=
-LALAMOVE_SANDBOX=false       ← already set in Vercel
+# EASYPARCEL_* — REMOVED 2026-06-25 (OAuth never approved); env vars deleted from Vercel
+LALAMOVE_API_KEY=            ← pk_prod_ (developers.lalamove.com) ✅ Vercel prod
+LALAMOVE_API_SECRET=         ← sk_prod_ ✅ Vercel prod
+LALAMOVE_SANDBOX=false       ← ✅ Vercel
+SENDPARCEL_CLIENT_ID=        ← ✅ Vercel prod (Pos Standard API, OAuth2). Local .env.local = STAGING creds.
+SENDPARCEL_CLIENT_SECRET=    ← ✅ Vercel prod
+SENDPARCEL_ACCOUNT_NO=8800673560   ← Pos contract account (UVW Group)
+SENDPARCEL_SUBSCRIPTION=UVWGroup   ← webhook subscription_code (registered with Pos)
+SENDPARCEL_ENV=production    ← Vercel prod (staging locally) → switches base URL
 UPSTASH_REDIS_REST_URL=      ← ✅ set in Vercel (Singapore)
 UPSTASH_REDIS_REST_TOKEN=    ← ✅ set in Vercel
 NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL  ← ✅ set in Vercel
@@ -459,8 +463,10 @@ Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.p
 ## Delivery = HYBRID Lalamove + Pos Laju/SendParcel (as of 2026-06-26)
 - `src/lib/courier.ts` `getDeliveryQuote()` runs **both** providers, merges, sorts cheapest; `covered=true` if EITHER serves the route. Buyer picks in the courier list.
 - **Lalamove** (`src/lib/lalamove.ts`) — same-day, door-to-door, intra-city. No Sabah coverage; expensive inter-state.
-- **Pos Laju / SendParcel** (`src/lib/sendparcel.ts`) — standard parcel, cheaper, **nationwide incl. Sabah/Sarawak**. Pos Standard API v2.1: OAuth2 `client_credentials` token (`POST /oauth2/token`, 24h), Create Order (`POST /api/order/v2.1/create`). Base: staging `api-dev.pos.com.my`, prod `posapi.pos.com.my` (`SENDPARCEL_ENV`). **No rate API** → fixed Pos Laju estimate (`POS_BASE`/`POS_PERKG` by zone) + 30% markup; tune to real contract rates. `subscription_code`=UVWGroup, `account_number`=8800673560. Verified staging (201, tracking ERD…MY). **Gated on `SENDPARCEL_CLIENT_ID`** — Pos hidden in prod until prod creds set (store registration + SendParcel Pro → Store Integration pending). Webhook books `pos_standard` → stores trackingNumber + deliveryTrackingUrl + posLabelUrl (consignment PDF).
-- Self-pickup fallback (below) now only triggers when NEITHER provider serves the route (rare, since Pos is nationwide).
+- **Pos Laju / SendParcel** (`src/lib/sendparcel.ts`) — standard parcel, cheaper, **nationwide incl. Sabah/Sarawak**, **drop-off** model (seller prints the consignment label and drops at any Pos branch; `pickup.required:false`). **LIVE in prod** (prod creds in Vercel, `SENDPARCEL_ENV=production`). Pos Standard API v2.1: OAuth2 `client_credentials` token (`POST /oauth2/token`, 24h cache), Create Order (`POST /api/order/v2.1/create`). Base: staging `api-dev.pos.com.my`, prod `posapi.pos.com.my`. `subscription_code`=UVWGroup, `account_number`=8800673560. **Gated on `SENDPARCEL_CLIENT_ID`** (so it cannot show a quote it can't book). Webhook books `pos_standard` → `Transaction.trackingNumber` + `deliveryTrackingUrl` + `posLabelUrl`.
+  - **No rate API** → priced from the signed UVW Group contract (Appendix A, `posQuoteParts`): Zone 1/2/3 (Klang Valley / between Peninsular states / within same state) RM5.50 first 2kg +RM1/kg; Zone 4 (Pen→East) RM12.50 first 1kg +RM10/kg; Zone 5 (East→Pen / between Sabah-Sarawak) RM11.50 first 1kg +RM8/kg. `basePrice = raw × 1.15 fuel × 1.08 SST` (true cost). **Tiered markup**: 40% cheap zones, 28% East. Tune the constants in `sendparcel.ts` if the contract changes.
+  - **Volumetric weight**: Pos bills `max(actual, L×W×H/5000)`. Sellers enter dimensions in the sell/edit forms (pre-filled from `CATEGORY_DIMENSIONS`), stored on `Listing.lengthCm/widthCm/heightCm`. `chargeableWeight()` in `src/lib/parcelDimensions.ts` (client-safe shared module) uses real dims, falling back to category default. Threaded through `getDeliveryQuote(…, category, dims)`.
+- Self-pickup fallback (below) only triggers when NEITHER provider serves the route (rare now that Pos is nationwide).
 
 ## Lalamove Integration (same-day provider)
 - `src/lib/courier.ts` — `getDeliveryQuote(sellerState, buyerState, weightKg, buyerPostcode?)` → `{ cheapest, couriers, source: 'lalamove'|'none', covered }`. **Lalamove-only, no fallback.** `covered:false` = route unservable. `CourierRate` + `DeliveryQuoteResult` live here now (was easyparcel.ts).
@@ -650,7 +656,14 @@ Simplified above-fold section (updated 2026-06-08):
 - **Prisma connection**: `PrismaPg` adapter with `max: 1` in `src/lib/prisma.ts` — serverless-optimised pooling. Config via `prisma.config.ts` (Prisma 7 — no url/directUrl in schema.prisma)
 
 ## Last Deployed
-2026-06-18 (Delete Account UI), commit 9cdf1bc. Live: https://kassim.app
+2026-06-26 — Delivery system overhaul (hybrid Lalamove + Pos Laju/SendParcel + self-pickup, contract rates, tiered markup + SST + volumetric, seller dimensions) + Stripe Connect payouts. Live: https://kassim.app
+
+**Gotchas learned this session:**
+- **Vendor API docs that are JS-rendered SPAs** (e.g. `api-doc.pos.com.my`) can't be read with WebFetch (returns only the title). Use the Playwright MCP browser (`browser_navigate` + `browser_evaluate` to read `document.body.innerText`) to extract endpoints/payloads. Don't guess vendor API shapes.
+- **`vercel deploy --prod` often fails on the final CLI step with a DNS blip** (`ENOTFOUND api.vercel.com` / `ECONNRESET`) — but the build still completes server-side. Just retry, or check `vercel ls` (it usually shows READY).
+- **Vercel env changes need a redeploy** to take effect; `NEXT_PUBLIC_*` are build-time inlined. After editing env, always redeploy.
+- **Pos has no rate API** — contract-priced. Volumetric weight (`L×W×H/5000`) matters: bill `max(actual, volumetric)` or lose money on bulky-light items.
+- **Lalamove inter-state is absurdly expensive** (Sel→Johor ~RM392 via CAR) — Pos wins for inter-state; Lalamove is for same-city same-day.
 
 ### 2026-06-08 Session 7 Changes (commit 2e2facd)
 10 buy-flow UX improvements from expert review:
