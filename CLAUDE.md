@@ -456,7 +456,13 @@ Live URLs: `https://kassim.app/logo-512.png`, `https://kassim.app/logo.svg`
 Design: teal (#14b8a6) lightning bolt on dark (#0a0a0f) background
 Favicon order in `layout.tsx`: `logo-square.svg` (SVG, shortcut) → `logo-512.png` (PNG fallback)
 
-## Lalamove Integration (SOLE delivery provider as of 2026-06-25)
+## Delivery = HYBRID Lalamove + Pos Laju/SendParcel (as of 2026-06-26)
+- `src/lib/courier.ts` `getDeliveryQuote()` runs **both** providers, merges, sorts cheapest; `covered=true` if EITHER serves the route. Buyer picks in the courier list.
+- **Lalamove** (`src/lib/lalamove.ts`) — same-day, door-to-door, intra-city. No Sabah coverage; expensive inter-state.
+- **Pos Laju / SendParcel** (`src/lib/sendparcel.ts`) — standard parcel, cheaper, **nationwide incl. Sabah/Sarawak**. Pos Standard API v2.1: OAuth2 `client_credentials` token (`POST /oauth2/token`, 24h), Create Order (`POST /api/order/v2.1/create`). Base: staging `api-dev.pos.com.my`, prod `posapi.pos.com.my` (`SENDPARCEL_ENV`). **No rate API** → fixed Pos Laju estimate (`POS_BASE`/`POS_PERKG` by zone) + 30% markup; tune to real contract rates. `subscription_code`=UVWGroup, `account_number`=8800673560. Verified staging (201, tracking ERD…MY). **Gated on `SENDPARCEL_CLIENT_ID`** — Pos hidden in prod until prod creds set (store registration + SendParcel Pro → Store Integration pending). Webhook books `pos_standard` → stores trackingNumber + deliveryTrackingUrl + posLabelUrl (consignment PDF).
+- Self-pickup fallback (below) now only triggers when NEITHER provider serves the route (rare, since Pos is nationwide).
+
+## Lalamove Integration (same-day provider)
 - `src/lib/courier.ts` — `getDeliveryQuote(sellerState, buyerState, weightKg, buyerPostcode?)` → `{ cheapest, couriers, source: 'lalamove'|'none', covered }`. **Lalamove-only, no fallback.** `covered:false` = route unservable. `CourierRate` + `DeliveryQuoteResult` live here now (was easyparcel.ts).
 - `src/lib/lalamove.ts` — **API v3** HMAC: `Authorization: hmac <apiKey>:<ts>:<sig>`, rawSignature `${ts}\r\nPOST\r\n${path}\r\n\r\n${body}`, body wrapped `{ data: {...} }`. Verified live (HTTP 201).
 - `getLalamoveQuote(...)` → `CourierRate` w/ 30% markup, or null if unserved. `createLalamoveOrder(input)` → **re-quotes** for fresh quotationId + stopIds (expire ~5min) then `POST /v3/orders` → `{ orderId, shareUrl }`.
