@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendAuctionWonEmail } from '@/lib/resend'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+
+  // Require login — this is the client-side fallback for the expiry cron. Already self-guarded
+  // (only acts once the timer has lapsed), but should not be callable anonymously.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const listing = await prisma.listing.findUnique({
     where: { id },

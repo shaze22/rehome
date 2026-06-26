@@ -13,7 +13,7 @@ import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, 
 import { DeleteAccountButton } from '@/components/dashboard/DeleteAccountButton'
 
 async function getDashboardData(userId: string) {
-  const [user, myListings, myBids, transactions, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
+  const [user, myListings, myBids, earningsAgg, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.listing.findMany({
       where: { sellerId: userId, hiddenBySeller: false },
@@ -38,8 +38,9 @@ async function getDashboardData(userId: string) {
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
-    prisma.transaction.findMany({
+    prisma.transaction.aggregate({
       where: { sellerId: userId, status: 'RELEASED' },
+      _sum: { sellerPayout: true },
     }),
     // Orders as seller
     prisma.transaction.findMany({
@@ -78,7 +79,8 @@ async function getDashboardData(userId: string) {
   const totalViews = myListings.reduce((sum, l) => sum + (l.viewCount ?? 0), 0)
 
   return {
-    user, myListings, myBids, transactions,
+    user, myListings, myBids,
+    totalEarnings: earningsAgg._sum.sellerPayout ?? 0,
     sellerOrders: sellerOrdersWithTitle, buyerOrders: buyerOrdersWithTitle,
     totalViews, watchlistCount,
     avgRating: avgRating._avg.rating ?? 0,
@@ -92,7 +94,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!user) redirect('/auth/login')
 
   const params = await searchParams
-  let { user: dbUser, myListings, myBids, transactions, sellerOrders, buyerOrders, totalViews, watchlistCount, avgRating, reviewCount } = await getDashboardData(user.id)
+  let { user: dbUser, myListings, myBids, totalEarnings, sellerOrders, buyerOrders, totalViews, watchlistCount, avgRating, reviewCount } = await getDashboardData(user.id)
 
   if (!dbUser) {
     dbUser = await prisma.user.create({
@@ -104,7 +106,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     })
   }
 
-  const totalEarnings = transactions.reduce((sum, t) => sum + t.sellerPayout, 0)
   const activeListings = myListings.filter(l => l.status === 'ACTIVE')
   const wonBids = myBids.filter(b => b.listing.currentBidder === user.id && b.listing.status !== 'ACTIVE')
   const unpaidWins = wonBids.filter(b => b.listing.status === 'ENDED')
