@@ -17,8 +17,6 @@ if (!base && !deployment) {
   process.exit(2)
 }
 
-const MARK = '\n__STATUS__'
-
 /** @returns {Promise<{ status: number, body: string }>} */
 async function get(path) {
   if (deployment) {
