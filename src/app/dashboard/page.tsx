@@ -11,6 +11,7 @@ import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
 import { PayoutsSection } from '@/components/dashboard/PayoutsSection'
 import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck } from 'lucide-react'
 import { DeleteAccountButton } from '@/components/dashboard/DeleteAccountButton'
+import { Kassim } from '@/components/brand/Kassim'
 
 async function getDashboardData(userId: string) {
   const [user, myListings, myBids, earningsAgg, sellerOrders, buyerOrders, watchlistCount, avgRating] = await Promise.all([
@@ -308,8 +309,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
           {myListings.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Package className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have no listings yet.</p>
+              <Kassim pose="head-think" width={88} className="mx-auto mb-3" />
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have no listings yet. Everyone has a cave: a drawer, a storeroom, under the bed.</p>
               <Link href="/sell" className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal">
                 Start Selling
               </Link>
@@ -336,8 +337,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
           {myBids.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have not placed any bids yet.</p>
+              <Kassim pose="head-wink" width={88} className="mx-auto mb-3" />
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have not placed any bids yet. Flash Bids start at RM0.</p>
               <Link href="/listings" className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal">
                 Browse Listings
               </Link>

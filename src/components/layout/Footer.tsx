@@ -41,6 +41,7 @@ export function Footer() {
                 { href: '/dashboard', label: 'Dashboard' },
                 { href: '/impact', label: 'Our Impact' },
                 { href: '/how-it-works', label: 'How It Works' },
+                { href: '/story', label: 'Meet Kassim' },
               ].map(link => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>

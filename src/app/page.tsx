@@ -9,7 +9,8 @@ import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
 import { HeroBanner } from '@/components/home/HeroBanner'
-import { ArrowRight, Zap, ArrowLeftRight, Flame } from 'lucide-react'
+import { KassimSays } from '@/components/brand/Kassim'
+import { ArrowRight, Flame } from 'lucide-react'
 
 const getFeaturedListings = unstable_cache(async () => {
   try {
@@ -209,8 +210,9 @@ async function HomeContent() {
           </div>
           {flashListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Zap className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-2">No active auctions yet</p>
+              <KassimSays pose="head-think" title="No active auctions yet">
+                Kassim is still deciding what to let go of. Got something sitting in a drawer?
+              </KassimSays>
               <Link href="/sell" className="text-sm px-4 py-2 rounded-lg font-medium text-white gradient-teal inline-block mt-2">Start Selling</Link>
             </div>
           ) : (
@@ -237,9 +239,9 @@ async function HomeContent() {
           </div>
           {swapListings.length === 0 ? (
             <div className="text-center py-10 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid rgba(22,163,74,0.3)' }}>
-              <ArrowLeftRight className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p className="font-medium mb-1">No swap listings right now</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Check back soon for items to swap.</p>
+              <KassimSays pose="head-sigh" title="No swap listings right now">
+                Nobody to trade with yet. Check back soon for items to swap.
+              </KassimSays>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">

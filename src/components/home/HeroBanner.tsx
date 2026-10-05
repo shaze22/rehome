@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Zap, ArrowLeftRight, Search } from 'lucide-react'
+import { Kassim } from '@/components/brand/Kassim'
 
 export function HeroBanner() {
   return (
@@ -9,6 +10,13 @@ export function HeroBanner() {
       </div>
 
       <div className="max-w-3xl mx-auto relative text-center">
+        <Link href="/story" className="inline-flex items-end justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <Kassim pose="body-wave" width={72} preload className="w-14 sm:w-[72px] h-auto kassim-bob" />
+          <span className="rounded-2xl rounded-bl-sm px-3 py-2 mb-4 text-left text-xs sm:text-sm font-medium" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            My cave is full.{' '}
+            <span style={{ color: 'var(--teal)' }}>Every Flash Bid starts at RM0.</span>
+          </span>
+        </Link>
         <p className="text-xs font-semibold tracking-widest uppercase mb-2 sm:mb-3" style={{ color: 'var(--teal)' }}>
           Malaysia&apos;s Smarter Pre-Loved Marketplace
         </p>

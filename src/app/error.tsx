@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { AlertTriangle } from 'lucide-react'
+import { Kassim } from '@/components/brand/Kassim'
 import * as Sentry from '@sentry/nextjs'
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -13,9 +13,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
-          <AlertTriangle className="w-10 h-10" style={{ color: 'var(--red)' }} />
-        </div>
+        <Kassim pose="head-sigh" width={112} className="mx-auto mb-6" />
         <h1 className="text-4xl font-bold font-mono mb-4" style={{ color: 'var(--red)' }}>500</h1>
         <h2 className="text-2xl font-bold mb-3">Something Went Wrong</h2>
         <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>

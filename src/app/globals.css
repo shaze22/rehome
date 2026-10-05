@@ -137,6 +137,19 @@ body {
   border-radius: 3px;
 }
 
+@keyframes kassim-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.kassim-bob {
+  animation: kassim-bob 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kassim-bob { animation: none; }
+}
+
 @keyframes timer-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }

@@ -15,6 +15,7 @@ import { trackRecentlyViewed } from '@/components/home/RecentlyViewed'
 import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
+import { Kassim } from '@/components/brand/Kassim'
 
 interface FlashTransaction {
   id: string
@@ -1154,6 +1155,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Auction Has Ended</p>
                 {listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
+                    <Kassim pose="body-cheer" width={120} className="mx-auto mb-2 kassim-bob" />
                     <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
                     {paymentCancelled && (
                       <div className="mb-3 px-3 py-2.5 rounded-xl text-xs font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--yellow)' }}>
@@ -1451,8 +1453,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
           <h2 className="text-xl font-bold mb-4">Bid History</h2>
           {bids.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Gavel className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-              <p style={{ color: 'var(--text-secondary)' }}>No bids yet. Be the first!</p>
+              <Kassim pose="head-wink" width={88} className="mx-auto mb-3" />
+              <p style={{ color: 'var(--text-secondary)' }}>Nobody has dared yet. It is still RM0. Be the first!</p>
             </div>
           ) : (
             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>

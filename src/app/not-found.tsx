@@ -1,17 +1,15 @@
 import Link from 'next/link'
-import { Recycle } from 'lucide-react'
+import { Kassim } from '@/components/brand/Kassim'
 
 export default function NotFound() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
       <div className="text-center">
-        <div className="w-20 h-20 rounded-2xl gradient-teal flex items-center justify-center mx-auto mb-6">
-          <Recycle className="w-10 h-10 text-white" />
-        </div>
+        <Kassim pose="head-shock" width={128} className="mx-auto mb-6" />
         <h1 className="text-6xl font-bold font-mono mb-4" style={{ color: 'var(--teal)' }}>404</h1>
-        <h2 className="text-2xl font-bold mb-3">Page Not Found</h2>
+        <h2 className="text-2xl font-bold mb-3">Even Kassim can&apos;t find this one</h2>
         <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
-          The page you are looking for does not exist or has been moved.
+          He has kept everything for years, but this page is not in the cave. It may have been moved or sold.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/" className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal">

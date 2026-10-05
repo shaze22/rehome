@@ -9,6 +9,13 @@ Malaysian circular economy auction platform. Two modes:
 
 > **Naming note:** Folder is `rehome/`, GitHub repo is `shaze22/rehome`, Vercel slug is `rehome` — all intentional, do NOT rename. Only the brand name in UI/code is KASSIM.
 
+## Kassim mascot (added 2026-10-05)
+- Character: Kassim, a storybook bazaar merchant and stubborn collector whose cave got too full, so he opened it to everyone. Story page: `/story`.
+- Assets: `public/kassim/{head,body}-*.webp` (10 cut-outs). Render only via `<Kassim pose=… />` / `<KassimSays />` in `src/components/brand/Kassim.tsx`. New poses come from a new master sheet, never one-off generations.
+- Used on: hero, `/story`, empty states (home, listings, dashboard, watchlist, bid history), 404, error, sell welcome banner, auction-won panel.
+- **Keep him out of** checkout, delivery, escrow, payout and dispute screens. Those stay plain and serious.
+- **Legal guardrails (owner decision):** the character is named "Kassim" only. Never write "Kassim Baba", "Ali Baba", "Baba", "forty thieves" or "Open Sesame", and never reference the P. Ramlee film, genie lamps or flying carpets. The story only evokes the old tale.
+
 ## Tech Stack
 - **Next.js 16.2.6** (App Router, Turbopack) — breaking changes from v15
 - TypeScript + Tailwind CSS v4
