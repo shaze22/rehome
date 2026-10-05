@@ -13,6 +13,7 @@ Malaysian circular economy auction platform. Two modes:
 - Character: Kassim, a storybook bazaar merchant and stubborn collector whose cave got too full, so he opened it to everyone. Story page: `/story`.
 - Assets: `public/kassim/{head,body}-*.webp` (10 cut-outs). Render only via `<Kassim pose=… />` / `<KassimSays />` in `src/components/brand/Kassim.tsx`. New poses come from a new master sheet, never one-off generations.
 - Used on: hero, `/story`, empty states (home, listings, dashboard, watchlist, bid history), 404, error, sell welcome banner, auction-won panel.
+- Flash timer is drawn as the stone door of his treasure cave sliding shut over the 30 minutes (`src/components/listings/CaveDoorTimer.tsx`, display only; `/api/bid` still owns the real window). Winners get a one-shot `Confetti` (`src/components/brand/Confetti.tsx`).
 - **Keep him out of** checkout, delivery, escrow, payout and dispute screens. Those stay plain and serious.
 - **Legal guardrails (owner decision):** the character is named "Kassim" only. Never write "Kassim Baba", "Ali Baba", "Baba", "forty thieves" or "Open Sesame", and never reference the P. Ramlee film, genie lamps or flying carpets. The story only evokes the old tale.
 

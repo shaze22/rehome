@@ -16,6 +16,8 @@ import { OfferModal } from './OfferModal'
 import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
 import { Kassim } from '@/components/brand/Kassim'
+import { Confetti } from '@/components/brand/Confetti'
+import { CaveDoorTimer } from './CaveDoorTimer'
 
 interface FlashTransaction {
   id: string
@@ -366,11 +368,15 @@ function useServerTimeOffset() {
 
 type UrgencyLevel = 0 | 1 | 2 | 3
 
+// Display-only mirror of the fixed Flash window enforced in /api/bid.
+const FLASH_WINDOW_MS = 30 * 60 * 1000
+
 function useCountdown(endsAt: string | null, offset = 0) {
   const [timeLeft, setTimeLeft] = useState('')
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(0)
   const [isEnded, setIsEnded] = useState(false)
   const [isWaiting, setIsWaiting] = useState(!endsAt)
+  const [msLeft, setMsLeft] = useState(0)
 
   useEffect(() => {
     if (!endsAt) {
@@ -382,8 +388,9 @@ function useCountdown(endsAt: string | null, offset = 0) {
     setIsWaiting(false)
     function update() {
       const diff = new Date(endsAt as string).getTime() - (Date.now() + offset)
-      if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); return }
+      if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); setMsLeft(0); return }
       setIsEnded(false) // reset if endsAt changed to future (e.g. after first bid realtime update)
+      setMsLeft(diff)
       const d = Math.floor(diff / 86400000)
       const h = Math.floor((diff % 86400000) / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
@@ -402,7 +409,7 @@ function useCountdown(endsAt: string | null, offset = 0) {
     return () => clearInterval(id)
   }, [endsAt, offset])
 
-  return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting }
+  return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting, msLeft }
 }
 
 export function ListingDetailClient({ listing: initialListing, currentUserId: initialUserId, currentUserEmail, currentUserState, currentUserPhone, currentUserPostcode, currentUserSavedAddress, watchlistButton, relatedListingsSlot }: Props) {
@@ -452,7 +459,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery' | ''>('')
   const [buyerState, setBuyerState] = useState('')
   const serverTimeOffset = useServerTimeOffset()
-  const { timeLeft, urgencyLevel, isUrgent, isEnded: countdownEnded, isWaiting } = useCountdown(listing.endsAt, serverTimeOffset)
+  const { timeLeft, urgencyLevel, isUrgent, isEnded: countdownEnded, isWaiting, msLeft } = useCountdown(listing.endsAt, serverTimeOffset)
   const isEnded = countdownEnded || listing.status === 'ENDED' || listing.status === 'SOLD'
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [offerSubmitted, setOfferSubmitted] = useState(false)
@@ -927,6 +934,22 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   : urgencyLevel >= 1 ? '⚡ Ending soon!'
                   : 'Time left'
                 : null
+              if (!isSwap) {
+                return (
+                  <div className="mb-4">
+                    <CaveDoorTimer
+                      closed={1 - msLeft / FLASH_WINDOW_MS}
+                      timeLeft={timeLeft}
+                      label={urgencyLabel ?? 'Time left'}
+                      color={urgencyLevel >= 2 ? '#fca5a5' : urgencyLevel >= 1 ? '#fdba74' : '#5eead4'}
+                      isWaiting={isWaiting}
+                      isEnded={isEnded}
+                      shake={urgencyLevel >= 3 && !isEnded}
+                    />
+                    <p className="text-xs text-right" style={{ color: 'var(--text-secondary)' }}>{listing._count.bids} bids</p>
+                  </div>
+                )
+              }
               return (
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -950,7 +973,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
               )
             })()}
 
-            {isWaiting && (
+            {isWaiting && !isEnded && (
               <div className="mb-4 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', color: 'var(--text-secondary)' }}>
                 Be the first bidder! The 30-minute timer starts as soon as the first bid comes in.
               </div>
@@ -1153,8 +1176,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             {!isSwap && isEnded && (
               <div className="text-center py-4">
                 <p className="text-lg font-bold" style={{ color: 'var(--red)' }}>Auction Has Ended</p>
-                {listing.currentBidder === currentUserId && !flashTx && (
+                {!!currentUserId && listing.currentBidder === currentUserId && !flashTx && (
                   <div className="mt-3">
+                    <Confetti onceKey={`kassim_confetti_${listing.id}`} />
                     <Kassim pose="body-cheer" width={120} className="mx-auto mb-2 kassim-bob" />
                     <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
                     {paymentCancelled && (
