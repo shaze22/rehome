@@ -30,6 +30,14 @@ interface Props {
   userId: string
 }
 
+function AiBadge() {
+  return (
+    <span className="ml-1.5 inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.25)' }}>
+      <Sparkles className="w-2.5 h-2.5" />AI
+    </span>
+  )
+}
+
 export function SellForm({ userId }: Props) {
   const router = useRouter()
 
@@ -61,6 +69,7 @@ export function SellForm({ userId }: Props) {
   useEffect(() => {
     if (dimsTouched) return
     const d = dimsFor(category)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- category change resets the default parcel size
     setLengthCm(String(d.l)); setWidthCm(String(d.w)); setHeightCm(String(d.h))
   }, [category, dimsTouched])
 
@@ -283,14 +292,6 @@ export function SellForm({ userId }: Props) {
     backgroundColor: 'var(--bg-elevated)',
     border: '1px solid var(--border)',
     color: 'var(--text-primary)',
-  }
-
-  function AiBadge() {
-    return (
-      <span className="ml-1.5 inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-md font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.25)' }}>
-        <Sparkles className="w-2.5 h-2.5" />AI
-      </span>
-    )
   }
 
   return (
@@ -681,7 +682,7 @@ export function SellForm({ userId }: Props) {
               style={{ border: '1px solid rgba(22,163,74,0.5)', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.08)' }}
             >
               {swapAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {swapAiLoading ? 'AI is finding suggestions...' : '✨ AI Suggest Swap Items'}
+              {swapAiLoading ? 'AI is finding suggestions...' : 'AI Suggest Swap Items'}
             </button>
 
             {swapAiSuggestion && (
@@ -772,7 +773,7 @@ export function SellForm({ userId }: Props) {
           onClick={getAISuggestion}
           disabled={aiLoading}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium mb-4 transition-all hover:scale-105"
-          style={{ border: '1px solid rgba(168,85,247,0.5)', color: 'var(--purple)', backgroundColor: 'rgba(168,85,247,0.08)' }}
+          style={{ border: '1px solid rgba(245,185,66,0.5)', color: 'var(--purple)', backgroundColor: 'rgba(245,185,66,0.08)' }}
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
           {aiLoading ? 'AI is analysing...' : mode === 'FLASH' ? 'See Estimated Selling Price' : 'Estimate Item Value'}
@@ -785,7 +786,7 @@ export function SellForm({ userId }: Props) {
         )}
 
         {aiSuggestion && (
-          <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
+          <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: 'rgba(245,185,66,0.08)', border: '1px solid rgba(245,185,66,0.3)' }}>
             <div className="grid grid-cols-3 gap-3 mb-3">
               {[
                 { label: 'Low', value: aiSuggestion.low, color: 'var(--yellow)' },
@@ -798,7 +799,7 @@ export function SellForm({ userId }: Props) {
                 </div>
               ))}
             </div>
-            <div className="flex items-start gap-2 text-xs p-2 rounded-lg" style={{ backgroundColor: 'rgba(168,85,247,0.08)' }}>
+            <div className="flex items-start gap-2 text-xs p-2 rounded-lg" style={{ backgroundColor: 'rgba(245,185,66,0.08)' }}>
               <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--purple)' }} />
               <p style={{ color: 'var(--text-secondary)' }}>{aiSuggestion.reasoning}</p>
             </div>

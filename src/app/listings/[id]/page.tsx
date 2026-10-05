@@ -19,11 +19,11 @@ const CATEGORY_MS: Record<string, string> = {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const listing = await getListing(id)
-  if (!listing) return { title: 'Listing tidak dijumpai' }
+  if (!listing) return { title: 'Listing not found' }
 
   const category = CATEGORY_MS[listing.category] ?? listing.category
-  const modeLabel = listing.mode === 'SWAP' ? 'Item Swap' : 'Flash Auction'
-  const priceText = listing.mode === 'SWAP' ? 'Item Swap' : `RM ${listing.currentBid.toFixed(0)}`
+  const modeLabel = listing.mode === 'SWAP' ? 'Swap Bid' : 'Flash Bid'
+  const priceText = listing.mode === 'SWAP' ? 'Swap Bid' : `RM ${listing.currentBid.toFixed(0)}`
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
   const title = `${listing.title} | ${priceText}`
   const description = `${modeLabel} · ${category} · ${listing.state} · ${listing.description.slice(0, 120)}...`
@@ -109,11 +109,11 @@ export default async function ListingDetailPage({ params, searchParams }: { para
     <section className="mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
       <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
       <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-        {relatedListings.map((l: any) => (
+        {relatedListings.map(l => (
           <div key={l.id} className="flex-shrink-0 w-64">
             {l.mode === 'SWAP'
-              ? <SwapListingCard listing={l as any} />
-              : <ListingCard listing={l as any} />
+              ? <SwapListingCard listing={l} />
+              : <ListingCard listing={l} />
             }
           </div>
         ))}
@@ -145,7 +145,7 @@ export default async function ListingDetailPage({ params, searchParams }: { para
         </div>
       )}
       <ListingDetailClient
-        listing={listing as any}
+        listing={listing}
         currentUserId={user?.id ?? null}
         currentUserEmail={user?.email ?? null}
         currentUserState={dbUser?.state ?? null}

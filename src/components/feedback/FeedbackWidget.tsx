@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { MessageSquare, X, Send, CheckCircle } from 'lucide-react'
+import { MessageSquare, X, Send, CheckCircle, LifeBuoy, MessageCircle } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 export function FeedbackWidget() {
   const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [type, setType] = useState<'bug' | 'suggestion' | 'other'>('bug')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const pathname = usePathname()
+  const onListing = pathname.startsWith('/listings/')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -31,16 +33,41 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* Floating button — small icon only */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex items-center justify-center w-11 h-11 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95"
-        style={{ backgroundColor: 'var(--teal)', boxShadow: '0 4px 16px rgba(20,184,166,0.35)' }}
-        aria-label="Beta feedback"
-        title="Beta Feedback"
-      >
-        <MessageSquare className="w-5 h-5" />
-      </button>
+      {/* One help button. On a listing page the phone layout hands the bottom edge to the bid bar. */}
+      <div className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex-col items-end gap-2 ${onListing ? 'hidden md:flex' : 'flex'}`}>
+        {menuOpen && (
+          <div className="rounded-xl overflow-hidden shadow-xl text-sm" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <a
+              href="https://wa.me/60189899495?text=Hi%20KASSIM%2C%20I%20need%20help%20with..."
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <MessageCircle className="w-4 h-4" style={{ color: '#25D366' }} />
+              Chat on WhatsApp
+            </a>
+            <button
+              onClick={() => { setMenuOpen(false); setOpen(true) }}
+              className="flex items-center gap-2 w-full px-4 py-3 font-medium"
+              style={{ color: 'var(--text-primary)', borderTop: '1px solid var(--border)' }}
+            >
+              <MessageSquare className="w-4 h-4" style={{ color: 'var(--teal)' }} />
+              Send feedback
+            </button>
+          </div>
+        )}
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          className="flex items-center justify-center w-11 h-11 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+          style={{ backgroundColor: 'var(--teal)', boxShadow: '0 4px 16px rgba(20,184,166,0.35)' }}
+          aria-label="Help and feedback"
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <LifeBuoy className="w-5 h-5" />}
+        </button>
+      </div>
 
       {/* Modal */}
       {open && (
@@ -74,7 +101,7 @@ export function FeedbackWidget() {
                           color: type === t ? 'var(--teal)' : 'var(--text-secondary)',
                         }}
                       >
-                        {t === 'bug' ? '🐛 Bug' : t === 'suggestion' ? '💡 Suggestion' : '💬 Other'}
+                        {t === 'bug' ? 'Bug' : t === 'suggestion' ? 'Suggestion' : 'Other'}
                       </button>
                     ))}
                   </div>

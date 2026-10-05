@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const user = await prisma.user.findUnique({ where: { id }, select: { name: true, state: true, rehomeScore: true } })
-  if (!user) return { title: 'Profil tidak dijumpai' }
+  if (!user) return { title: 'Profile not found' }
   const name = user.name ?? 'KASSIM User'
   return {
     title: `${name}'s Profile`,
@@ -245,8 +245,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {profile.listings.map(listing =>
             listing.mode === 'SWAP'
-              ? <SwapListingCard key={listing.id} listing={listing as any} />
-              : <ListingCard key={listing.id} listing={listing as any} />
+              ? <SwapListingCard key={listing.id} listing={listing} />
+              : <ListingCard key={listing.id} listing={listing} />
           )}
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Clock, Gavel, Eye, Loader2, Trash2, Share2, Pencil } from 'lucide-react'
+import { Clock, Gavel, Eye, Loader2, Trash2, Share2, Pencil, Zap, ArrowLeftRight } from 'lucide-react'
 
 interface Listing {
   id: string
@@ -71,7 +71,7 @@ export function SellerListingCard({ listing }: Props) {
         <Link href={`/listings/${listing.id}`} className="flex-1 min-w-0 hover:underline">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-xs font-bold flex-shrink-0" style={{ color: listing.mode === 'SWAP' ? '#16a34a' : 'var(--orange)' }}>
-              {listing.mode === 'SWAP' ? '🔄' : '⚡'}
+              {listing.mode === 'SWAP' ? <ArrowLeftRight className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
             </span>
             <p className="text-sm font-medium line-clamp-1">{listing.title}</p>
           </div>

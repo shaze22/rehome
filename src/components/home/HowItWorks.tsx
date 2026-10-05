@@ -85,7 +85,7 @@ export function HowItWorks() {
             <div className="flex items-center gap-2 mb-6">
               <span className="text-xl">⚡</span>
               <div>
-                <h3 className="font-bold" style={{ color: 'var(--orange)' }}>Flash Auction</h3>
+                <h3 className="font-bold" style={{ color: 'var(--orange)' }}>Flash Bid</h3>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sell fast, get cash today</p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export function HowItWorks() {
               className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-white"
               style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}
             >
-              Start a Flash Auction <ArrowRight className="w-4 h-4" />
+              Start a Flash Bid <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -104,7 +104,7 @@ export function HowItWorks() {
             <div className="flex items-center gap-2 mb-6">
               <span className="text-xl">🔄</span>
               <div>
-                <h3 className="font-bold" style={{ color: '#16a34a' }}>Item Swap</h3>
+                <h3 className="font-bold" style={{ color: '#16a34a' }}>Swap Bid</h3>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Trade without spending cash</p>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, CheckCircle, ArrowLeftRight } from 'lucide-react'
+import { Clock, CheckCircle, ArrowLeftRight, Banknote, MessagesSquare } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface SwapListing {
@@ -40,6 +40,7 @@ function useCountdown(endsAt: Date | string | null) {
   const [isUrgent, setIsUrgent] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keeps the countdown in step with endsAt
     if (!endsAt) { setTimeLeft('Open'); return }
     function update() {
       const diff = new Date(endsAt as Date | string).getTime() - Date.now()
@@ -129,7 +130,7 @@ export function SwapListingCard({ listing, priority = false }: Props) {
           {offerCount >= 2 && (
             <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-bold"
               style={{ background: 'rgba(10,10,15,0.8)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 {offerCount}
+              <MessagesSquare className="w-3 h-3 inline -mt-0.5" /> {offerCount}
             </div>
           )}
         </div>
@@ -161,11 +162,11 @@ export function SwapListingCard({ listing, priority = false }: Props) {
           {/* Offer chips — desktop only */}
           <div className="hidden sm:flex items-center gap-1.5 flex-wrap mb-2">
             <span className="px-1.5 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.25)' }}>
-              🔄 Item Swap
+              <ArrowLeftRight className="w-3 h-3 inline -mt-0.5" /> Swap Bid
             </span>
             {listing.swapAcceptCash && (
               <span className="px-1.5 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'rgba(20,184,166,0.1)', color: 'var(--teal)', border: '1px solid rgba(20,184,166,0.25)' }}>
-                💰 Cash Bid
+                <Banknote className="w-3 h-3 inline -mt-0.5" /> Cash Bid
               </span>
             )}
           </div>
@@ -179,7 +180,7 @@ export function SwapListingCard({ listing, priority = false }: Props) {
           {/* Mobile-only: compact offer type pill */}
           <div className="flex sm:hidden items-center gap-1 mb-1.5">
             <span className="px-1.5 py-0.5 rounded text-xs font-medium" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
-              🔄{listing.swapAcceptCash ? ' + 💰' : ''}
+              <ArrowLeftRight className="w-3 h-3 inline -mt-0.5" />{listing.swapAcceptCash && <> + <Banknote className="w-3 h-3 inline -mt-0.5" /></>}
             </span>
           </div>
 

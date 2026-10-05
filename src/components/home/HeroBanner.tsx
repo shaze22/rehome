@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, ArrowLeftRight, Search } from 'lucide-react'
+import { Zap, ArrowLeftRight, Search, Lock, BadgeCheck, Truck, Tag } from 'lucide-react'
 import { Kassim } from '@/components/brand/Kassim'
 
 /** Kassim standing at the open mouth of his treasure cave. */
@@ -56,7 +56,7 @@ export function HeroBanner() {
             style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
           >
             My treasure cave is full.{' '}
-            <span style={{ color: 'var(--teal)' }}>Every Flash Bid starts at RM0.</span>
+            <span style={{ color: 'var(--teal)' }}>Come and take a look.</span>
           </Link>
           <HeroCave />
         </div>
@@ -66,14 +66,14 @@ export function HeroBanner() {
             Malaysia&apos;s Smarter Pre-Loved Marketplace
           </p>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-2 sm:mb-3">
-            One man&apos;s trash is another man&apos;s{' '}
-            <span className="text-gold-gradient">treasure.</span>
+            Bid from <span className="text-gold-gradient">RM0.</span>{' '}
+            Win in 30 minutes.
           </h1>
-          <p className="text-xs sm:text-base max-w-lg mx-auto lg:mx-0 mb-4 sm:mb-6" style={{ color: 'var(--text-secondary)' }}>
-            30-min flash auctions, item swaps, 100% secure escrow, delivery included.
+          <p className="text-sm sm:text-base max-w-lg mx-auto lg:mx-0 mb-4 sm:mb-6" style={{ color: 'var(--text-secondary)' }}>
+            One man&apos;s trash is another man&apos;s treasure. Bid on pre-loved items or swap your own, with escrow and delivery built in.
           </p>
 
-          {/* Primary CTAs — Flash Bid + Swap Bid side by side */}
+          {/* One primary action (Flash Bid); Swap Bid is the quieter second choice */}
           <div className="flex items-center justify-center lg:justify-start gap-3 mb-4 sm:mb-6">
             <Link
               href="/listings?mode=flash"
@@ -81,12 +81,12 @@ export function HeroBanner() {
               style={{ background: 'linear-gradient(135deg, #ff6b35, #f59e0b)', boxShadow: '0 4px 20px rgba(255,107,53,0.35)' }}
             >
               <Zap className="w-4 h-4" />
-              Flash Bid
+              Browse Flash Bid
             </Link>
             <Link
               href="/listings?mode=swap"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #16a34a, #22c55e)', boxShadow: '0 4px 20px rgba(22,163,74,0.35)' }}
+              className="flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95"
+              style={{ border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
             >
               <ArrowLeftRight className="w-4 h-4" />
               Swap Bid
@@ -113,13 +113,13 @@ export function HeroBanner() {
           {/* Trust micro-indicators */}
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-1.5 sm:gap-6">
             {[
-              { emoji: '🔒', text: 'Escrow Protected' },
-              { emoji: '✅', text: 'IC Verified Sellers' },
-              { emoji: '📦', text: 'Auto Delivery' },
-              { emoji: '0%', text: 'Free to List' },
+              { icon: Lock, text: 'Escrow Protected' },
+              { icon: BadgeCheck, text: 'IC Verified Sellers' },
+              { icon: Truck, text: 'Delivery Included' },
+              { icon: Tag, text: 'Free to List' },
             ].map(item => (
               <div key={item.text} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                <span className="font-semibold">{item.emoji}</span>
+                <item.icon className="w-3.5 h-3.5" style={{ color: 'var(--teal)' }} />
                 <span>{item.text}</span>
               </div>
             ))}

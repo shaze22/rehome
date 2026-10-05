@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Clock, Gavel, Leaf, Shield, CheckCircle, MapPin, Star,
   AlertCircle, ChevronLeft, ChevronRight, Bot, Share2, ArrowLeftRight,
-  Package, Truck, Trash2, Link2, Copy
+  Package, Truck, Trash2, Link2, Copy, Eye, Zap
 } from 'lucide-react'
 import { calculatePlatformFee, MALAYSIAN_STATES } from '@/lib/delivery'
 import { trackRecentlyViewed } from '@/components/home/RecentlyViewed'
@@ -20,6 +20,9 @@ import { Confetti } from '@/components/brand/Confetti'
 import { KassimNiche } from '@/components/brand/Motifs'
 import { CoinBurst, OutbidNotice } from '@/components/brand/Reactions'
 import { CaveDoorTimer } from './CaveDoorTimer'
+import { StickyBidBar } from './StickyBidBar'
+import { DeliveryCheckout, HIGH_DELIVERY } from './DeliveryCheckout'
+import { useCountdown, useServerTimeOffset, FLASH_WINDOW_MS } from './useCountdown'
 
 interface FlashTransaction {
   id: string
@@ -41,7 +44,7 @@ interface FlashTransaction {
 interface Bid {
   id: string
   amount: number
-  createdAt: string
+  createdAt: string | Date
   bidder: { name: string | null; rehomeScore: number }
 }
 
@@ -53,7 +56,7 @@ interface Seller {
   icVerified: boolean
   state: string | null
   icStatus: string
-  createdAt: string
+  createdAt: string | Date
 }
 
 interface Listing {
@@ -70,7 +73,7 @@ interface Listing {
   state: string
   status: string
   mode: string
-  endsAt: string | null
+  endsAt: string | Date | null
   co2Saved: number
   viewCount?: number
   hasScratch: boolean
@@ -109,311 +112,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   BOOKS: 'Books', SPORTS: 'Sports', KITCHEN: 'Kitchen', OTHERS: 'Others',
 }
 
-interface DCourierRate { id: string; courierName: string; serviceName: string; basePrice: number; chargedPrice: number; markup: number; eta?: string }
-
-// Above this, delivery is flagged as expensive (typically inter-state) and the
-// buyer must explicitly acknowledge before paying.
-const HIGH_DELIVERY = 50
-
-function DeliveryCheckout({ listingId, bidAmount, sellerState, initialPhone, initialPostcode, initialAddress }: { listingId: string; bidAmount: number; sellerState: string; initialPhone?: string; initialPostcode?: string; initialAddress?: string }) {
-  const [credit, setCredit] = useState(0)
-  const [postcode, setPostcode] = useState(initialPostcode ?? '')
-  const [phone, setPhone] = useState(initialPhone ?? '')
-  const [address, setAddress] = useState(initialAddress ?? '')
-  const [quotes, setQuotes] = useState<DCourierRate[] | null>(null)
-  const [quotesLoading, setQuotesLoading] = useState(false)
-  const [selected, setSelected] = useState<DCourierRate | null>(null)
-  const [covered, setCovered] = useState(true)
-  const [ackHighCost, setAckHighCost] = useState(false)
-  const [pickup, setPickup] = useState(false)  // self-pickup fallback for Lalamove-uncovered areas
-
-  const step = !postcode || postcode.length < 5 ? 1
-    : pickup ? (phone.length < 10 ? 3 : 4)
-    : !selected ? 2
-    : !phone || phone.length < 10 || !address || address.length < 10 ? 3
-    : 4
-
-  const STEPS = ['Postcode', 'Courier', 'Your Details', 'Pay']
-
-  useEffect(() => {
-    fetch('/api/referral').then(r => r.json()).then(d => setCredit(d.creditBalance ?? 0)).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (postcode.length !== 5 || !/^\d{5}$/.test(postcode)) {
-      setQuotes(null); setSelected(null); return
-    }
-    setQuotesLoading(true)
-    const t = setTimeout(() => {
-      fetch(`/api/listings/${listingId}/delivery-quote?buyerState=${sellerState}&buyerPostcode=${postcode}`)
-        .then(r => r.json())
-        .then((d: { couriers?: DCourierRate[]; covered?: boolean }) => {
-          const list = d.couriers ?? []
-          setQuotes(list)
-          setSelected(list[0] ?? null)
-          setCovered(d.covered !== false)
-          setAckHighCost(false)
-          setPickup(false)
-        })
-        .catch(() => setQuotes(null))
-        .finally(() => setQuotesLoading(false))
-    }, 500)
-    return () => clearTimeout(t)
-  }, [postcode, listingId, sellerState])
-
-  const discount = Math.min(credit, Math.max(0, bidAmount - 1))
-  const deliveryFee = pickup ? 0 : (selected?.chargedPrice ?? 0)
-  // Buyer pays: bid amount + delivery only. Platform fee (15%) is deducted from seller's payout, not charged to buyer.
-  const total = bidAmount - discount + deliveryFee
-
-  const isHighCost = !pickup && (selected?.chargedPrice ?? 0) >= HIGH_DELIVERY
-  const ready = pickup
-    ? phone.length >= 10
-    : (selected !== null && phone.length >= 10 && address.length >= 10 && (!isHighCost || ackHighCost))
-
-  const checkoutParams = new URLSearchParams({ listingId })
-  if (pickup) {
-    checkoutParams.set('pickup', '1')
-    checkoutParams.set('buyerPhone', phone)
-    if (postcode) checkoutParams.set('buyerPostcode', postcode)
-  } else if (selected) {
-    checkoutParams.set('deliveryFee', selected.chargedPrice.toString())
-    checkoutParams.set('deliveryBase', selected.basePrice.toString())
-    checkoutParams.set('deliveryMarkup', selected.markup.toString())
-    checkoutParams.set('courierName', selected.courierName)
-    checkoutParams.set('courierService', selected.serviceName)
-    checkoutParams.set('courierServiceId', selected.id)
-    checkoutParams.set('buyerPostcode', postcode)
-    checkoutParams.set('buyerPhone', phone)
-    checkoutParams.set('buyerAddress', address.slice(0, 490))
-  }
-
-  return (
-    <div className="space-y-3">
-      {/* Step indicator */}
-      <div className="flex items-center gap-1 mb-1">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center gap-1 flex-1">
-            <div className="flex flex-col items-center flex-1">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                backgroundColor: i + 1 <= step ? 'var(--teal)' : 'var(--bg-elevated)',
-                color: i + 1 <= step ? 'white' : 'var(--text-muted)',
-                border: i + 1 === step ? '2px solid var(--teal)' : '2px solid transparent',
-              }}>
-                {i + 1 < step ? '✓' : i + 1}
-              </div>
-              <span className="text-xs mt-0.5 text-center leading-none" style={{ color: i + 1 === step ? 'var(--teal)' : 'var(--text-muted)', fontSize: '9px' }}>{label}</span>
-            </div>
-            {i < STEPS.length - 1 && <div className="h-0.5 flex-1 mb-3 rounded" style={{ backgroundColor: i + 1 < step ? 'var(--teal)' : 'var(--border)' }} />}
-          </div>
-        ))}
-      </div>
-
-      {/* Delivery header — only shown when postcode not yet entered */}
-      {step === 1 && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(79,140,255,0.08)', border: '1px solid rgba(79,140,255,0.2)', color: 'var(--text-secondary)' }}>
-          📦 <span>All orders via KASSIM platform. Enter your postcode to see courier rates.</span>
-        </div>
-      )}
-
-      <div className="space-y-2">
-          {/* Postcode */}
-          <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Your postcode</label>
-            <input
-              type="text" inputMode="numeric" maxLength={5} value={postcode}
-              onChange={e => setPostcode(e.target.value.replace(/\D/g, ''))}
-              placeholder="e.g. 50480"
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            />
-          </div>
-
-          {/* Courier picker */}
-          {quotesLoading && (
-            <p className="text-xs text-center py-2" style={{ color: 'var(--text-muted)' }}>Getting courier rates...</p>
-          )}
-          {quotes && quotes.length > 0 && (
-            <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Select courier</label>
-              <div className="space-y-1.5">
-                {quotes.map(c => (
-                  <button key={c.id} type="button" onClick={() => setSelected(c)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all"
-                    style={{
-                      backgroundColor: selected?.id === c.id ? 'rgba(79,140,255,0.12)' : 'var(--bg-elevated)',
-                      border: selected?.id === c.id ? '1px solid rgba(79,140,255,0.5)' : '1px solid var(--border)',
-                      color: 'var(--text-primary)',
-                    }}>
-                    <span>
-                      <span className="font-medium">{c.courierName}</span>
-                      <span style={{ color: 'var(--text-muted)' }}> · {c.serviceName}</span>
-                      {c.eta && <span className="ml-1" style={{ color: 'var(--text-muted)' }}>({c.eta})</span>}
-                    </span>
-                    <span className="font-mono font-bold" style={{ color: 'var(--teal)' }}>RM {c.chargedPrice.toFixed(2)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {quotes && quotes.length === 0 && covered && !pickup && (
-            <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
-              No rates found. Please double-check your postcode.
-            </p>
-          )}
-          {quotes && quotes.length === 0 && !covered && !pickup && (
-            <div className="space-y-2">
-              <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--red)' }}>
-                ⚠️ Lalamove does not deliver to your area.
-              </p>
-              <button type="button" onClick={() => setPickup(true)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs text-left"
-                style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.3)', color: 'var(--text-primary)' }}>
-                <Package className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--green)' }} />
-                <span><strong>Self-pickup instead</strong> — collect the item from the seller. No delivery fee. Tap to choose.</span>
-              </button>
-            </div>
-          )}
-          {pickup && (
-            <div className="px-3 py-2.5 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'rgba(0,217,165,0.08)', border: '1px solid rgba(0,217,165,0.3)' }}>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--green)' }}><Package className="w-3.5 h-3.5" /> Self-Pickup selected</span>
-                <button type="button" onClick={() => setPickup(false)} className="underline" style={{ color: 'var(--text-muted)' }}>change</button>
-              </div>
-              <p style={{ color: 'var(--text-secondary)' }}>Arrange a meet-up with the seller after payment. Your payment stays in escrow until you confirm you have collected the item. No delivery fee.</p>
-            </div>
-          )}
-
-          {/* Contact & address */}
-          <div>
-            <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Phone number</label>
-            <input
-              type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-              placeholder="e.g. 0123456789"
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            />
-          </div>
-          {!pickup && (
-            <div>
-              <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Delivery address</label>
-              <textarea
-                value={address} onChange={e => setAddress(e.target.value)}
-                placeholder="Full address including unit, street, city"
-                rows={2}
-                className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-                style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              />
-            </div>
-          )}
-        </div>
-
-      {/* Payment summary */}
-      {(selected || pickup) && (
-        <div className="rounded-lg p-3 text-xs space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <div className="flex justify-between">
-            <span style={{ color: 'var(--text-muted)' }}>Winning bid</span>
-            <span className="font-mono">RM {bidAmount.toFixed(0)}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between" style={{ color: 'var(--teal)' }}>
-              <span>💳 Credit discount</span>
-              <span className="font-mono">− RM {discount.toFixed(0)}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span style={{ color: 'var(--text-muted)' }}>{pickup ? 'Self-pickup' : `Delivery (${selected?.courierName ?? ''})`}</span>
-            <span className="font-mono">{pickup ? 'Free' : `RM ${deliveryFee.toFixed(2)}`}</span>
-          </div>
-          <div className="flex justify-between pt-1.5 font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--teal)' }}>
-            <span>Total you pay</span>
-            <span className="font-mono">RM {total.toFixed(2)}</span>
-          </div>
-          <p className="text-xs pt-1" style={{ color: 'var(--text-muted)' }}>15% platform fee is deducted from the seller's payout, not charged to you.</p>
-        </div>
-      )}
-
-      {/* High delivery cost — require explicit acknowledgement before paying */}
-      {selected && isHighCost && (
-        <label className="flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs cursor-pointer" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.4)' }}>
-          <input type="checkbox" checked={ackHighCost} onChange={e => setAckHighCost(e.target.checked)} className="mt-0.5" style={{ accentColor: 'var(--yellow)' }} />
-          <span style={{ color: 'var(--text-secondary)' }}>
-            Delivery costs <strong style={{ color: 'var(--yellow)' }}>RM {deliveryFee.toFixed(2)}</strong> because the seller is far away (inter-state). Are you sure? Tick to confirm you want to proceed.
-          </span>
-        </label>
-      )}
-
-      <Link
-        href={ready ? `/api/payment/checkout?${checkoutParams.toString()}` : '#'}
-        className={`block w-full text-center py-3 rounded-xl font-semibold text-white gradient-teal ${!ready ? 'opacity-50 pointer-events-none' : ''}`}
-      >
-        {!ready
-          ? (pickup ? 'Enter your phone number' : 'Fill in delivery details')
-          : total === 0
-            ? 'Confirm Self-Pickup (Free)'
-            : `Proceed to Payment: RM ${total.toFixed(2)}`}
-      </Link>
-    </div>
-  )
-}
-
-function useServerTimeOffset() {
-  const [offset, setOffset] = useState(0)
-  useEffect(() => {
-    fetch('/api/time')
-      .then(r => r.json())
-      .then(({ serverTime }: { serverTime: number }) => setOffset(serverTime - Date.now()))
-      .catch(() => {})
-  }, [])
-  return offset
-}
-
-type UrgencyLevel = 0 | 1 | 2 | 3
-
-// Display-only mirror of the fixed Flash window enforced in /api/bid.
-const FLASH_WINDOW_MS = 30 * 60 * 1000
-
-function useCountdown(endsAt: string | null, offset = 0) {
-  const [timeLeft, setTimeLeft] = useState('')
-  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(0)
-  const [isEnded, setIsEnded] = useState(false)
-  const [isWaiting, setIsWaiting] = useState(!endsAt)
-  const [msLeft, setMsLeft] = useState(0)
-
-  useEffect(() => {
-    if (!endsAt) {
-      setIsWaiting(true)
-      setIsEnded(false)
-      setTimeLeft('Waiting for first bidder...')
-      return
-    }
-    setIsWaiting(false)
-    function update() {
-      const diff = new Date(endsAt as string).getTime() - (Date.now() + offset)
-      if (diff <= 0) { setIsEnded(true); setTimeLeft('Ended'); setMsLeft(0); return }
-      setIsEnded(false) // reset if endsAt changed to future (e.g. after first bid realtime update)
-      setMsLeft(diff)
-      const d = Math.floor(diff / 86400000)
-      const h = Math.floor((diff % 86400000) / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
-      if (diff < 60000) setUrgencyLevel(3)
-      else if (diff < 300000) setUrgencyLevel(2)
-      else if (diff < 600000) setUrgencyLevel(1)
-      else setUrgencyLevel(0)
-      if (d > 0) setTimeLeft(`${d}d ${h}h ${m}m`)
-      else if (h > 0) setTimeLeft(`${h}h ${m}m ${s}s`)
-      else if (m > 0) setTimeLeft(`${m}m ${s}s`)
-      else setTimeLeft(`${s}s`)
-    }
-    update()
-    const id = setInterval(update, 1000)
-    return () => clearInterval(id)
-  }, [endsAt, offset])
-
-  return { timeLeft, urgencyLevel, isUrgent: urgencyLevel > 0, isEnded, isWaiting, msLeft }
-}
-
 export function ListingDetailClient({ listing: initialListing, currentUserId: initialUserId, currentUserEmail, currentUserState, currentUserPhone, currentUserPostcode, currentUserSavedAddress, watchlistButton, relatedListingsSlot }: Props) {
   const [listing, setListing] = useState(initialListing)
   const [bids, setBids] = useState(initialListing.bids)
@@ -446,6 +144,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
     const key = `kassim_bid_${listing.id}`
     const saved = sessionStorage.getItem(key)
     if (saved && !isNaN(Number(saved))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restores the bid typed before login (sessionStorage)
       setBidAmount(Number(saved))
       sessionStorage.removeItem(key)
     }
@@ -514,6 +213,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
 
   // Fetch EasyParcel delivery quote when buyer selects a state
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- no delivery choice means no quote
     if (deliveryMethod !== 'delivery' || !buyerState) { setDeliveryQuote(null); return }
     setQuoteLoading(true)
     const timer = setTimeout(() => {
@@ -530,6 +230,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   useEffect(() => {
     if (isSwap || !currentUserId) return
     if (listing.status !== 'ENDED' && listing.status !== 'SOLD') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the transaction lookup for this listing
     setTxLoading(true)
     fetch(`/api/transactions/${listing.id}`)
       .then(r => r.json())
@@ -673,8 +374,6 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
 
   const isFirstBid = listing._count.bids === 0
   const deliveryPrice = deliveryMethod === 'pickup' ? 0 : (deliveryQuote?.cheapest ?? null)
-  const platformFee = calculatePlatformFee(bidAmount)
-  const totalIfWin = deliveryPrice !== null ? bidAmount + deliveryPrice + platformFee : null
   const deliveryReady = deliveryMethod === 'pickup' || (deliveryMethod === 'delivery' && buyerState !== '' && !quoteLoading && deliveryQuote !== null)
 
   async function handleBid(e: React.FormEvent) {
@@ -865,16 +564,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             </div>
             {/* View count + interest indicator */}
             <div className="flex items-center gap-3 mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <span>👀 {listing.viewCount ?? 0} views</span>
+              <span><Eye className="w-3 h-3 inline -mt-0.5" /> {listing.viewCount ?? 0} views</span>
               <span>·</span>
-              <span>{isSwap ? `${listing._count.offers ?? 0} offers received` : listing._count.bids > 0 ? `🔥 ${listing._count.bids} bids` : '0 bids'}</span>
+              <span>{isSwap ? `${listing._count.offers ?? 0} offers received` : listing._count.bids > 0 ? `${listing._count.bids} bids` : '0 bids'}</span>
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{listing.description}</p>
           </div>
 
           {/* AI Pricing */}
           {listing.aiSuggestedMin && (
-            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)' }}>
+            <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(245,185,66,0.08)', border: '1px solid rgba(245,185,66,0.3)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <Bot className="w-4 h-4" style={{ color: 'var(--purple)' }} />
                 <span className="text-sm font-semibold" style={{ color: 'var(--purple)' }}>Estimated Market Value</span>
@@ -939,13 +638,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 : 'var(--teal)'
               const urgencyLabel = !isSwap && !isWaiting
                 ? urgencyLevel >= 3 ? '⏱ Final seconds!'
-                  : urgencyLevel >= 2 ? '🔥 Almost over!'
-                  : urgencyLevel >= 1 ? '⚡ Ending soon!'
+                  : urgencyLevel >= 2 ? 'Almost over!'
+                  : urgencyLevel >= 1 ? 'Ending soon!'
                   : 'Time left'
                 : null
               if (!isSwap) {
                 return (
-                  <div className="mb-4">
+                  <div id="bid-box" className="mb-4 scroll-mt-20">
                     <CaveDoorTimer
                       closed={1 - msLeft / FLASH_WINDOW_MS}
                       timeLeft={timeLeft}
@@ -960,7 +659,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 )
               }
               return (
-                <div className="flex items-center justify-between mb-4">
+                <div id="bid-box" className="flex items-center justify-between mb-4 scroll-mt-20">
                   <div>
                     {urgencyLabel && (
                       <p className="text-xs mb-0.5 font-medium" style={{ color: timerColor }}>{urgencyLabel}</p>
@@ -1023,7 +722,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   <div className="text-center py-4 px-4 rounded-xl" style={{ backgroundColor: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#16a34a' }} />
                     <p className="text-sm font-medium" style={{ color: '#16a34a' }}>Offer submitted!</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Waiting for the owner's response. You will be notified.</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Waiting for the owner&apos;s response. You will be notified.</p>
                     <button onClick={() => setOfferSubmitted(false)} className="mt-3 text-xs underline" style={{ color: 'var(--text-muted)' }}>
                       Make a new offer
                     </button>
@@ -1181,7 +880,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     disabled={bidLoading || isLastBidder}
                     className="w-full py-3 rounded-xl font-semibold text-white gradient-teal disabled:opacity-50 transition-all hover:scale-105 active:scale-95"
                   >
-                    {bidLoading ? 'Placing bid...' : isFirstBid ? '⚡ Place First Bid - Could Win for Free!' : `Bid RM ${bidAmount}`}
+                    {bidLoading ? 'Placing bid...' : isFirstBid ? 'Place First Bid - Could Win for Free!' : `Bid RM ${bidAmount}`}
                   </button>
                 )}
               </form>
@@ -1194,7 +893,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   <div className="mt-3">
                     <Confetti onceKey={`kassim_confetti_${listing.id}`} />
                     <Kassim pose="body-cheer" width={120} className="mx-auto mb-2 kassim-bob" />
-                    <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>🎉 Congratulations! You won!</p>
+                    <p className="text-sm mb-3 font-semibold" style={{ color: 'var(--green)' }}>Congratulations! You won!</p>
                     {paymentCancelled && (
                       <div className="mb-3 px-3 py-2.5 rounded-xl text-xs font-medium" style={{ backgroundColor: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--yellow)' }}>
                         Payment was not completed. Complete checkout below to secure your item. You have 24 hours.
@@ -1286,21 +985,21 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             {/* Trust badges */}
             <div className="flex flex-wrap gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
               <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                🔒 Escrow Protected
+                <Shield className="w-3 h-3 inline -mt-0.5" /> Escrow Protected
               </span>
               {listing.seller.icVerified && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  ✅ IC Verified Seller
+                  <CheckCircle className="w-3 h-3 inline -mt-0.5" /> IC Verified Seller
                 </span>
               )}
               {listing.mode === 'FLASH' && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  {listing.endsAt === null ? '⚡ Timer starts on first bid' : '⚡ Flash: 30 Min Only'}
+                  <Zap className="w-3 h-3 inline -mt-0.5" /> {listing.endsAt === null ? 'Timer starts on first bid' : 'Flash Bid: 30 minutes only'}
                 </span>
               )}
               {listing.mode === 'SWAP' && (
                 <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
-                  🔄 Swap: 72hr Window
+                  <ArrowLeftRight className="w-3 h-3 inline -mt-0.5" /> Swap Bid: 72-hour window
                 </span>
               )}
             </div>
@@ -1314,7 +1013,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 className="flex items-center justify-center gap-2 w-full mt-3 py-2.5 rounded-xl text-sm font-medium"
                 style={{ backgroundColor: '#25D366', color: 'white' }}
               >
-                💬 WhatsApp {listing.seller.name ?? 'Seller'}
+                WhatsApp {listing.seller.name ?? 'Seller'}
               </a>
             )}
             {currentUserId && !isOwnListing && !listing.seller.phone && (
@@ -1527,6 +1226,16 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
             </div>
           )}
         </div>
+      )}
+
+      {!isEnded && !isOwnListing && listing.status === 'ACTIVE' && (
+        <StickyBidBar
+          targetId="bid-box"
+          isSwap={isSwap}
+          priceLabel={isSwap ? 'Swap Bid' : `RM ${currentBidDisplay.toFixed(0)}`}
+          timeLabel={isWaiting ? 'Timer starts on the first bid' : `${timeLeft} left`}
+          urgent={!isSwap && urgencyLevel >= 2}
+        />
       )}
 
       {/* Offer Modal */}

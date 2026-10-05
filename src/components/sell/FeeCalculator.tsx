@@ -50,7 +50,7 @@ export function FeeCalculator() {
       </div>
 
       <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-        💡 <strong>Swap</strong> listings have 0% platform fee
+        <strong>Swap Bid</strong> listings have 0% platform fee
       </p>
     </div>
   )

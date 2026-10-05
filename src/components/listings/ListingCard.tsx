@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, CheckCircle, Zap } from 'lucide-react'
+import { Clock, CheckCircle, Zap, Flame, Gavel, Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 interface ListingWithSeller {
@@ -41,6 +41,7 @@ function useCountdown(endsAt: Date | string | null) {
 
   useEffect(() => {
     if (!endsAt) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- keeps the countdown in step with endsAt
       setTimeLeft('')
       setIsUrgent(false)
       setIsEndingSoon(false)
@@ -132,7 +133,7 @@ export function ListingCard({ listing, priority = false }: Props) {
 
           {isEndingSoon && (
             <div className="absolute top-0 left-0 right-0 z-10 py-0.5 sm:py-1 text-center text-xs font-bold" style={{ background: 'rgba(239,68,68,0.92)', color: 'white' }}>
-              🔥 ENDING SOON
+              <Flame className="w-3 h-3 inline -mt-0.5" /> ENDING SOON
             </div>
           )}
 
@@ -146,7 +147,7 @@ export function ListingCard({ listing, priority = false }: Props) {
           {bidCount >= 2 && (
             <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-bold"
               style={{ background: 'rgba(10,10,15,0.8)', color: 'white', backdropFilter: 'blur(4px)' }}>
-              🔥 {bidCount}
+              <Gavel className="w-3 h-3 inline -mt-0.5" /> {bidCount}
             </div>
           )}
         </div>
@@ -212,7 +213,7 @@ export function ListingCard({ listing, priority = false }: Props) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {(listing.viewCount ?? 0) > 10 && (
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>👀 {listing.viewCount}</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}><Eye className="w-3 h-3 inline -mt-0.5" /> {listing.viewCount}</span>
               )}
               {listing.seller.icVerified && (
                 <span title="IC Verified Seller">

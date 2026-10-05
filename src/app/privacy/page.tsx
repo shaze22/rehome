@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Lock } from 'lucide-react'
 
-export const metadata = { title: 'Privacy Policy | KASSIM' }
+export const metadata = { title: 'Privacy Policy' }
 
 export default function PrivacyPage() {
   return (

@@ -10,7 +10,7 @@ import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
 import { HeroBanner } from '@/components/home/HeroBanner'
 import { KassimSays, KeyDivider } from '@/components/brand/Motifs'
-import { ArrowRight, Flame } from 'lucide-react'
+import { ArrowRight, Flame, Lock, Sparkles, BadgeCheck, Zap, ArrowLeftRight } from 'lucide-react'
 
 const getFeaturedListings = unstable_cache(async () => {
   try {
@@ -100,10 +100,10 @@ const getStats = unstable_cache(async () => {
 }, ['homepage-stats'], { revalidate: 120 })
 
 const TRUST_FEATURES = [
-  { emoji: '🔒', title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
-  { emoji: '🤖', title: 'AI Pricing', desc: 'AI price suggestions based on current market. Sell at a fair and accurate price.' },
-  { emoji: '✅', title: 'IC Verified', desc: 'Sellers who verify their IC get a trust badge. You know who you\'re dealing with.' },
-  { emoji: '⚡', title: '30-Min Auctions', desc: 'Fast 30-minute auctions. Bid, win, pay. Done in one day.' },
+  { icon: Lock, title: 'Secure Escrow', desc: 'Buyer funds held safely until item is received. Zero fraud risk.' },
+  { icon: Sparkles, title: 'AI Pricing', desc: 'AI price suggestions based on current market. Sell at a fair and accurate price.' },
+  { icon: BadgeCheck, title: 'IC Verified', desc: 'Sellers who verify their IC get a trust badge. You know who you\'re dealing with.' },
+  { icon: Zap, title: 'Flash Bid', desc: 'Fast 30-minute auctions. Bid, win, pay. Done in one day.' },
 ]
 
 // Skeleton shown while HomeContent streams in
@@ -171,30 +171,33 @@ async function HomeContent() {
     !flashListings.some(f => f.id === t.id) && !swapListings.some(s => s.id === t.id)
   )
 
+  const formatNumber = new Intl.NumberFormat('en-MY')
+  const liveStats = [
+    { show: activeFlash > 0, value: String(activeFlash), label: 'Flash Bid live', color: 'var(--orange)' },
+    { show: activeSwap > 0, value: String(activeSwap), label: 'Swap Bid open', color: '#16a34a' },
+    { show: totalSales > 0, value: `RM ${formatNumber.format(Math.round(totalSales))}`, label: 'In sales', color: 'var(--teal)' },
+    { show: co2Full > 0, value: `${formatNumber.format(Math.round(co2Full))}kg`, label: 'CO₂ saved', color: 'var(--green)' },
+  ].filter(stat => stat.show)
+
   return (
     <>
-      {/* Live Stats Bar */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="rounded-2xl px-4 sm:px-6 py-3 sm:py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              {[
-                { emoji: '⚡', value: activeFlash, label: 'Flash Live', color: 'var(--orange)' },
-                { emoji: '🔄', value: activeSwap, label: 'Swaps Open', color: '#16a34a' },
-                { emoji: '💰', value: totalSales > 0 ? `RM ${new Intl.NumberFormat('en-MY').format(Math.round(totalSales))}` : 'Growing', label: 'In Sales', color: 'var(--teal)', raw: true },
-                { emoji: '🌱', value: co2Full > 0 ? `${new Intl.NumberFormat('en-MY').format(Math.round(co2Full))}kg` : 'Counting', label: 'CO₂ Saved', color: 'var(--green)', raw: true },
-              ].map(stat => (
-                <div key={stat.label} className="text-center py-1">
-                  <p className="text-lg sm:text-2xl font-bold font-mono" style={{ color: stat.color }}>
-                    {stat.raw ? stat.value : `${stat.emoji} ${stat.value}`}
-                  </p>
-                  <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
-                </div>
-              ))}
+      {/* Live Stats Bar: only figures that are above zero, and only when at least two are */}
+      {liveStats.length >= 2 && (
+        <section className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="rounded-2xl px-4 sm:px-6 py-3 sm:py-4" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <div className="flex flex-wrap justify-around gap-x-8 gap-y-3">
+                {liveStats.map(stat => (
+                  <div key={stat.label} className="text-center py-1">
+                    <p className="text-lg sm:text-2xl font-bold font-mono" style={{ color: stat.color }}>{stat.value}</p>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <KeyDivider className="mt-2" />
 
@@ -203,7 +206,7 @@ async function HomeContent() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold" style={{ color: '#ff6b35' }}>⚡ FLASH BID</h2>
+              <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2" style={{ color: '#ff6b35' }}><Zap className="w-5 h-5" /> FLASH BID</h2>
               <p className="text-xs sm:text-sm mt-0.5 sm:mt-1" style={{ color: 'var(--text-secondary)' }}>Bid from RM0. Timer starts on first bid. 30 min to win.</p>
             </div>
             <Link href="/listings?mode=flash" className="flex items-center gap-1 text-sm font-medium hover:underline flex-shrink-0" style={{ color: 'var(--teal)' }}>
@@ -220,7 +223,7 @@ async function HomeContent() {
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {flashListings.map((listing, i) => (
-                <ListingCard key={listing.id} listing={listing as any} priority={i === 0} />
+                <ListingCard key={listing.id} listing={listing} priority={i === 0} />
               ))}
             </div>
           )}
@@ -232,7 +235,7 @@ async function HomeContent() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold" style={{ color: '#16a34a' }}>🔄 SWAP BID</h2>
+              <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2" style={{ color: '#16a34a' }}><ArrowLeftRight className="w-5 h-5" /> SWAP BID</h2>
               <p className="text-xs sm:text-sm mt-0.5 sm:mt-1" style={{ color: 'var(--text-secondary)' }}>Offer cash or trade your item. 3-day window.</p>
             </div>
             <Link href="/listings?mode=swap" className="flex items-center gap-1 text-sm font-medium hover:underline flex-shrink-0" style={{ color: '#16a34a' }}>
@@ -248,7 +251,7 @@ async function HomeContent() {
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {swapListings.map((listing, i) => (
-                <SwapListingCard key={listing.id} listing={listing as any} priority={i === 0} />
+                <SwapListingCard key={listing.id} listing={listing} priority={i === 0} />
               ))}
             </div>
           )}
@@ -271,8 +274,8 @@ async function HomeContent() {
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {uniqueTrendingListings.map(listing => (
                 listing.mode === 'SWAP'
-                  ? <SwapListingCard key={listing.id} listing={listing as any} />
-                  : <ListingCard key={listing.id} listing={listing as any} />
+                  ? <SwapListingCard key={listing.id} listing={listing} />
+                  : <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           </div>
@@ -287,7 +290,7 @@ async function HomeContent() {
               <div>
                 <div className="flex items-center gap-2 sm:gap-3 mb-1">
                   <h2 className="text-lg sm:text-2xl font-bold" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    ⚡ Friday FLASH BID Night
+                    Friday FLASH BID Night
                   </h2>
                   <span className="px-2 py-0.5 rounded-md text-xs font-bold hidden sm:inline" style={{ backgroundColor: '#ef4444', color: 'white' }}>FEATURED</span>
                 </div>
@@ -298,8 +301,8 @@ async function HomeContent() {
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {megaListings.map(listing => (
                 listing.mode === 'SWAP'
-                  ? <SwapListingCard key={listing.id} listing={listing as any} />
-                  : <ListingCard key={listing.id} listing={listing as any} />
+                  ? <SwapListingCard key={listing.id} listing={listing} />
+                  : <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           </div>
@@ -322,7 +325,7 @@ async function HomeContent() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {TRUST_FEATURES.map(item => (
               <div key={item.title} className="rounded-xl p-4 sm:p-6 text-center card-hover" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">{item.emoji}</div>
+                <item.icon className="w-7 h-7 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3" style={{ color: 'var(--teal)' }} />
                 <h3 className="font-bold mb-1 sm:mb-2 text-xs sm:text-sm">{item.title}</h3>
                 <p className="text-xs leading-relaxed hidden sm:block" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
               </div>

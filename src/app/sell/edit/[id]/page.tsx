@@ -23,7 +23,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
       <div className="sticky top-0 z-10 px-4 py-4 flex items-center gap-3" style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
         <h1 className="text-lg font-bold">Edit Listing</h1>
       </div>
-      <EditListingForm listing={listing as any} userId={user.id} />
+      <EditListingForm listing={listing} userId={user.id} />
     </div>
   )
 }

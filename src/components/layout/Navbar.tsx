@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Bell, Heart, Menu, X, Plus, LayoutDashboard, LogOut, UserCircle } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
+import { Logo } from '@/components/brand/Logo'
 
 export function Navbar() {
   const [user, setUser] = useState<User | null>(null)
@@ -46,8 +47,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="KASSIM" height={36} style={{ height: '36px', width: 'auto' }} />
+            <Logo height={34} />
             <p className="text-xs hidden md:block leading-none" style={{ color: 'var(--text-muted)' }}>Bid Fast. Swap Smart.</p>
           </Link>
 
@@ -112,6 +112,10 @@ export function Navbar() {
             ) : (
               <div className="flex items-center gap-3">
                 <ThemeToggle />
+                <Link href="/sell" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ border: '1px solid var(--teal)', color: 'var(--teal)' }}>
+                  <Plus className="w-4 h-4" />
+                  Sell
+                </Link>
                 <Link href="/auth/login" className="text-sm transition-colors hover:text-teal" style={{ color: 'var(--text-secondary)' }}>
                   Sign In
                 </Link>

@@ -76,7 +76,7 @@ export function ReferralSection() {
             <li>1. Share your unique link with friends</li>
             <li>2. Friend signs up using your link</li>
             <li>3. You + friend each get <strong style={{ color: 'var(--teal)' }}>RM5 credit</strong></li>
-            <li>4. Credit can be used as a discount when bidding on Flash auctions</li>
+            <li>4. Credit can be used as a discount when bidding on Flash Bid listings</li>
           </ol>
         </div>
 
@@ -114,7 +114,7 @@ export function ReferralSection() {
 
         {data.creditBalance > 0 && (
           <div className="mt-4 px-4 py-3 rounded-xl text-xs" style={{ backgroundColor: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#eab308' }}>
-            💡 You have <strong>RM{data.creditBalance.toFixed(0)} credit</strong>. Credit will be automatically applied at Flash auction checkout.
+            You have <strong>RM{data.creditBalance.toFixed(0)} credit</strong>. Credit will be automatically applied at Flash Bid checkout.
           </div>
         )}
       </div>

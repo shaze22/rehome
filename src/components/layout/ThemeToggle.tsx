@@ -11,6 +11,7 @@ export function ThemeToggle() {
     const saved = localStorage.getItem('kassim_theme') as 'dark' | 'light' | null
     const systemLight = window.matchMedia('(prefers-color-scheme: light)').matches
     const initial = saved ?? (systemLight ? 'light' : 'dark')
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the saved theme is only readable after mount
     setTheme(initial)
     document.documentElement.dataset.theme = initial === 'light' ? 'light' : ''
     setMounted(true)

@@ -2,13 +2,14 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { Gift, Shield, Zap, ArrowLeftRight, CheckCircle } from 'lucide-react'
+import { Logo } from '@/components/brand/Logo'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Special Invitation | KASSIM' }
+export const metadata: Metadata = { title: 'Special Invitation' }
 
 const FEATURES = [
-  { icon: Zap, label: '30-min Flash Auctions', color: 'var(--teal)' },
-  { icon: ArrowLeftRight, label: 'Free Item Swaps', color: '#16a34a' },
+  { icon: Zap, label: '30-minute Flash Bid', color: 'var(--teal)' },
+  { icon: ArrowLeftRight, label: 'Swap Bid with zero fees', color: '#16a34a' },
   { icon: Shield, label: 'Secure Escrow', color: 'var(--purple)' },
   { icon: CheckCircle, label: 'IC-Verified Sellers', color: 'var(--orange)' },
 ]
@@ -37,19 +38,19 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
           <div className="p-8">
             {/* Logo */}
             <div className="text-center mb-6">
-              <span className="text-2xl font-bold" style={{ color: 'var(--teal)' }}>⚡ KASSIM</span>
+              <Logo height={36} />
             </div>
 
             {/* Invite message */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-full gradient-teal flex items-center justify-center text-3xl mx-auto mb-4">
-                🎁
+              <div className="w-16 h-16 rounded-full gradient-teal flex items-center justify-center mx-auto mb-4">
+                <Gift className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2">
                 <span style={{ color: 'var(--teal)' }}>{referrer.name ?? 'Your friend'}</span> invited you to KASSIM!
               </h1>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Malaysia's #1 flash auction and item swap platform
+                Malaysia&apos;s pre-loved marketplace for Flash Bid and Swap Bid
               </p>
             </div>
 
@@ -90,7 +91,7 @@ export default async function ReferralLandingPage({ params }: { params: Promise<
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
-          RM5 credit will be applied after registration. Use it when bidding on Flash auctions.
+          RM5 credit will be applied after registration. Use it when bidding on Flash Bid listings.
         </p>
       </div>
     </div>

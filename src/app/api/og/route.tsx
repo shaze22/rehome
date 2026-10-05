@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
             <div style={{ fontSize: '22px', color: '#64748b', marginTop: 'auto' }}>{subtitle}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: '18px', color: '#475569' }}>kassim.app</div>
-              <div style={{ fontSize: '18px', color: '#475569' }}>Malaysia's Circular Economy 🌱</div>
+              <div style={{ fontSize: '18px', color: '#475569' }}>Malaysia&apos;s Circular Economy 🌱</div>
             </div>
           </div>
       </div>

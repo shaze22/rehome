@@ -180,11 +180,11 @@ export async function sendWelcomeEmail(to: string, name: string) {
   await safeSend(to, 'Welcome to KASSIM! 🎉', baseTemplate(
     'Welcome to KASSIM!',
     `<p>Hi ${name},</p>
-    <p>Thanks for joining <strong>KASSIM</strong> — Malaysia's #1 flash auction and item swap platform!</p>
+    <p>Thanks for joining <strong>KASSIM</strong> — Malaysia's pre-loved marketplace for Flash Bid and Swap Bid!</p>
     <p>Here's what you can do:</p>
     <ul style="padding-left:20px;color:#94a3b8;line-height:2">
-      <li>⚡ <strong style="color:#e2e8f0">Flash Auctions</strong> — bid on pre-loved items in 30 minutes</li>
-      <li>🔄 <strong style="color:#e2e8f0">Item Swaps</strong> — trade items without cash</li>
+      <li>⚡ <strong style="color:#e2e8f0">Flash Bid</strong> — bid on pre-loved items in 30 minutes</li>
+      <li>🔄 <strong style="color:#e2e8f0">Swap Bid</strong> — trade items without cash</li>
       <li>🤖 <strong style="color:#e2e8f0">AI Pricing</strong> — automatic price suggestions</li>
       <li>🛡️ <strong style="color:#e2e8f0">Secure Escrow</strong> — funds held until item arrives</li>
     </ul>
@@ -248,7 +248,7 @@ export async function sendReferralRewardEmail(to: string, name: string, friendNa
        <span style="color:#94a3b8;font-size:12px">Credit added</span><br>
        <span style="color:#00d9a5;font-size:28px;font-weight:700;font-family:monospace">+RM${credit}</span>
      </p>
-     <p style="color:#94a3b8;font-size:13px">Credit can be used as a discount when bidding on Flash auctions.</p>`,
+     <p style="color:#94a3b8;font-size:13px">Credit can be used as a discount when bidding on Flash Bid listings.</p>`,
     'View Dashboard', `${BASE}/dashboard`
   ))
 }

@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'KASSIM',
     short_name: 'KASSIM',
-    description: 'Malaysia\'s #1 Flash Auction & Item Swap Platform',
+    description: 'Pre-loved marketplace for Malaysia: Flash Bid and Swap Bid',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
@@ -18,7 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/api/pwa-icon?size=512', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
-      { name: 'Flash Auctions', short_name: 'Flash', url: '/listings?mode=flash', description: 'Browse active auctions' },
+      { name: 'Flash Bid', short_name: 'Flash', url: '/listings?mode=flash', description: 'Browse active auctions' },
       { name: 'Sell Now', short_name: 'Sell', url: '/sell', description: 'Create a new listing' },
     ],
   }

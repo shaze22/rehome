@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 }
 
 const SELLER_BENEFITS = [
-  { emoji: '🤖', title: 'AI Does the Work', desc: 'Upload photos — AI instantly generates your listing title, description, and fair market price. No guessing, no writing.' },
-  { emoji: '🔒', title: 'Zero Fraud Risk', desc: 'Buyer payment is held in secure escrow until you ship and they confirm receipt. You always get paid before anyone can dispute.' },
-  { emoji: '📦', title: 'Delivery Handled', desc: 'Buyer pays for delivery. Ship via any courier. KASSIM tracks and manages the escrow release automatically.' },
+  { icon: Bot, title: 'AI Does the Work', desc: 'Upload photos — AI instantly generates your listing title, description, and fair market price. No guessing, no writing.' },
+  { icon: Shield, title: 'Zero Fraud Risk', desc: 'Buyer payment is held in secure escrow until you ship and they confirm receipt. You always get paid before anyone can dispute.' },
+  { icon: Package, title: 'Delivery Handled', desc: 'Buyer pays for delivery. Ship via any courier. KASSIM tracks and manages the escrow release automatically.' },
 ]
 
 const HOW_TO_SELL = [
@@ -39,7 +39,7 @@ export default function JualPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: 'rgba(20,184,166,0.1)', border: '1px solid rgba(20,184,166,0.3)', color: 'var(--teal)' }}>
               <Zap className="w-3.5 h-3.5" />
-              Malaysia&apos;s Smarter Auction Platform
+              Malaysia&apos;s Smarter Pre-Loved Marketplace
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Earn Money from{' '}
@@ -48,7 +48,7 @@ export default function JualPage() {
               </span>
             </h1>
             <p className="text-lg mb-8" style={{ color: 'var(--text-secondary)' }}>
-              Malaysia's auction platform. Photo → AI sets price → Bid in minutes. Free registration, commission only when you sell.
+              Malaysia&apos;s auction platform. Photo → AI sets price → Bid in minutes. Free registration, commission only when you sell.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
@@ -97,7 +97,7 @@ export default function JualPage() {
               <ul className="space-y-3 mb-6">
                 {[
                   'Fee only deducted on successful sale',
-                  'SWAP listings 0% fee, completely free',
+                  'Swap Bid listings carry a 0% fee',
                   'Paid out after buyer confirms receipt of item',
                   'No limit on number of listings',
                 ].map(item => (
@@ -123,7 +123,7 @@ export default function JualPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {SELLER_BENEFITS.map(b => (
               <div key={b.title} className="rounded-xl p-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                <div className="text-3xl mb-4">{b.emoji}</div>
+                <b.icon className="w-8 h-8 mb-4" style={{ color: 'var(--teal)' }} />
                 <h3 className="font-bold text-sm mb-2">{b.title}</h3>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{b.desc}</p>
               </div>

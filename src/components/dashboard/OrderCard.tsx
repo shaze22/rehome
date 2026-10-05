@@ -99,7 +99,7 @@ export function OrderCard({ order }: Props) {
       {/* Delivery booking details (seller sees buyer info; buyer sees tracking) */}
       {localOrder.isSeller && localOrder.courierName && (
         <div className="mb-3 px-3 py-2 rounded-lg text-xs space-y-1" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <p className="font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>📦 Delivery Info</p>
+          <p className="font-medium mb-1" style={{ color: 'var(--text-secondary)' }}><Package className="w-3 h-3 inline -mt-0.5" /> Delivery Info</p>
           {localOrder.courierName && <p style={{ color: 'var(--text-muted)' }}>Courier: <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{localOrder.courierName} {localOrder.courierService ? `· ${localOrder.courierService}` : ''}</span></p>}
           {localOrder.buyerPostcode && <p style={{ color: 'var(--text-muted)' }}>Buyer postcode: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{localOrder.buyerPostcode}</span></p>}
           {localOrder.buyerPhone && <p style={{ color: 'var(--text-muted)' }}>Buyer phone: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{localOrder.buyerPhone}</span></p>}

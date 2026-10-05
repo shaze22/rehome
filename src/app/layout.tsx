@@ -1,35 +1,35 @@
 import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono, Fredoka } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Analytics } from '@vercel/analytics/next'
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget'
-import { WhatsAppSupport } from '@/components/layout/WhatsAppSupport'
 import { PWASetup } from '@/components/pwa/PWASetup'
 import { createClient } from '@/lib/supabase/server'
 import { PushPermission } from '@/components/pwa/PushPermission'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+// Fonts ship with the repo (src/fonts) so a build never depends on reaching Google Fonts.
+const inter = localFont({
+  src: '../fonts/inter-latin-wght-normal.woff2',
+  weight: '100 900',
   display: 'swap',
   variable: '--font-inter',
 })
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const jetbrainsMono = localFont({
+  src: '../fonts/jetbrains-mono-latin-wght-normal.woff2',
+  weight: '100 800',
   display: 'swap',
   variable: '--font-mono',
 })
 
-const fredoka = Fredoka({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
+const fredoka = localFont({
+  src: '../fonts/fredoka-latin-wght-normal.woff2',
+  weight: '300 700',
   display: 'swap',
   variable: '--font-display',
 })
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     default: 'KASSIM | Buy, Sell & Swap in Malaysia',
     template: '%s | KASSIM',
   },
-  description: 'Buy and sell pre-loved items through 30-minute progressive auctions or swap directly. AI pricing. Secure escrow. Every deal saves the planet.',
+  description: 'Buy and sell pre-loved items through 30-minute Flash Bid auctions, or trade with Swap Bid. Secure escrow and delivery included.',
   keywords: ['auction', 'swap', 'second hand', 'preloved', 'malaysia', 'kassim', 'flash auction', 'item swap'],
   authors: [{ name: 'KASSIM' }],
   creator: 'KASSIM',
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'KASSIM | Buy, Sell & Swap in Malaysia',
-    description: 'Buy and sell pre-loved items through progressive auctions or item swaps.',
+    description: 'Buy and sell pre-loved items through Flash Bid auctions or Swap Bid.',
     images: [DEFAULT_OG],
   },
 }
@@ -104,7 +104,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer />
           <BottomNav />
           <FeedbackWidget />
-          <WhatsAppSupport />
           <Analytics />
           <PWASetup />
           {user && <PushPermission userId={user.id} />}

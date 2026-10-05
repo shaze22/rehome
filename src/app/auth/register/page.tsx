@@ -1,5 +1,6 @@
 'use client'
 
+import { Logo } from '@/components/brand/Logo'
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -78,8 +79,7 @@ export default function RegisterPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="KASSIM" height={40} style={{ height: '40px', width: 'auto', margin: '0 auto 16px' }} />
+          <div className="mb-4"><Logo height={40} /></div>
           <h1 className="text-2xl font-bold mb-2">Join KASSIM</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Buy, sell &amp; swap pre-loved items the smarter way</p>
         </div>

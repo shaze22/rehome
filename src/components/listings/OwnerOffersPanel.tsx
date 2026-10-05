@@ -215,7 +215,7 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
 
         {latestOffer.message && (
           <p className="text-xs px-3 py-2 rounded-lg mb-3 italic" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)' }}>
-            "{latestOffer.message}"
+            &quot;{latestOffer.message}&quot;
           </p>
         )}
 
@@ -273,7 +273,7 @@ function OfferCard({ offer, onAction, listingValue }: { offer: Offer; onAction: 
               <div>
                 <span style={{ color: 'var(--text-secondary)' }}>{o.bidder?.name ?? 'Owner'}: </span>
                 {o.offeredCashAmount != null && <span className="font-mono">RM {o.offeredCashAmount} </span>}
-                {o.message && <span className="italic" style={{ color: 'var(--text-muted)' }}>"{o.message}"</span>}
+                {o.message && <span className="italic" style={{ color: 'var(--text-muted)' }}>&quot;{o.message}&quot;</span>}
               </div>
             </div>
           ))}
@@ -302,6 +302,7 @@ export function OwnerOffersPanel({ listingId, listingTitle, swapValueEstimate }:
     }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- loads offers when the listing changes
   useEffect(() => { loadOffers() }, [listingId])
 
   const cashOffers = offers.filter(o => o.offerType === 'CASH')

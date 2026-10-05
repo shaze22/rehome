@@ -20,6 +20,16 @@ Malaysian circular economy auction platform. Two modes:
 - **Keep him out of** checkout, delivery, escrow, payout and dispute screens. Those stay plain and serious.
 - **Legal guardrails (owner decision):** the character is named "Kassim" only. Never write "Kassim Baba", "Ali Baba", "Baba", "forty thieves" or "Open Sesame", and never reference the P. Ramlee film, genie lamps or flying carpets. The story only evokes the old tale.
 
+## Release and quality gates (added 2026-10-05)
+- **Ship with `npm run ship`, not a bare `vercel deploy --prod`.** It runs typecheck, lint and unit tests, builds a production deployment without switching the domain, smoke-tests it, promotes it, then smoke-tests kassim.app. A failed gate leaves the live site untouched. It needs a clean git tree.
+- `npm test` (Vitest, `tests/`): fee split, parcel sizing and Pos quote regression figures. Pure logic only, no database.
+- `npm run smoke -- --base <url>`: GET-only checks, safe against production. `--deployment <url>` goes through `vercel curl` for protected deployment URLs.
+- Lint is at zero errors; keep it there. The `react-hooks/set-state-in-effect` disables each carry a reason: they are deliberate mount-time or data-loading effects.
+- Fonts are local files in `src/fonts` (`next/font/local`). Do not switch back to `next/font/google`: a build once failed on fetching them.
+- Naming: the two modes are **Flash Bid** and **Swap Bid** everywhere in copy. UI copy is English. Icons are lucide, not emoji (the `/how-it-works` infographic is the one exception).
+- `ListingDetailClient.tsx` was split: `DeliveryCheckout.tsx`, `useCountdown.ts`, `StickyBidBar.tsx`, `CaveDoorTimer.tsx`. The bid form and transaction panel still live in the main file.
+- Gotcha: `next dev` can serve a stale `globals.css` even after a restart. Touch the file once before trusting a screenshot.
+
 ## Tech Stack
 - **Next.js 16.2.6** (App Router, Turbopack) — breaking changes from v15
 - TypeScript + Tailwind CSS v4

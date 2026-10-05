@@ -213,6 +213,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
     } finally { setLoading(false) }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the escrow record when the listing changes
   useEffect(() => { load() }, [listingId])
 
   if (loading) return <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--teal)' }} /></div>
@@ -287,7 +288,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
         </p>
         {tx.disputeReason && (
           <p className="text-xs mt-2 italic px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>
-            "{tx.disputeReason}"
+            &quot;{tx.disputeReason}&quot;
           </p>
         )}
       </div>
@@ -302,7 +303,7 @@ export function SwapEscrowPanel({ listingId, currentUserId, listingTitle }: Prop
           <h3 className="font-semibold" style={{ color: '#16a34a' }}>Swap Successful!</h3>
         </div>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Congratulations! The swap for "{listingTitle}" has been completed. Your Swap Score has been updated.
+          Congratulations! The swap for &quot;{listingTitle}&quot; has been completed. Your Swap Score has been updated.
         </p>
       </div>
     )

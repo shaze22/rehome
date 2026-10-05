@@ -34,7 +34,7 @@ export const BADGES: Badge[] = [
     description: 'KASSIM Score ≥ 80 with IC verified',
     emoji: '🛡️',
     color: 'var(--blue)',
-    requirement: 'rehomeScore >= 80 AND icVerified',
+    requirement: 'KASSIM Score of 80 or more, with a verified IC',
   },
   {
     id: 'corporate_green',

@@ -33,6 +33,7 @@ export function PushPermission({ userId }: { userId: string }) {
   useEffect(() => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return
     if (localStorage.getItem(ASKED_KEY)) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- notification permission is only known in the browser
     if (Notification.permission === 'granted') { setStatus('subscribed'); return }
     if (Notification.permission === 'denied') { setStatus('denied'); return }
 

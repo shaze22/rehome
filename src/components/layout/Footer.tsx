@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from '@/components/brand/Logo'
 import { Leaf, Shield, Zap } from 'lucide-react'
 
 export function Footer() {
@@ -9,11 +10,10 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="KASSIM" height={32} style={{ height: '32px', width: 'auto' }} />
+              <Logo height={30} />
             </div>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Malaysia&apos;s best place to buy, sell &amp; swap pre-loved items. Safe, simple, and money in your pocket.
+              A Malaysian marketplace to buy, sell and swap pre-loved items. Safe, simple, and money in your pocket.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--green)' }}>

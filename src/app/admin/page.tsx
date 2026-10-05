@@ -127,14 +127,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <AdminPanel
-      pendingICs={pendingICsSigned as any}
-      recentListings={recentListings as any}
-      recentUsers={recentUsers as any}
-      allUsers={allUsers as any}
+      pendingICs={pendingICsSigned}
+      recentListings={recentListings}
+      recentUsers={recentUsers}
+      allUsers={allUsers}
       userPage={userPage}
       userTotalPages={Math.max(1, Math.ceil(totalUsers / USERS_PER_PAGE))}
-      disputedSwaps={disputedSwaps as any}
-      pendingPayouts={enrichedPayouts as any}
+      disputedSwaps={disputedSwaps}
+      pendingPayouts={enrichedPayouts}
       stats={{
         totalUsers, activeListings, soldListings, endedListings,
         totalVolume, totalRevenue, totalBids, totalMessages,

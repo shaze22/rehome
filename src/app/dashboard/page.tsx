@@ -9,7 +9,7 @@ import { OrderCard } from '@/components/dashboard/OrderCard'
 import { ReferralSection } from '@/components/dashboard/ReferralSection'
 import { ProfileEditForm } from '@/components/dashboard/ProfileEditForm'
 import { PayoutsSection } from '@/components/dashboard/PayoutsSection'
-import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck } from 'lucide-react'
+import { Gavel, Package, Plus, CheckCircle, Clock, ShoppingBag, BarChart2, Eye, Heart, Star, TrendingUp, AlertTriangle, Zap, Truck, Camera, Search, BadgeCheck } from 'lucide-react'
 import { DeleteAccountButton } from '@/components/dashboard/DeleteAccountButton'
 import { KassimNiche } from '@/components/brand/Motifs'
 
@@ -95,7 +95,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!user) redirect('/auth/login')
 
   const params = await searchParams
-  let { user: dbUser, myListings, myBids, totalEarnings, sellerOrders, buyerOrders, totalViews, watchlistCount, avgRating, reviewCount } = await getDashboardData(user.id)
+  const dashboard = await getDashboardData(user.id)
+  const { myListings, myBids, totalEarnings, sellerOrders, buyerOrders, totalViews, watchlistCount, avgRating, reviewCount } = dashboard
+  let dbUser = dashboard.user
 
   if (!dbUser) {
     dbUser = await prisma.user.create({
@@ -199,14 +201,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <h2 className="text-lg font-bold mb-4">Welcome to KASSIM! Here&apos;s how to get started:</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { step: '1', emoji: '📸', title: 'List Your First Item', desc: 'Take photos, set a price, and go live in under 3 minutes.', href: '/sell', cta: 'Start Selling' },
-              { step: '2', emoji: '🔍', title: 'Browse Auctions', desc: 'Find pre-loved items from Malaysians near you. Bid from RM0.', href: '/listings', cta: 'Browse Now' },
-              { step: '3', emoji: '✅', title: 'Verify Your IC', desc: 'Get a trust badge that makes buyers 3x more likely to bid on your items.', href: '/dashboard', cta: 'Verify Below' },
+              { step: '1', icon: Camera, title: 'List Your First Item', desc: 'Take photos, set a price, and go live in under 3 minutes.', href: '/sell', cta: 'Start Selling' },
+              { step: '2', icon: Search, title: 'Browse Auctions', desc: 'Find pre-loved items from Malaysians near you. Bid from RM0.', href: '/listings', cta: 'Browse Now' },
+              { step: '3', icon: BadgeCheck, title: 'Verify Your IC', desc: 'Get a trust badge that makes buyers 3x more likely to bid on your items.', href: '/dashboard', cta: 'Verify Below' },
             ].map(item => (
               <Link key={item.step} href={item.href} className="flex flex-col gap-2 p-4 rounded-xl transition-all hover:scale-[1.02]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white gradient-teal">{item.step}</span>
-                  <span className="text-lg">{item.emoji}</span>
+                  <item.icon className="w-4 h-4" style={{ color: 'var(--teal)' }} />
                 </div>
                 <p className="font-semibold text-sm">{item.title}</p>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
@@ -318,7 +320,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           ) : (
             <div className="space-y-3">
               {myListings.map(listing => (
-                <SellerListingCard key={listing.id} listing={listing as any} />
+                <SellerListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           )}
@@ -383,7 +385,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             Orders
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {(sellerOrders as any[]).map(o => (
+            {sellerOrders.map(o => (
               <OrderCard key={o.id} order={{
                 listingId: o.listingId, title: o.listingTitle,
                 amount: o.amount, sellerPayout: o.sellerPayout,
@@ -399,7 +401,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 pickupMethod: o.pickupMethod,
               }} />
             ))}
-            {(buyerOrders as any[]).map(o => (
+            {buyerOrders.map(o => (
               <OrderCard key={o.id} order={{
                 listingId: o.listingId, title: o.listingTitle,
                 amount: o.amount, sellerPayout: o.sellerPayout,

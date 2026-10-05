@@ -27,14 +27,14 @@ h1, h1 *, h2, h2 * {
   --teal: #14b8a6;
   --green: #00d9a5;
   --blue: #4f8cff;
-  --purple: #a855f7;
+  --purple: #f5b942; /* retired accent: now the same gold, kept so old references still resolve */
   --orange: #ff6b35;
   --yellow: #fbbf24;
   --gold: #f5b942;
   --red: #ef4444;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --text-muted: #475569;
+  --text-muted: #7c8aa0;
   --border: #1e1e3a;
 }
 
@@ -46,14 +46,14 @@ h1, h1 *, h2, h2 * {
   --teal: #14b8a6;
   --green: #059669;
   --blue: #3b82f6;
-  --purple: #9333ea;
+  --purple: #b7791f;
   --orange: #ea580c;
   --yellow: #d97706;
   --gold: #b7791f;
   --red: #dc2626;
   --text-primary: #1c1917;
   --text-secondary: #57534e;
-  --text-muted: #a8a29e;
+  --text-muted: #736b65;
   --border: #e7dccb;
 }
 

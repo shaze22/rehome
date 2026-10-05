@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Leaf, TreePine, Droplets, Recycle, TrendingUp, Users, Award } from 'lucide-react'
 import { BADGES } from '@/lib/badges'
 import type { Metadata } from 'next'
+import { KassimSays } from '@/components/brand/Motifs'
 
 export const metadata: Metadata = {
   title: 'Environmental Impact',
@@ -58,60 +59,70 @@ export default async function ImpactPage() {
         </p>
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
-        {[
-          {
-            icon: Leaf,
-            value: `${Math.round(stats.totalCO2).toLocaleString()}kg`,
-            label: 'CO₂ Saved',
-            sublabel: 'vs buying new',
-            color: 'var(--green)',
-            border: 'rgba(0,217,165,0.2)',
-          },
-          {
-            icon: TreePine,
-            value: stats.trees.toLocaleString(),
-            label: 'Tree Equivalent',
-            sublabel: 'CO₂ absorbed per year',
-            color: 'var(--teal)',
-            border: 'rgba(20,184,166,0.2)',
-          },
-          {
-            icon: Droplets,
-            value: `${stats.water.toLocaleString()}L`,
-            label: 'Water Saved',
-            sublabel: 'from new production',
-            color: 'var(--blue)',
-            border: 'rgba(79,140,255,0.2)',
-          },
-        ].map(stat => (
-          <div key={stat.label} className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${stat.border}` }}>
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${stat.color}15` }}>
-              <stat.icon className="w-7 h-7" style={{ color: stat.color }} />
+      {stats.soldCount > 0 ? (
+        <>
+        {/* Main Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
+          {[
+            {
+              icon: Leaf,
+              value: `${Math.round(stats.totalCO2).toLocaleString()}kg`,
+              label: 'CO₂ Saved',
+              sublabel: 'vs buying new',
+              color: 'var(--green)',
+              border: 'rgba(0,217,165,0.2)',
+            },
+            {
+              icon: TreePine,
+              value: stats.trees.toLocaleString(),
+              label: 'Tree Equivalent',
+              sublabel: 'CO₂ absorbed per year',
+              color: 'var(--teal)',
+              border: 'rgba(20,184,166,0.2)',
+            },
+            {
+              icon: Droplets,
+              value: `${stats.water.toLocaleString()}L`,
+              label: 'Water Saved',
+              sublabel: 'from new production',
+              color: 'var(--blue)',
+              border: 'rgba(79,140,255,0.2)',
+            },
+          ].map(stat => (
+            <div key={stat.label} className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: `1px solid ${stat.border}` }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${stat.color}15` }}>
+                <stat.icon className="w-7 h-7" style={{ color: stat.color }} />
+              </div>
+              <p className="text-4xl font-bold font-mono mb-2" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="font-semibold mb-1">{stat.label}</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{stat.sublabel}</p>
             </div>
-            <p className="text-4xl font-bold font-mono mb-2" style={{ color: stat.color }}>{stat.value}</p>
-            <p className="font-semibold mb-1">{stat.label}</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{stat.sublabel}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Platform stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-        {[
-          { label: 'Items Sold', value: stats.soldCount.toLocaleString(), icon: Recycle, color: 'var(--teal)' },
-          { label: 'Users', value: stats.totalUsers.toLocaleString(), icon: Users, color: 'var(--purple)' },
-          { label: 'Platform Fee', value: '15%', icon: TrendingUp, color: 'var(--yellow)' },
-          { label: 'Badges', value: BADGES.length.toString(), icon: Award, color: 'var(--orange)' },
-        ].map(s => (
-          <div key={s.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <s.icon className="w-5 h-5 mx-auto mb-2" style={{ color: s.color }} />
-            <p className="text-2xl font-bold font-mono" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
-          </div>
-        ))}
-      </div>
+        {/* Platform stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+          {[
+            { label: 'Items Sold', value: stats.soldCount.toLocaleString(), icon: Recycle, color: 'var(--teal)' },
+            { label: 'Users', value: stats.totalUsers.toLocaleString(), icon: Users, color: 'var(--purple)' },
+            { label: 'Platform Fee', value: '15%', icon: TrendingUp, color: 'var(--yellow)' },
+            { label: 'Badges', value: BADGES.length.toString(), icon: Award, color: 'var(--orange)' },
+          ].map(s => (
+            <div key={s.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+              <s.icon className="w-5 h-5 mx-auto mb-2" style={{ color: s.color }} />
+              <p className="text-2xl font-bold font-mono" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        </>
+      ) : (
+        <div className="rounded-2xl p-8 sm:p-10 text-center mb-16 max-w-xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <KassimSays pose="head-wink" title="The counter starts with the first sale">
+            Every item that changes hands here is one less bought new. CO₂, water and tree figures will appear on this page as soon as the first deal completes.
+          </KassimSays>
+        </div>
+      )}
 
       {/* Badges */}
       <div className="mb-16">
@@ -128,7 +139,6 @@ export default async function ImpactPage() {
                 </div>
                 <div>
                   <p className="font-semibold">{badge.name}</p>
-                  <p className="text-xs" style={{ color: badge.color }}>{badge.nameMs}</p>
                 </div>
               </div>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{badge.description}</p>

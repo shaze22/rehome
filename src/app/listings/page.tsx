@@ -137,14 +137,14 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         <section className="mb-8 rounded-2xl p-6" style={{ background: 'linear-gradient(135deg,rgba(239,68,68,0.07),rgba(249,115,22,0.07))', border: '1px solid rgba(239,68,68,0.2)' }}>
           <div className="flex items-center gap-2 mb-4">
             <Flame className="w-5 h-5" style={{ color: '#ef4444' }} />
-            <h2 className="text-lg font-bold" style={{ color: '#ef4444' }}>🔥 Ending in the Next 2 Hours</h2>
+            <h2 className="text-lg font-bold" style={{ color: '#ef4444' }}><Flame className="w-5 h-5 inline -mt-1" /> Ending in the Next 2 Hours</h2>
             <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>
               {endingSoonListings.length} left
             </span>
           </div>
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {endingSoonListings.map(listing => (
-              <ListingCard key={listing.id} listing={listing as any} />
+              <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         </section>
@@ -181,9 +181,9 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         color: 'var(--text-secondary)',
       }}>
         {activeMode === 'flash' ? (
-          <span>⚡ <strong style={{ color: '#ff6b35' }}>FLASH BID</strong>: Bid from RM0. Timer starts on the first bid. 30 minutes to win. Highest bid takes it.</span>
+          <span><strong style={{ color: '#ff6b35' }}>FLASH BID</strong>: Bid from RM0. Timer starts on the first bid. 30 minutes to win. Highest bid takes it.</span>
         ) : (
-          <span>🔄 <strong style={{ color: '#16a34a' }}>SWAP BID</strong>: Offer cash or trade your item. Seller picks the best deal. 3-day window.</span>
+          <span><strong style={{ color: '#16a34a' }}>SWAP BID</strong>: Offer cash or trade your item. Seller picks the best deal. 3-day window.</span>
         )}
         <span className="ml-3 font-semibold" style={{ color: activeMode === 'flash' ? '#ff6b35' : '#16a34a' }}>
           {total} {activeMode === 'flash' ? 'auction' : 'swap'}{total !== 1 ? 's' : ''} active
@@ -235,7 +235,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               <KassimNiche pose="head-think" width={96} className="mx-auto mb-4" />
               <p className="text-lg font-medium mb-2">Kassim searched the whole treasure cave. Nothing.</p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'No auctions right now. Check back soon or list yours!'}
+                {activeMode === 'swap' ? 'No active Swap Bid listings at the moment.' : 'No auctions right now. Check back soon or list yours!'}
               </p>
             </div>
           ) : (
@@ -243,8 +243,8 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
               <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                 {listings.map(listing =>
                   activeMode === 'swap'
-                    ? <SwapListingCard key={listing.id} listing={listing as any} />
-                    : <ListingCard key={listing.id} listing={listing as any} />
+                    ? <SwapListingCard key={listing.id} listing={listing} />
+                    : <ListingCard key={listing.id} listing={listing} />
                 )}
               </div>
 

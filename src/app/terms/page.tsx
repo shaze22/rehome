@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Shield } from 'lucide-react'
 
-export const metadata = { title: 'Terms of Service | KASSIM' }
+export const metadata = { title: 'Terms of Service' }
 
 export default function TermsPage() {
   return (
@@ -21,7 +21,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>1. Platform Description</h2>
           <p className="text-sm leading-relaxed">
-            KASSIM (&ldquo;the Platform&rdquo;) is an online circular economy marketplace operated in Malaysia, enabling users to list, bid on, and swap pre-owned items via Flash Auctions and Swap Offers. Access to the Platform is subject to these Terms of Service and all applicable Malaysian laws, including the Contracts Act 1950 and the Consumer Protection Act 1999.
+            KASSIM (&ldquo;the Platform&rdquo;) is an online circular economy marketplace operated in Malaysia, enabling users to list, bid on, and swap pre-owned items via Flash Bid and Swap Bid. Access to the Platform is subject to these Terms of Service and all applicable Malaysian laws, including the Contracts Act 1950 and the Consumer Protection Act 1999.
           </p>
         </section>
 
@@ -37,9 +37,9 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>3. Flash Auctions</h2>
+          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>3. Flash Bid</h2>
           <p className="text-sm leading-relaxed mb-2">
-            Flash Auctions are time-limited bidding sessions. The Platform charges a <strong style={{ color: 'var(--teal)' }}>15% platform fee</strong> on the final sale price. The fee is deducted from the seller&apos;s payout automatically via our escrow system.
+            Flash Bid listings are time-limited bidding sessions. The Platform charges a <strong style={{ color: 'var(--teal)' }}>15% platform fee</strong> on the final sale price. The fee is deducted from the seller&apos;s payout automatically via our escrow system.
           </p>
           <ul className="text-sm space-y-2 list-disc pl-5 leading-relaxed">
             <li>Bids are binding. Once placed, a bid cannot be retracted.</li>
@@ -49,9 +49,9 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>4. Swap Offers</h2>
+          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>4. Swap Bid</h2>
           <p className="text-sm leading-relaxed">
-            Swap Offers allow users to propose item-for-item, cash, or hybrid exchanges. All accepted swaps are processed through the KASSIM escrow system. Both parties must ship items within the agreed timeframe. Disputes are handled by KASSIM administrators with final resolution authority.
+            Swap Bid lets users propose item-for-item, cash, or hybrid exchanges. All accepted swaps are processed through the KASSIM escrow system. Both parties must ship items within the agreed timeframe. Disputes are handled by KASSIM administrators with final resolution authority.
           </p>
         </section>
 

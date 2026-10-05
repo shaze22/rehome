@@ -20,6 +20,7 @@ export function MegaLelongCountdown() {
   useEffect(() => {
     const day = new Date().getDay()
     // Show countdown Mon-Thu (days 1-4)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the weekday is only known in the browser
     if (day >= 1 && day <= 4) setShow(true)
 
     function update() {

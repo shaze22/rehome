@@ -376,10 +376,10 @@ export default function HowItWorksPage() {
               <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Buyer offers their item. No money changes hands. Pure trade.</p>
               <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-muted)' }}>Always available</p>
             </div>
-            <div className="p-4 rounded-xl text-center" style={{ background: 'linear-gradient(135deg,rgba(168,85,247,0.1),rgba(168,85,247,0.05))', border: '1px solid rgba(168,85,247,0.25)' }}>
+            <div className="p-4 rounded-xl text-center" style={{ background: 'linear-gradient(135deg,rgba(245,185,66,0.1),rgba(245,185,66,0.05))', border: '1px solid rgba(245,185,66,0.25)' }}>
               <p className="text-2xl mb-2">🔄💰</p>
-              <p className="font-bold text-sm mb-1" style={{ color: '#a855f7' }}>Hybrid</p>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Item + cash top-up. Perfect when values don't match exactly.</p>
+              <p className="font-bold text-sm mb-1" style={{ color: '#d99a2b' }}>Hybrid</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>Item + cash top-up. Perfect when values don&apos;t match exactly.</p>
               <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-muted)' }}>Set min top-up in listing</p>
             </div>
           </div>

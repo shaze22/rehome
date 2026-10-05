@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock } from 'lucide-react'
+import { Clock, Zap, ArrowLeftRight } from 'lucide-react'
 
 export interface RecentItem {
   id: string
@@ -76,7 +76,7 @@ export function RecentlyViewed() {
                   <Image src={item.photo} alt={item.title} fill className="object-cover" sizes="144px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl">
-                    {item.mode === 'SWAP' ? '🔄' : '⚡'}
+                    {item.mode === 'SWAP' ? <ArrowLeftRight className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
                   </div>
                 )}
                 <div

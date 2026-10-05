@@ -9,18 +9,18 @@ import {
 
 interface PendingIC {
   id: string; name: string | null; email: string
-  icPhoto: string | null; icPhotoUrl: string | null; icStatus: string; createdAt: string
+  icPhoto: string | null; icPhotoUrl: string | null; icStatus: string; createdAt: string | Date
 }
 
 interface Listing {
-  id: string; title: string; status: string; currentBid: number; createdAt: string; isFeatured: boolean
-  featuredUntil: string | null
+  id: string; title: string; status: string; currentBid: number; createdAt: string | Date; isFeatured: boolean
+  featuredUntil: string | Date | null
   seller: { name: string | null; icVerified: boolean }; _count: { bids: number }
 }
 
 interface RecentUser {
   id: string; name: string | null; email: string; role: string
-  rehomeScore: number; createdAt: string
+  rehomeScore: number; createdAt: string | Date
 }
 
 interface Stats {
@@ -32,8 +32,8 @@ interface DisputedSwap {
   id: string
   listingId: string
   disputeReason: string | null
-  createdAt: string
-  updatedAt: string
+  createdAt: string | Date
+  updatedAt: string | Date
   listing: { id: string; title: string }
   seller: { id: string; name: string | null; email: string }
   buyer: { id: string; name: string | null; email: string }
@@ -42,7 +42,7 @@ interface DisputedSwap {
 interface BetaUser {
   id: string; name: string | null; email: string; role: string
   rehomeScore: number; swapScore: number | null; icVerified: boolean
-  createdAt: string; _count: { listings: number }
+  createdAt: string | Date; _count: { listings: number }
 }
 
 interface PendingPayout {
@@ -51,7 +51,7 @@ interface PendingPayout {
   sellerPayout: number
   amount: number
   courierName: string | null
-  updatedAt: string
+  updatedAt: string | Date
   listing: { id: string; title: string }
   seller: { id: string; name: string | null; email: string }
   buyer: { id: string; name: string | null; email: string }
@@ -241,6 +241,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
     }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the audit log once on mount
   useEffect(() => { void loadAuditLog() }, [])
 
   async function handleResolveDispute(txId: string, resolution: 'complete' | 'cancel') {
@@ -306,7 +307,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
           {localPending.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <CheckCircle className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--green)' }} />
-              <p style={{ color: 'var(--text-secondary)' }}>Tiada pengesahan IC tertunda</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No pending IC verifications</p>
             </div>
           ) : (
             <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -409,7 +410,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
         {localDisputes.length === 0 ? (
           <div className="text-center py-8 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--green)' }} />
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Tiada pertikaian aktif</p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No active disputes</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -430,7 +431,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                 </div>
                 {tx.disputeReason && (
                   <p className="text-xs px-3 py-2 rounded-lg mb-3 italic" style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: 'var(--text-secondary)', border: '1px solid rgba(239,68,68,0.15)' }}>
-                    "{tx.disputeReason}"
+                    &quot;{tx.disputeReason}&quot;
                   </p>
                 )}
                 <div className="flex gap-2">
@@ -489,7 +490,7 @@ export function AdminPanel({ pendingICs, recentListings, recentUsers, allUsers, 
                     <td className="px-4 py-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
                     <td className="px-4 py-2.5">
                       <span className="px-1.5 py-0.5 rounded text-xs font-mono"
-                        style={{ backgroundColor: u.role === 'ADMIN' ? 'rgba(168,85,247,0.15)' : u.role === 'SELLER' ? 'rgba(20,184,166,0.1)' : 'rgba(148,163,184,0.1)', color: u.role === 'ADMIN' ? 'var(--purple)' : u.role === 'SELLER' ? 'var(--teal)' : 'var(--text-secondary)' }}>
+                        style={{ backgroundColor: u.role === 'ADMIN' ? 'rgba(245,185,66,0.15)' : u.role === 'SELLER' ? 'rgba(20,184,166,0.1)' : 'rgba(148,163,184,0.1)', color: u.role === 'ADMIN' ? 'var(--purple)' : u.role === 'SELLER' ? 'var(--teal)' : 'var(--text-secondary)' }}>
                         {u.role}
                       </span>
                     </td>

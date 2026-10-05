@@ -68,6 +68,7 @@ export function EditListingForm({ listing, userId }: Props) {
   useEffect(() => {
     if (dimsTouched) return
     const d = dimsFor(category)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- category change resets the default parcel size
     setLengthCm(String(d.l)); setWidthCm(String(d.w)); setHeightCm(String(d.h))
   }, [category, dimsTouched])
   const [photos, setPhotos] = useState<string[]>(listing.photos)
@@ -128,7 +129,7 @@ export function EditListingForm({ listing, userId }: Props) {
         })
       } catch { blob = file }
       const path = `listings/${userId}/${Date.now()}.jpg`
-      const { data, err } = await supabase.storage.from('rehome-photos').upload(path, blob, { contentType: 'image/jpeg' }) as any
+      const { data, error: err } = await supabase.storage.from('rehome-photos').upload(path, blob, { contentType: 'image/jpeg' })
       if (err) { setError(`Upload failed: ${err.message}`); setPhotoUploading(false); return }
       if (data) {
         const { data: { publicUrl } } = supabase.storage.from('rehome-photos').getPublicUrl(data.path)
