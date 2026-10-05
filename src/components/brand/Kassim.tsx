@@ -12,6 +12,10 @@ const POSES = {
   'body-cheer': [420, 634],
   'body-point': [420, 745],
   'body-thumbs': [420, 744],
+  // 3D canon renders: hero-size use only, too detailed for icons.
+  '3d-point': [355, 684],
+  '3d-front': [488, 796],
+  '3d-thumbs': [362, 679],
 } as const
 
 export type KassimPose = keyof typeof POSES

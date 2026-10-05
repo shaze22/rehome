@@ -21,7 +21,7 @@ export function PayoutsSection({ onboarded: initialOnboarded, hasAccount }: { on
     <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 mb-3">
         <Banknote className="w-4 h-4" style={{ color: 'var(--teal)' }} />
-        <h2 className="text-sm font-bold">Seller Payouts</h2>
+        <h2 className="font-plain text-sm font-bold">Seller Payouts</h2>
         {onboarded && (
           <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1" style={{ backgroundColor: 'rgba(0,217,165,0.1)', color: 'var(--green)' }}>
             <CheckCircle className="w-3 h-3" /> Active

@@ -1315,7 +1315,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
       {/* Swap Escrow Panel — shown to both seller & buyer once offer accepted (listing SOLD) */}
       {isSwap && currentUserId && listing.status === 'SOLD' && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold mb-4">Escrow Status</h2>
+          <h2 className="font-plain text-xl font-bold mb-4">Escrow Status</h2>
           <SwapEscrowPanel
             listingId={listing.id}
             currentUserId={currentUserId}
@@ -1334,7 +1334,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
       {/* Flash Transaction Panel */}
       {!isSwap && flashTx && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <h2 className="font-plain text-xl font-bold mb-4 flex items-center gap-2">
             <Package className="w-5 h-5" style={{ color: 'var(--teal)' }} />
             Transaction Status
           </h2>

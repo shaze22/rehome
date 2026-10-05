@@ -4,6 +4,17 @@
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
+/* Page and section titles use the rounded display face. The `*` rule above sets
+   the family on every element, so children of a heading must be matched too. */
+h1, h1 *, h2, h2 * {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+}
+
+/* Legal, money and admin surfaces opt out of the display face. */
+.font-plain, .font-plain * {
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
 .font-mono, code, kbd, pre {
   font-family: var(--font-mono), 'Courier New', monospace;
 }
@@ -19,6 +30,7 @@
   --purple: #a855f7;
   --orange: #ff6b35;
   --yellow: #fbbf24;
+  --gold: #f5b942;
   --red: #ef4444;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
@@ -27,21 +39,22 @@
 }
 
 [data-theme="light"] {
-  --bg-base: #f8fafc;
+  --bg-base: #fbf7ef;
   --bg-card: #ffffff;
-  --bg-elevated: #f1f5f9;
-  --bg-surface: #e2e8f0;
+  --bg-elevated: #f5eee1;
+  --bg-surface: #e9dfcd;
   --teal: #14b8a6;
   --green: #059669;
   --blue: #3b82f6;
   --purple: #9333ea;
   --orange: #ea580c;
   --yellow: #d97706;
+  --gold: #b7791f;
   --red: #dc2626;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #a8a29e;
+  --border: #e7dccb;
 }
 
 @theme inline {
@@ -101,6 +114,17 @@ body {
 
   .gradient-teal {
     background: linear-gradient(135deg, var(--teal), var(--green));
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  }
+
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .gradient-purple {

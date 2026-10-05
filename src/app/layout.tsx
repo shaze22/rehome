@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, Fredoka } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -25,6 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
   display: 'swap',
   variable: '--font-mono',
+})
+
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-display',
 })
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kassim.app'
@@ -83,7 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const messages = await getMessages()
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={`h-full ${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className={`h-full ${inter.variable} ${jetbrainsMono.variable} ${fredoka.variable}`} suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/api/pwa-icon?size=192" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -30,7 +30,7 @@ export default function StoryPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-10">
-        <Kassim pose="body-wave" width={160} preload className="mx-auto mb-4 kassim-bob" />
+        <Kassim pose="3d-front" width={170} preload className="mx-auto mb-4 kassim-bob" />
         <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--teal)' }}>Our Story</p>
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">Meet Kassim</h1>
         <p className="text-base max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
@@ -51,7 +51,7 @@ export default function StoryPage() {
       </div>
 
       <div className="rounded-2xl p-6 sm:p-8 text-center" style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.1),rgba(255,107,53,0.08))', border: '1px solid rgba(20,184,166,0.3)' }}>
-        <Kassim pose="body-point" width={120} className="mx-auto mb-4" />
+        <Kassim pose="3d-thumbs" width={130} className="mx-auto mb-4" />
         <h2 className="text-xl sm:text-2xl font-bold mb-2">Everyone has a treasure cave</h2>
         <p className="text-sm sm:text-base max-w-md mx-auto mb-6" style={{ color: 'var(--text-secondary)' }}>
           A drawer. A storeroom. Under the bed. Good things sitting still. KASSIM is where you open that door and let them move again.

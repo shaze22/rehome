@@ -73,7 +73,7 @@ export function DeleteAccountButton() {
                   <AlertTriangle className="w-5 h-5" style={{ color: 'var(--red)' }} />
                 </div>
                 <div>
-                  <h2 className="font-bold text-lg">Delete Account</h2>
+                  <h2 className="font-plain font-bold text-lg">Delete Account</h2>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>This action cannot be undone</p>
                 </div>
               </div>

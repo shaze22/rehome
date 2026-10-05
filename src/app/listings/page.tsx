@@ -160,7 +160,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             : { color: 'var(--text-secondary)' }}
         >
           <Zap className="w-4 h-4" />
-          ⚡ FLASH BID
+          FLASH BID
         </Link>
         <Link
           href="/listings?mode=swap"
@@ -170,7 +170,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
             : { color: 'var(--text-secondary)' }}
         >
           <ArrowLeftRight className="w-4 h-4" />
-          🔄 SWAP BID
+          SWAP BID
         </Link>
       </div>
 
