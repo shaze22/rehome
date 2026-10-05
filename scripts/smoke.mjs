@@ -4,6 +4,9 @@
 //   node scripts/smoke.mjs --deployment https://rehome-xxxx.vercel.app   (protected URL, via `vercel curl`)
 
 import { spawnSync } from 'node:child_process'
+import { readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const args = process.argv.slice(2)
 const flag = name => { const i = args.indexOf(name); return i === -1 ? null : args[i + 1] }
@@ -19,11 +22,16 @@ const MARK = '\n__STATUS__'
 /** @returns {Promise<{ status: number, body: string }>} */
 async function get(path) {
   if (deployment) {
-    const r = spawnSync('vercel', ['curl', path, '--deployment', deployment, '--', '-sS', '-w', `${MARK}%{http_code}`], { encoding: 'latin1', shell: true, maxBuffer: 64 * 1024 * 1024 })
-    const out = r.stdout ?? ''
-    const i = out.lastIndexOf(MARK)
-    if (i === -1) return { status: 0, body: (r.stderr ?? '').slice(-300) }
-    return { status: Number(out.slice(i + MARK.length).trim()), body: out.slice(0, i) }
+    // Body goes to a temp file and only the status code to stdout: cmd.exe mangles
+    // multi-line arguments, so nothing fancy is passed through the shell.
+    const file = join(tmpdir(), `kassim-smoke-${process.pid}.bin`)
+    const cmd = `vercel curl "${path}" --deployment ${deployment} -- -sS -o "${file}" -w "%{http_code}"`
+    const r = spawnSync(cmd, { encoding: 'utf8', shell: true })
+    const status = Number((r.stdout ?? '').trim().split(/\s+/).pop())
+    let body = ''
+    try { body = readFileSync(file, 'latin1'); rmSync(file) } catch { /* no body written */ }
+    if (!status) return { status: 0, body: (r.stderr ?? '').slice(-300) }
+    return { status, body }
   }
   const res = await fetch(base + path, { redirect: 'manual' })
   return { status: res.status, body: await res.text() }
@@ -31,7 +39,7 @@ async function get(path) {
 
 const REDIRECT = [302, 303, 307, 308]
 const checks = [
-  { path: '/', status: [200], has: ['KASSIM', 'Bid from'] },
+  { path: '/', status: [200], has: ['KASSIM', 'Win in 30 minutes'] },
   { path: '/story', status: [200], has: ['Meet Kassim'] },
   { path: '/listings', status: [200], has: ['FLASH BID', 'SWAP BID'] },
   { path: '/listings?mode=swap', status: [200], has: ['SWAP BID'] },
@@ -61,6 +69,7 @@ for (const c of checks) {
   const problems = []
   if (c.status && !c.status.includes(status)) problems.push(`status ${status}, expected ${c.status.join('/')}`)
   for (const text of c.has ?? []) if (!body.includes(text)) problems.push(`missing "${text}"`)
+  if (c.lacks && status !== 200) problems.push(`status ${status}, could not inspect the page`)
   for (const text of c.lacks ?? []) if (body.includes(text)) problems.push(`must not contain "${text}"`)
   if (problems.length) failed++
   console.log(`${problems.length ? 'FAIL' : 'ok  '} ${c.path}${problems.length ? '  ->  ' + problems.join('; ') : ''}`)
