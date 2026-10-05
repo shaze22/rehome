@@ -1,42 +1,29 @@
 import Link from 'next/link'
 import { Zap, ArrowLeftRight, Search, Lock, BadgeCheck, Truck, Tag } from 'lucide-react'
+import Image from 'next/image'
 import { Kassim } from '@/components/brand/Kassim'
 
-/** Kassim standing at the open mouth of his treasure cave. */
+/** Kassim standing at the open mouth of his treasure cave. Both are 3D renders from the same canon. */
 function HeroCave() {
   return (
-    <div className="relative mx-auto w-full max-w-[230px] sm:max-w-[300px] lg:max-w-[400px]">
-      <svg viewBox="0 0 400 330" className="block w-full h-auto" aria-hidden>
-        <defs>
-          <radialGradient id="hero-cave-glow" cx="50%" cy="92%" r="80%">
-            <stop offset="0%" stopColor="#fde68a" />
-            <stop offset="35%" stopColor="#f59e0b" />
-            <stop offset="75%" stopColor="#7c2d12" />
-            <stop offset="100%" stopColor="#1c1917" />
-          </radialGradient>
-          <linearGradient id="hero-cave-rock" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#57534e" />
-            <stop offset="100%" stopColor="#292524" />
-          </linearGradient>
-          <clipPath id="hero-cave-mouth">
-            <path d="M52 330 L52 168 Q52 56 200 56 Q348 56 348 168 L348 330 Z" />
-          </clipPath>
-        </defs>
-        <path d="M8 330 L8 152 Q8 8 200 8 Q392 8 392 152 L392 330 Z" fill="url(#hero-cave-rock)" />
-        <g clipPath="url(#hero-cave-mouth)">
-          <rect x="52" y="56" width="296" height="274" fill="url(#hero-cave-glow)" />
-          <ellipse cx="200" cy="336" rx="170" ry="52" fill="#f59e0b" />
-          <ellipse cx="112" cy="300" rx="52" ry="20" fill="#fbbf24" />
-          <ellipse cx="296" cy="296" rx="56" ry="22" fill="#fbbf24" />
-          <circle cx="92" cy="282" r="7" fill="#14b8a6" />
-          <circle cx="318" cy="272" r="8" fill="#ff6b35" />
-          <circle cx="128" cy="276" r="4" fill="#fef3c7" />
-          <circle cx="282" cy="268" r="4.5" fill="#fef3c7" />
-          <circle cx="306" cy="292" r="6" fill="#14b8a6" />
-        </g>
-        <path d="M52 330 L52 168 Q52 56 200 56 Q348 56 348 168 L348 330" fill="none" stroke="#1c1917" strokeWidth="6" />
-      </svg>
-      <Kassim pose="3d-point" width={160} preload className="absolute bottom-0 left-[30%] w-[40%] h-auto kassim-bob" />
+    <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[380px] lg:max-w-[520px]" style={{ aspectRatio: '5 / 4' }}>
+      <Image
+        src="/kassim/cave-3d.webp"
+        alt=""
+        aria-hidden
+        fill
+        preload
+        sizes="(max-width: 640px) 300px, (max-width: 1024px) 380px, 520px"
+        className="object-contain"
+        draggable={false}
+      />
+      {/* contact shadow so he stands on the cave floor instead of floating over it */}
+      <div
+        className="absolute left-[36%] bottom-[1%] w-[28%] h-[5%] rounded-[50%]"
+        style={{ background: 'radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 70%)' }}
+        aria-hidden
+      />
+      <Kassim pose="3d-point" width={160} preload className="absolute bottom-[2%] left-[37.1%] w-[25.8%] h-auto kassim-bob" />
     </div>
   )
 }
