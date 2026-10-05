@@ -5,7 +5,7 @@ import { Kassim } from '@/components/brand/Kassim'
 
 export const metadata: Metadata = {
   title: 'Meet Kassim',
-  description: 'Kassim could never let a good thing go to waste. Then his cave got too full to close. This is why every Flash Bid starts at RM0.',
+  description: 'Kassim could never let a good thing go to waste. Then his treasure cave got too full to close. This is why every Flash Bid starts at RM0.',
 }
 
 const CHAPTERS = [
@@ -17,7 +17,7 @@ const CHAPTERS = [
   {
     pose: 'head-shock',
     title: 'Then the door would not close',
-    body: 'Years of collecting, and one morning his cave was so full that the door stopped shutting. Treasure everywhere, and nobody enjoying any of it.',
+    body: 'Years of collecting, and one morning his treasure cave was so full that the door stopped shutting. Good things everywhere, and nobody enjoying any of it.',
   },
   {
     pose: 'head-wink',
@@ -52,7 +52,7 @@ export default function StoryPage() {
 
       <div className="rounded-2xl p-6 sm:p-8 text-center" style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.1),rgba(255,107,53,0.08))', border: '1px solid rgba(20,184,166,0.3)' }}>
         <Kassim pose="body-point" width={120} className="mx-auto mb-4" />
-        <h2 className="text-xl sm:text-2xl font-bold mb-2">Everyone has a cave</h2>
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">Everyone has a treasure cave</h2>
         <p className="text-sm sm:text-base max-w-md mx-auto mb-6" style={{ color: 'var(--text-secondary)' }}>
           A drawer. A storeroom. Under the bed. Good things sitting still. KASSIM is where you open that door and let them move again.
         </p>

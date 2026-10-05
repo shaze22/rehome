@@ -233,7 +233,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
           {listings.length === 0 ? (
             <div className="text-center py-16 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Kassim pose="head-think" width={112} className="mx-auto mb-4" />
-              <p className="text-lg font-medium mb-2">Kassim searched the whole cave. Nothing.</p>
+              <p className="text-lg font-medium mb-2">Kassim searched the whole treasure cave. Nothing.</p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {activeMode === 'swap' ? 'No active Item Swap listings at the moment.' : 'No auctions right now. Check back soon or list yours!'}
               </p>

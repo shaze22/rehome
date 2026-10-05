@@ -9,7 +9,7 @@ export default function NotFound() {
         <h1 className="text-6xl font-bold font-mono mb-4" style={{ color: 'var(--teal)' }}>404</h1>
         <h2 className="text-2xl font-bold mb-3">Even Kassim can&apos;t find this one</h2>
         <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
-          He has kept everything for years, but this page is not in the cave. It may have been moved or sold.
+          He has kept everything for years, but this page is not in the treasure cave. It may have been moved or sold.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/" className="px-6 py-3 rounded-xl font-semibold text-white gradient-teal">

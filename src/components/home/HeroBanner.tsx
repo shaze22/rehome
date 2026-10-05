@@ -13,7 +13,7 @@ export function HeroBanner() {
         <Link href="/story" className="inline-flex items-end justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
           <Kassim pose="body-wave" width={72} preload className="w-14 sm:w-[72px] h-auto kassim-bob" />
           <span className="rounded-2xl rounded-bl-sm px-3 py-2 mb-4 text-left text-xs sm:text-sm font-medium" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            My cave is full.{' '}
+            My treasure cave is full.{' '}
             <span style={{ color: 'var(--teal)' }}>Every Flash Bid starts at RM0.</span>
           </span>
         </Link>

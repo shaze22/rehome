@@ -53,7 +53,7 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
           <Kassim pose="body-thumbs" width={64} className="flex-shrink-0" />
           <div>
             <p className="font-bold text-base mb-1" style={{ color: 'var(--teal)' }}>Welcome to KASSIM!</p>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Time to open your cave. List your first item below. It takes under 3 minutes and goes live instantly.</p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Time to open your treasure cave. List your first item below. It takes under 3 minutes and goes live instantly.</p>
           </div>
         </div>
       )}

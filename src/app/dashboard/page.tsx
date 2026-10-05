@@ -310,7 +310,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {myListings.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <Kassim pose="head-think" width={88} className="mx-auto mb-3" />
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have no listings yet. Everyone has a cave: a drawer, a storeroom, under the bed.</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>You have no listings yet. Everyone has a treasure cave: a drawer, a storeroom, under the bed.</p>
               <Link href="/sell" className="px-4 py-2 rounded-lg text-sm font-medium text-white gradient-teal">
                 Start Selling
               </Link>
