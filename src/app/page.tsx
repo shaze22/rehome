@@ -9,7 +9,7 @@ import { CategoryGrid } from '@/components/home/CategoryGrid'
 import { RecentlyViewed } from '@/components/home/RecentlyViewed'
 import { MegaLelongCountdown } from '@/components/home/MegaLelongCountdown'
 import { HeroBanner } from '@/components/home/HeroBanner'
-import { KassimSays } from '@/components/brand/Kassim'
+import { KassimSays, KeyDivider } from '@/components/brand/Motifs'
 import { ArrowRight, Flame } from 'lucide-react'
 
 const getFeaturedListings = unstable_cache(async () => {
@@ -195,6 +195,8 @@ async function HomeContent() {
           </div>
         </div>
       </section>
+
+      <KeyDivider className="mt-2" />
 
       {/* Flash Listings */}
       <section className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8">

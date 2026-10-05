@@ -17,6 +17,8 @@ import { OwnerOffersPanel } from './OwnerOffersPanel'
 import { SwapEscrowPanel } from './SwapEscrowPanel'
 import { Kassim } from '@/components/brand/Kassim'
 import { Confetti } from '@/components/brand/Confetti'
+import { KassimNiche } from '@/components/brand/Motifs'
+import { CoinBurst, OutbidNotice } from '@/components/brand/Reactions'
 import { CaveDoorTimer } from './CaveDoorTimer'
 
 interface FlashTransaction {
@@ -425,6 +427,13 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
   const [photoIdx, setPhotoIdx] = useState(0)
   // Client-side auth fallback — handles SSR session miss
   const [currentUserId, setCurrentUserId] = useState<string | null>(initialUserId)
+  // Outbid notice: raised when the highest bidder changes from this user to someone else.
+  const [seenBidder, setSeenBidder] = useState(listing.currentBidder)
+  const [outbid, setOutbid] = useState(false)
+  if (listing.currentBidder !== seenBidder) {
+    setSeenBidder(listing.currentBidder)
+    setOutbid(!!currentUserId && seenBidder === currentUserId && listing.currentBidder !== currentUserId)
+  }
   useEffect(() => {
     if (currentUserId) return
     createClient().auth.getUser().then(({ data }) => {
@@ -1115,6 +1124,8 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                   </>
                 )}
 
+                {outbid && <OutbidNotice currentBid={listing.currentBid} />}
+
                 {bidError && (
                   <div className="flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.3)' }}>
                     <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {bidError}
@@ -1128,7 +1139,9 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                 )}
 
                 {bidSuccess && (
-                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(20,184,166,0.3)' }}>
+                  <div className="relative mb-3">
+                  <CoinBurst />
+                  <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(20,184,166,0.3)' }}>
                     <div className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium" style={{ backgroundColor: 'rgba(20,184,166,0.12)', color: 'var(--teal)' }}>
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
                       Bid placed! You are now the highest bidder.
@@ -1143,6 +1156,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
                     >
                       <Share2 className="w-3 h-3" /> Tell your friends before someone outbids you!
                     </button>
+                  </div>
                   </div>
                 )}
                 {!currentUserId ? (
@@ -1477,7 +1491,7 @@ export function ListingDetailClient({ listing: initialListing, currentUserId: in
           <h2 className="text-xl font-bold mb-4">Bid History</h2>
           {bids.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <Kassim pose="head-wink" width={88} className="mx-auto mb-3" />
+              <KassimNiche pose="head-wink" width={76} />
               <p style={{ color: 'var(--text-secondary)' }}>Nobody has dared yet. It is still RM0. Be the first!</p>
             </div>
           ) : (

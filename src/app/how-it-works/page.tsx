@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, ChevronDown, Zap, ArrowLeftRight, Shield, CheckCircle } from 'lucide-react'
 import type { Metadata } from 'next'
+import { KeyDivider } from '@/components/brand/Motifs'
 
 export const metadata: Metadata = {
   title: 'How It Works',
@@ -75,6 +76,7 @@ export default function HowItWorksPage() {
         <p className="text-base max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
           Two modes. Both protect your money. Both include delivery.
         </p>
+        <KeyDivider className="mt-6" />
       </div>
 
       {/* ── Quick Compare ── */}

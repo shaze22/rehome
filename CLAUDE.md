@@ -15,6 +15,8 @@ Malaysian circular economy auction platform. Two modes:
 - Used on: hero, `/story`, empty states (home, listings, dashboard, watchlist, bid history), 404, error, sell welcome banner, auction-won panel.
 - Flash timer is drawn as the stone door of his treasure cave sliding shut over the 30 minutes (`src/components/listings/CaveDoorTimer.tsx`, display only; `/api/bid` still owns the real window). Winners get a one-shot `Confetti` (`src/components/brand/Confetti.tsx`).
 - Look and feel (2026-10-05): homepage hero shows the 3D canon Kassim (`3d-*` poses, hero-size only) at his cave mouth; `h1`/`h2` use Fredoka (`--font-display`); light theme is warm cream; `--gold` / `.text-gold-gradient` is the accent. Teal stays the primary colour.
+- Motifs (`src/components/brand/Motifs.tsx`): `KassimNiche` frames a Kassim head in a glowing cave-mouth arch (use it for every empty state; `KassimSays` wraps it), `KeyDivider` / `GoldKey` is the gold-key ornament for section breaks. Product photos are never reshaped into arches.
+- Reactions (`src/components/brand/Reactions.tsx`): `OutbidNotice` appears in the bid form when the highest bidder changes from the current user to someone else; `CoinBurst` plays over the "Bid placed" message.
 - **Keep him out of** checkout, delivery, escrow, payout and dispute screens. Those stay plain and serious.
 - **Legal guardrails (owner decision):** the character is named "Kassim" only. Never write "Kassim Baba", "Ali Baba", "Baba", "forty thieves" or "Open Sesame", and never reference the P. Ramlee film, genie lamps or flying carpets. The story only evokes the old tale.
 

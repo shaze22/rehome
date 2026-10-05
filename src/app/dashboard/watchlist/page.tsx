@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { Heart } from 'lucide-react'
-import { Kassim } from '@/components/brand/Kassim'
+import { KassimNiche } from '@/components/brand/Motifs'
 
 export default async function WatchlistPage() {
   const supabase = await createClient()
@@ -30,7 +30,7 @@ export default async function WatchlistPage() {
 
       {items.length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <Kassim pose="head-smile" width={104} className="mx-auto mb-4" />
+          <KassimNiche pose="head-smile" width={88} className="mx-auto mb-4" />
           <p className="text-lg font-medium mb-2">Tiada listing tersimpan</p>
           <p style={{ color: 'var(--text-secondary)' }}>Tekan ❤ pada listing untuk simpan di sini</p>
         </div>

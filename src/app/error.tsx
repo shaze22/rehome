@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Kassim } from '@/components/brand/Kassim'
+import { KassimNiche } from '@/components/brand/Motifs'
 import * as Sentry from '@sentry/nextjs'
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -13,7 +13,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <Kassim pose="head-sigh" width={112} className="mx-auto mb-6" />
+        <KassimNiche pose="head-sigh" width={96} className="mx-auto mb-6" />
         <h1 className="text-4xl font-bold font-mono mb-4" style={{ color: 'var(--red)' }}>500</h1>
         <h2 className="text-2xl font-bold mb-3">Something Went Wrong</h2>
         <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>

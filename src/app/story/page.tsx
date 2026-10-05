@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { Kassim } from '@/components/brand/Kassim'
+import { KeyDivider } from '@/components/brand/Motifs'
 
 export const metadata: Metadata = {
   title: 'Meet Kassim',
@@ -37,6 +38,8 @@ export default function StoryPage() {
           The world&apos;s most stubborn collector, and the reason this marketplace exists.
         </p>
       </div>
+
+      <KeyDivider className="mb-8" />
 
       <div className="space-y-4 mb-10">
         {CHAPTERS.map(chapter => (

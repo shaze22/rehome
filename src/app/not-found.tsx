@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import { Kassim } from '@/components/brand/Kassim'
+import { KassimNiche } from '@/components/brand/Motifs'
 
 export default function NotFound() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
       <div className="text-center">
-        <Kassim pose="head-shock" width={128} className="mx-auto mb-6" />
+        <KassimNiche pose="head-shock" width={110} className="mx-auto mb-6" />
         <h1 className="text-6xl font-bold font-mono mb-4" style={{ color: 'var(--teal)' }}>404</h1>
         <h2 className="text-2xl font-bold mb-3">Even Kassim can&apos;t find this one</h2>
         <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>

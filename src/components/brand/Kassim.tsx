@@ -43,23 +43,3 @@ export function Kassim({ pose, width, className, preload }: KassimProps) {
     />
   )
 }
-
-interface KassimSaysProps {
-  pose: KassimPose
-  title: string
-  children?: React.ReactNode
-  width?: number
-}
-
-/** Centred mascot + message block for empty states. */
-export function KassimSays({ pose, title, children, width = 96 }: KassimSaysProps) {
-  return (
-    <>
-      <Kassim pose={pose} width={width} className="mx-auto mb-3" />
-      <p className="font-medium mb-1">{title}</p>
-      {children && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{children}</p>
-      )}
-    </>
-  )
-}
